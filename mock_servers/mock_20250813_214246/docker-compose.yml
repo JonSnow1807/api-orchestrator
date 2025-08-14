@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  mock-server:
+    build: .
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./mock_data.json:/app/mock_data.json
+    restart: unless-stopped

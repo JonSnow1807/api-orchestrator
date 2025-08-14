@@ -1,0 +1,472 @@
+{
+  "/users": {
+    "069d9f24-7543-4866-8721-61016ad39bd9": {
+      "id": "069d9f24-7543-4866-8721-61016ad39bd9",
+      "name": "Kimberly Ruiz",
+      "email": "samanthawyatt@example.net",
+      "phone": "967.968.6684",
+      "address": "856 Cantu Extensions\nParkershire, MD 12667",
+      "company": "Ramos-Allen",
+      "job_title": "Technical sales engineer",
+      "description": "Ever apply candidate more. Stop help thus although piece hair state. Information agree we raise well news.",
+      "created_at": "2003-07-04T00:17:10.496805",
+      "updated_at": "2012-06-19T04:15:37.448727",
+      "status": "inactive",
+      "tags": [
+        "wall"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.168028"
+      }
+    },
+    "cf630603-1805-4ff4-9d6c-79c86691fe67": {
+      "id": "cf630603-1805-4ff4-9d6c-79c86691fe67",
+      "name": "David Miller",
+      "email": "msmith@example.com",
+      "phone": "001-596-672-9053x0877",
+      "address": "4427 Stewart Plains\nSouth John, WI 41073",
+      "company": "Curtis-Lee",
+      "job_title": "Farm manager",
+      "description": "Question theory five seven reach long guess. Especially risk figure computer main you. Husband magazine store at.",
+      "created_at": "2001-03-19T23:10:19.357301",
+      "updated_at": "1977-10-14T13:35:05.293546",
+      "status": "pending",
+      "tags": [
+        "age",
+        "thank",
+        "occur",
+        "couple"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.168382"
+      }
+    },
+    "fd1c8789-7712-4396-b42c-a26471637a98": {
+      "id": "fd1c8789-7712-4396-b42c-a26471637a98",
+      "name": "Colleen Nunez",
+      "email": "rodriguezjacob@example.com",
+      "phone": "001-373-549-2737x90195",
+      "address": "22376 Terrell Village Apt. 686\nIbarraside, NM 88595",
+      "company": "Rogers-Sosa",
+      "job_title": "Doctor, general practice",
+      "description": "List live official easy answer bank. Create sport great.\nCertainly out my drive. Hold game edge less able.",
+      "created_at": "1977-03-18T04:24:48.947030",
+      "updated_at": "1987-08-21T18:55:05.226332",
+      "status": "inactive",
+      "tags": [
+        "memory",
+        "design"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.168739"
+      }
+    },
+    "130321e7-1b17-4732-8b6d-e621e2446ce2": {
+      "id": "130321e7-1b17-4732-8b6d-e621e2446ce2",
+      "name": "Leroy Johnson",
+      "email": "sbrady@example.net",
+      "phone": "325-968-0144x30484",
+      "address": "PSC 5923, Box 2241\nAPO AA 33418",
+      "company": "Thompson-Harmon",
+      "job_title": "Equality and diversity officer",
+      "description": "We begin most way significant. Race section fly ago accept deep natural. Person beyond business social still activity. Military evening sort area significant.",
+      "created_at": "1995-09-15T03:05:27.856850",
+      "updated_at": "2014-02-16T20:59:14.063662",
+      "status": "active",
+      "tags": [
+        "this",
+        "certainly",
+        "candidate",
+        "cut",
+        "nice"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.169013"
+      }
+    },
+    "f5d4d607-d9bc-4ed0-a982-9d0368034c90": {
+      "id": "f5d4d607-d9bc-4ed0-a982-9d0368034c90",
+      "name": "Kyle Walsh",
+      "email": "cruzcraig@example.org",
+      "phone": "(292)768-5869x38372",
+      "address": "627 Combs Freeway Suite 305\nLake Catherine, ID 04785",
+      "company": "Liu Ltd",
+      "job_title": "Arboriculturist",
+      "description": "Little reflect rich interest country. Measure none who film listen majority another.",
+      "created_at": "1973-04-10T05:28:39.820119",
+      "updated_at": "1998-09-24T03:27:15.421116",
+      "status": "archived",
+      "tags": [
+        "standard",
+        "also",
+        "according",
+        "there"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.169327"
+      }
+    },
+    "7edbece1-04ba-423e-b7fe-a02a08bd7742": {
+      "id": "7edbece1-04ba-423e-b7fe-a02a08bd7742",
+      "name": "Karen Owens",
+      "email": "cheath@example.net",
+      "phone": "373-302-7976x0879",
+      "address": "0672 Houston Spur Apt. 069\nMichaelberg, GU 13410",
+      "company": "Gillespie-Smith",
+      "job_title": "Radiographer, therapeutic",
+      "description": "This draw certain whole no. Time several yeah including. Purpose yeah it him above plant most deal.\nThan here war father. Rate than talk industry suffer life. By order himself opportunity war shake.",
+      "created_at": "2014-05-08T09:27:13.035525",
+      "updated_at": "1993-01-25T21:14:48.548108",
+      "status": "pending",
+      "tags": [
+        "each",
+        "civil",
+        "color",
+        "cut"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.169662"
+      }
+    },
+    "19389e8d-bac7-4344-b212-c09005127a3a": {
+      "id": "19389e8d-bac7-4344-b212-c09005127a3a",
+      "name": "Diamond Martinez",
+      "email": "gregoryweber@example.org",
+      "phone": "916.351.6241x24831",
+      "address": "505 Justin Ford\nNew Charlesmouth, WA 61128",
+      "company": "Hooper-Guerrero",
+      "job_title": "Dealer",
+      "description": "Type treatment nature development meeting. Commercial authority control.\nCharge series program anything if. Involve performance behind business skill knowledge high. From human race central strategy.",
+      "created_at": "1999-08-24T08:23:11.075878",
+      "updated_at": "1980-08-27T00:36:37.641065",
+      "status": "inactive",
+      "tags": [
+        "though",
+        "cut",
+        "player",
+        "pretty"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.170015"
+      }
+    },
+    "0345c244-c868-429e-a9e9-16971626e603": {
+      "id": "0345c244-c868-429e-a9e9-16971626e603",
+      "name": "Donald King",
+      "email": "soliver@example.com",
+      "phone": "486.625.2402x4245",
+      "address": "597 Katrina Brooks Apt. 116\nWest Jessica, ND 42318",
+      "company": "Hammond, Brooks and Wilson",
+      "job_title": "Artist",
+      "description": "Case thousand difference question agreement. For magazine word fight radio news step. Most drug you building rock will.",
+      "created_at": "1993-05-31T07:20:25.477213",
+      "updated_at": "1989-01-02T04:21:48.253258",
+      "status": "inactive",
+      "tags": [
+        "record",
+        "allow",
+        "believe",
+        "each",
+        "their"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.170388"
+      }
+    },
+    "bfc245ed-0aef-4694-953a-ee73af983883": {
+      "id": "bfc245ed-0aef-4694-953a-ee73af983883",
+      "name": "Veronica Nelson",
+      "email": "maria20@example.org",
+      "phone": "(498)372-1787",
+      "address": "999 Payne Village Suite 820\nWilsonstad, HI 66481",
+      "company": "Knight Group",
+      "job_title": "Administrator, education",
+      "description": "Dog different perform outside. Rate note decision president huge itself once.\nInstead follow lead during him score short. Role score with tonight might. Too fish dream.",
+      "created_at": "2001-11-11T17:10:17.268349",
+      "updated_at": "1987-07-11T01:04:39.875138",
+      "status": "pending",
+      "tags": [
+        "join"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.170675"
+      }
+    },
+    "925681cd-d33b-4ae5-b218-34ee89b76ac3": {
+      "id": "925681cd-d33b-4ae5-b218-34ee89b76ac3",
+      "name": "Raymond Smith",
+      "email": "brittany00@example.org",
+      "phone": "001-325-672-5755x82159",
+      "address": "938 Torres Viaduct\nPort Toddville, GA 22319",
+      "company": "Moody-Lynch",
+      "job_title": "Emergency planning/management officer",
+      "description": "Store reduce usually eat stop guy. Sure success camera federal bit home. Standard teach care. Police table become character husband letter.",
+      "created_at": "1974-06-26T22:30:00.181580",
+      "updated_at": "1997-02-04T12:34:19.063332",
+      "status": "archived",
+      "tags": [
+        "find",
+        "generation",
+        "step",
+        "offer",
+        "letter"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.170985"
+      }
+    }
+  },
+  "/users/{id}": {
+    "3a17906b-362a-41b6-83bc-caf2d1c8db0d": {
+      "id": "3a17906b-362a-41b6-83bc-caf2d1c8db0d",
+      "name": "Michael Owens",
+      "email": "qgallagher@example.net",
+      "phone": "996.344.9293x049",
+      "address": "213 Samuel Dale Suite 879\nLake Douglasfurt, DC 31392",
+      "company": "Fletcher PLC",
+      "job_title": "Sport and exercise psychologist",
+      "description": "Reach home ahead arrive anything evening. Community account peace central administration describe black.",
+      "created_at": "2020-05-06T21:10:23.320910",
+      "updated_at": "1987-08-12T19:26:06.042876",
+      "status": "active",
+      "tags": [
+        "ok",
+        "shake"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.171249"
+      }
+    },
+    "1076c494-f93f-41fc-ba1b-2df2ce507d52": {
+      "id": "1076c494-f93f-41fc-ba1b-2df2ce507d52",
+      "name": "Christian Heath",
+      "email": "todd37@example.com",
+      "phone": "243-490-3868x777",
+      "address": "43877 Davenport Turnpike\nMichaelfort, GU 90868",
+      "company": "Jones and Sons",
+      "job_title": "Planning and development surveyor",
+      "description": "Nature range any why. Understand anything type pretty finish minute. Nor leave management move moment book our.",
+      "created_at": "2013-03-20T04:08:54.180385",
+      "updated_at": "2011-06-01T20:47:32.891291",
+      "status": "inactive",
+      "tags": [
+        "end",
+        "consider",
+        "wish",
+        "clearly"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.171520"
+      }
+    },
+    "fd47ea52-2470-42d8-83dc-dae4a294043c": {
+      "id": "fd47ea52-2470-42d8-83dc-dae4a294043c",
+      "name": "Ryan Bass",
+      "email": "schwartzmichael@example.org",
+      "phone": "001-604-561-6718",
+      "address": "PSC 8537, Box 0001\nAPO AP 05296",
+      "company": "Deleon PLC",
+      "job_title": "TEFL teacher",
+      "description": "Seek level put push there drive picture. Push ball pull sound front go mission.\nProgram model deep little. Evidence hope hour strong see teach.\nMemory tend fund sit. Yeah understand stop interview.",
+      "created_at": "1987-09-29T23:06:30.358566",
+      "updated_at": "1977-07-12T23:45:23.719826",
+      "status": "inactive",
+      "tags": [
+        "week",
+        "still"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.171767"
+      }
+    },
+    "633eeb11-18a4-4ae0-90c2-ad1d1bb25553": {
+      "id": "633eeb11-18a4-4ae0-90c2-ad1d1bb25553",
+      "name": "Alicia Baker",
+      "email": "michaelmartin@example.net",
+      "phone": "388-225-7392x72039",
+      "address": "94206 Daniels Center Apt. 091\nChristopherview, CO 28952",
+      "company": "Long, Smith and Williams",
+      "job_title": "Runner, broadcasting/film/video",
+      "description": "Painting conference only wide perhaps.\nNeed not other more important write. Him pay guy according. Else their kind girl discuss.",
+      "created_at": "1995-03-22T14:22:24.902409",
+      "updated_at": "2002-04-04T11:52:20.625866",
+      "status": "pending",
+      "tags": [
+        "direction",
+        "despite",
+        "ability",
+        "exist"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.172146"
+      }
+    },
+    "c1f48e39-d07f-4e58-8031-e527c1aea943": {
+      "id": "c1f48e39-d07f-4e58-8031-e527c1aea943",
+      "name": "Timothy Collier",
+      "email": "pdaniels@example.net",
+      "phone": "440.852.1367",
+      "address": "266 Christina Plains Suite 741\nEast Dawn, RI 99181",
+      "company": "Manning, Smith and Hall",
+      "job_title": "Air traffic controller",
+      "description": "Stand close reflect itself daughter run soldier. Black result choose conference worker century wide.\nSign action will game evening care brother. Population thus national tree analysis.",
+      "created_at": "2016-05-21T08:57:28.495496",
+      "updated_at": "2008-05-06T10:45:15.353012",
+      "status": "inactive",
+      "tags": [
+        "himself",
+        "movement",
+        "professional"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.172489"
+      }
+    },
+    "a9b6d8e0-971e-4a3a-8058-7e2676b767b4": {
+      "id": "a9b6d8e0-971e-4a3a-8058-7e2676b767b4",
+      "name": "Monica Dillon",
+      "email": "amandadavis@example.com",
+      "phone": "001-625-904-3479",
+      "address": "8115 Horn Estates Apt. 209\nRebeccafort, AS 24385",
+      "company": "Bradford LLC",
+      "job_title": "Publishing rights manager",
+      "description": "Yourself past industry goal father under throw. West their traditional edge. Half speak few production.\nProperty appear relationship still.",
+      "created_at": "2008-10-26T17:35:18.820889",
+      "updated_at": "2001-10-01T09:05:10.546207",
+      "status": "active",
+      "tags": [
+        "decide"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.172786"
+      }
+    },
+    "dbbe4611-f215-4509-88a5-822366f4a1a3": {
+      "id": "dbbe4611-f215-4509-88a5-822366f4a1a3",
+      "name": "Denise Williams",
+      "email": "ronaldware@example.com",
+      "phone": "548-425-9300x011",
+      "address": "27695 Tate Turnpike\nPort Christopher, VA 80578",
+      "company": "Wiggins, Ramirez and Harris",
+      "job_title": "Media planner",
+      "description": "Environmental care night this one. Campaign mean hospital talk full institution.\nPerformance affect after night. Rest training suggest soon admit however others.",
+      "created_at": "2006-09-12T21:58:14.611578",
+      "updated_at": "1997-05-07T19:43:02.202367",
+      "status": "inactive",
+      "tags": [
+        "send",
+        "expect",
+        "guy",
+        "body",
+        "analysis"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.173174"
+      }
+    },
+    "0fa947c8-115c-4011-8654-77cd245e7a33": {
+      "id": "0fa947c8-115c-4011-8654-77cd245e7a33",
+      "name": "Nathaniel Mathews",
+      "email": "gloriaharris@example.net",
+      "phone": "760-633-2328x504",
+      "address": "69593 Russo Forge\nWest Davidland, CT 92380",
+      "company": "Mccarthy, Barnes and Haney",
+      "job_title": "Senior tax professional/tax inspector",
+      "description": "Prove situation Congress put voice seem. Technology common set cell style charge anything.\nYourself American feel wonder write pattern. Finish yeah different short baby.",
+      "created_at": "2011-05-27T00:03:36.080865",
+      "updated_at": "2025-07-20T19:25:32.453487",
+      "status": "inactive",
+      "tags": [
+        "including",
+        "world",
+        "pull",
+        "see"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.173549"
+      }
+    },
+    "214a03d5-2d32-4668-8896-d4ca84879201": {
+      "id": "214a03d5-2d32-4668-8896-d4ca84879201",
+      "name": "Adam Nixon",
+      "email": "juliesingleton@example.net",
+      "phone": "+1-310-766-2412",
+      "address": "0613 Vazquez Roads Apt. 751\nEast Anne, NC 05508",
+      "company": "Duke-Huffman",
+      "job_title": "Pharmacist, community",
+      "description": "Suffer rate himself agreement will.\nRecognize play establish build between. Must break subject especially expect letter. Buy huge school amount water.",
+      "created_at": "1975-08-04T08:59:13.256011",
+      "updated_at": "1979-04-28T17:40:19.416928",
+      "status": "archived",
+      "tags": [
+        "drive",
+        "truth"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.174042"
+      }
+    },
+    "dab529b4-7c12-421a-adcc-0ea144af6887": {
+      "id": "dab529b4-7c12-421a-adcc-0ea144af6887",
+      "name": "Brittany Brown",
+      "email": "sgray@example.org",
+      "phone": "509.997.7482x5387",
+      "address": "965 William Highway\nChristinafort, MA 12647",
+      "company": "Guzman, Stevens and Simpson",
+      "job_title": "Medical sales representative",
+      "description": "Note alone assume own. Thousand difference also road free sell painting.\nBeyond police central record act. Environment gun state. Customer break only painting.",
+      "created_at": "1971-09-27T12:54:38.739158",
+      "updated_at": "1996-07-06T11:49:30.498051",
+      "status": "inactive",
+      "tags": [
+        "some",
+        "leg",
+        "house",
+        "thing"
+      ],
+      "metadata": {
+        "source": "mock_server",
+        "version": "1.0.0",
+        "generated_at": "2025-08-13T21:36:07.174446"
+      }
+    }
+  }
+}

@@ -22,6 +22,8 @@ from src.agents.spec_agent import SpecGeneratorAgent
 from src.agents.test_agent import TestGeneratorAgent
 
 from src.agents.ai_agent import AIIntelligenceAgent
+from src.agents.mock_server_agent import MockServerAgent
+from src.database import init_db, SessionLocal, DatabaseManager
 
 
 # Initialize FastAPI app
@@ -160,6 +162,10 @@ async def orchestrate(request: OrchestrationRequest):
     
     # Generate task ID
     task_id = str(uuid.uuid4())
+    db = SessionLocal()
+    project = DatabaseManager.create_project(db, "Auto-Project", source_path=request.source_path)
+    task = DatabaseManager.create_task(db, task_id, project.id)
+    db.close()
     
     # Validate source path
     if request.source_type == "directory":
@@ -196,6 +202,7 @@ async def initialize_orchestrator():
     orchestrator.register_agent(AgentType.SPEC_GENERATOR, SpecGeneratorAgent())
     orchestrator.register_agent(AgentType.TEST_GENERATOR, TestGeneratorAgent())
     orchestrator.register_agent(AgentType.AI_INTELLIGENCE, AIIntelligenceAgent())
+    orchestrator.register_agent(AgentType.MOCK_SERVER, MockServerAgent())
     
     # Broadcast initialization status
     await manager.broadcast({
