@@ -21,6 +21,9 @@ from src.agents.discovery_agent import DiscoveryAgent
 from src.agents.spec_agent import SpecGeneratorAgent
 from src.agents.test_agent import TestGeneratorAgent
 
+from src.agents.ai_agent import AIIntelligenceAgent
+
+
 # Initialize FastAPI app
 app = FastAPI(
     title="API Orchestrator",
@@ -192,6 +195,7 @@ async def initialize_orchestrator():
     orchestrator.register_agent(AgentType.DISCOVERY, DiscoveryAgent())
     orchestrator.register_agent(AgentType.SPEC_GENERATOR, SpecGeneratorAgent())
     orchestrator.register_agent(AgentType.TEST_GENERATOR, TestGeneratorAgent())
+    orchestrator.register_agent(AgentType.AI_INTELLIGENCE, AIIntelligenceAgent())
     
     # Broadcast initialization status
     await manager.broadcast({

@@ -14,6 +14,7 @@ class AgentType(Enum):
     PERFORMANCE = "performance"
     DOCUMENTATION = "documentation"
     VERSION_MANAGER = "version_manager"
+    AI_INTELLIGENCE = "ai_intelligence"
 
 @dataclass
 class APIEndpoint:
