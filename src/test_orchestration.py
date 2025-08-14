@@ -4,8 +4,9 @@ from pathlib import Path
 from src.core.orchestrator import APIOrchestrator, AgentType
 from src.agents.discovery_agent import DiscoveryAgent
 from src.agents.spec_agent import SpecGeneratorAgent
+from src.agents.test_agent import TestGeneratorAgent  # Add this import
 
-# Test content with a more complex API
+# Test content remains the same...
 test_content = '''
 from fastapi import FastAPI, Query, HTTPException
 from typing import Optional, List
@@ -73,9 +74,11 @@ async def test_orchestration():
         # Register agents
         discovery_agent = DiscoveryAgent()
         spec_agent = SpecGeneratorAgent()
+        test_agent = TestGeneratorAgent()  # Add this
         
         orchestrator.register_agent(AgentType.DISCOVERY, discovery_agent)
         orchestrator.register_agent(AgentType.SPEC_GENERATOR, spec_agent)
+        orchestrator.register_agent(AgentType.TEST_GENERATOR, test_agent)  # Add this
         
         # Run orchestration
         print("\n🚀 Starting API Orchestration...")
@@ -88,17 +91,29 @@ async def test_orchestration():
         print("=" * 60)
         print(f"✓ Discovered {len(results['apis'])} endpoints")
         print(f"✓ Generated OpenAPI spec")
+        print(f"✓ Generated {len(results.get('tests', []))} test files")
         
-        # Show the spec
+        # Save the spec
         if results['specs']:
-            print("\n📝 OpenAPI Specification:")
-            print("-" * 60)
-            print(json.dumps(results['specs'], indent=2))
-            
-            # Save to file
             spec_file = Path("generated_spec.json")
             spec_file.write_text(json.dumps(results['specs'], indent=2))
-            print(f"\n✓ Spec saved to {spec_file}")
+            print(f"✓ Spec saved to {spec_file}")
+        
+        # Save the tests
+        if results.get('tests'):
+            # Export tests to file
+            test_content = test_agent.export_tests(results['tests'], "file")
+            test_file_path = Path("generated_tests.py")
+            test_file_path.write_text(test_content)
+            print(f"✓ Tests saved to {test_file_path}")
+            
+            # Show a preview
+            print("\n📝 Generated Test Preview:")
+            print("-" * 60)
+            lines = test_content.split('\n')[:30]  # Show first 30 lines
+            for line in lines:
+                print(line)
+            print("... (truncated)")
         
         # Show any errors
         if results['errors']:
