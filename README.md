@@ -232,7 +232,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 For issues, questions, or suggestions:
 - Open an issue on GitHub
-- Email: support@api-orchestrator.com
+- Email: cshrivastava2000@gmail.com
 
 ---
 
