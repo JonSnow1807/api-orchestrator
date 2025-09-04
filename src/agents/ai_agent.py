@@ -90,11 +90,22 @@ class AIIntelligenceAgent:
         7. XSS vulnerabilities
         8. CORS misconfigurations
         
-        Return a detailed security analysis with:
-        - Security score (0-100)
-        - List of vulnerabilities with severity
-        - Recommendations for fixes
-        - Code examples for secure implementation
+        Return ONLY a valid JSON object with this structure:
+        {{
+            "security_score": <0-100>,
+            "vulnerabilities": [
+                {{
+                    "type": "<vulnerability type>",
+                    "severity": "<critical|high|medium|low>",
+                    "endpoint": "<affected endpoint>",
+                    "description": "<detailed description>",
+                    "recommendation": "<how to fix>",
+                    "code_example": "<secure implementation example>"
+                }}
+            ],
+            "summary": "<overall security assessment>",
+            "estimated_fix_time": "<hours needed to fix all issues>"
+        }}
         """
         
         try:
@@ -307,15 +318,27 @@ class AIIntelligenceAgent:
             return None
         
         try:
+            # Use sync call in async context (anthropic SDK doesn't have async yet)
             response = self.anthropic_client.messages.create(
-                model="claude-3-haiku-20240307",
+                model="claude-3-haiku-20240307",  # Fast and cost-effective
                 messages=[
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=2000
+                max_tokens=2000,
+                temperature=0.7
             )
             
-            return response.content[0].text
+            # Parse response based on the content
+            result_text = response.content[0].text
+            
+            # Try to parse as JSON if it looks like JSON
+            if result_text.strip().startswith('{') or result_text.strip().startswith('['):
+                try:
+                    return json.loads(result_text)
+                except:
+                    return {"response": result_text}
+            
+            return {"response": result_text}
             
         except Exception as e:
             print(f"Anthropic API error: {e}")
