@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import AIAnalysisDisplay from './AIAnalysisDisplay';
+import MockServerManager from './MockServerManager';
 import { 
   ArrowLeft,
   Folder,
@@ -80,29 +82,44 @@ const ProjectDetails = () => {
   };
 
   const connectWebSocket = () => {
-    const ws = new WebSocket('ws://localhost:8000/ws');
-    
-    ws.onopen = () => {
-      setWsConnected(true);
-      addMessage('Connected to orchestration server', 'success');
-    };
-    
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      handleWebSocketMessage(data);
-    };
-    
-    ws.onclose = () => {
+    try {
+      const ws = new WebSocket('ws://localhost:8000/ws');
+      
+      ws.onopen = () => {
+        setWsConnected(true);
+        addMessage('Connected to orchestration server', 'success');
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          handleWebSocketMessage(data);
+        } catch (err) {
+          console.error('Failed to parse WebSocket message:', err);
+        }
+      };
+      
+      ws.onclose = () => {
+        setWsConnected(false);
+        addMessage('Disconnected from server', 'error');
+        // Attempt to reconnect after 3 seconds
+        setTimeout(() => {
+          if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
+            connectWebSocket();
+          }
+        }, 3000);
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        addMessage('Connection error', 'error');
+      };
+      
+      wsRef.current = ws;
+    } catch (err) {
+      console.error('Failed to connect WebSocket:', err);
       setWsConnected(false);
-      addMessage('Disconnected from server', 'error');
-    };
-    
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      addMessage('Connection error', 'error');
-    };
-    
-    wsRef.current = ws;
+    }
   };
 
   const handleWebSocketMessage = (data) => {
@@ -371,7 +388,7 @@ const ProjectDetails = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="border-b border-gray-700">
           <nav className="-mb-px flex space-x-8">
-            {['overview', 'agents', 'console', 'artifacts'].map((tab) => (
+            {['overview', 'agents', 'ai-analysis', 'mock-server', 'console', 'artifacts'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -563,6 +580,26 @@ const ProjectDetails = () => {
               )}
               <div ref={messagesEndRef} />
             </div>
+          </div>
+        )}
+
+        {activeTab === 'ai-analysis' && (
+          <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 p-6">
+            <h2 className="text-lg font-semibold text-white mb-6 flex items-center">
+              <Brain className="w-6 h-6 mr-2 text-purple-400" />
+              AI Analysis Results
+            </h2>
+            <AIAnalysisDisplay taskId={currentTask} />
+          </div>
+        )}
+
+        {activeTab === 'mock-server' && (
+          <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 p-6">
+            <h2 className="text-lg font-semibold text-white mb-6 flex items-center">
+              <Server className="w-6 h-6 mr-2 text-purple-400" />
+              Mock Server Management
+            </h2>
+            <MockServerManager taskId={currentTask} />
           </div>
         )}
 

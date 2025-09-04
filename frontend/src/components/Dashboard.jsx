@@ -83,10 +83,13 @@ const Dashboard = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-gray-300">
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"
+              >
                 <User className="w-5 h-5" />
                 <span>{user?.username || 'User'}</span>
-              </div>
+              </button>
               <button
                 onClick={handleLogout}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"

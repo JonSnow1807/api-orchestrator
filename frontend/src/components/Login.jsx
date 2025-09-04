@@ -136,7 +136,7 @@ const Login = () => {
           {/* Demo Account */}
           <div className="mt-6 pt-6 border-t border-gray-700">
             <p className="text-xs text-gray-500 text-center">
-              Demo Account: demo@example.com / demo123
+              Demo Account: demo@example.com / Demo123!
             </p>
           </div>
         </div>
