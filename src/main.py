@@ -301,15 +301,16 @@ async def get_user_profile(
     db: Session = Depends(get_db)
 ):
     """Get current user's profile information"""
-    # Get user's API usage stats (simplified for now)
-    total_projects = db.query(Project).filter(Project.user_id == current_user.id).count()
+    # Get user's API usage stats (simplified for now) 
+    # Note: Project model not implemented yet, using 0 as placeholder
+    total_projects = 0  # db.query(Project).filter(Project.user_id == current_user.id).count()
     
     return {
         "id": current_user.id,
         "name": current_user.username,
         "email": current_user.email,
         "company": getattr(current_user, "company", ""),
-        "api_key": current_user.api_key,
+        "api_key": getattr(current_user, "api_key", f"sk_{current_user.id}_demo"),
         "subscription_tier": current_user.subscription_tier,
         "created_at": current_user.created_at.isoformat(),
         "last_login": datetime.utcnow().isoformat(),

@@ -109,16 +109,25 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    try {
-      await axios.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      // Clear everything regardless
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      delete axios.defaults.headers.common['Authorization'];
-      setUser(null);
+    // Clear auth data first to prevent infinite loops
+    const token = localStorage.getItem('access_token');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    delete axios.defaults.headers.common['Authorization'];
+    setUser(null);
+    
+    // Try to call logout endpoint if token existed
+    if (token) {
+      try {
+        // Create a custom axios instance to bypass interceptors
+        const axiosInstance = axios.create();
+        await axiosInstance.post('/auth/logout', {}, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch (error) {
+        // Ignore errors - we're logging out anyway
+        console.log('Logout API call failed (normal if token was invalid)');
+      }
     }
   };
 
