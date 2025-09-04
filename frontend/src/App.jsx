@@ -4,6 +4,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
+import ProjectCreate from './components/ProjectCreate';
+import ProjectDetails from './components/ProjectDetails';
 import PrivateRoute from './components/PrivateRoute';
 
 function App() {
@@ -19,6 +21,18 @@ function App() {
           <Route path="/dashboard" element={
             <PrivateRoute>
               <Dashboard />
+            </PrivateRoute>
+          } />
+          
+          <Route path="/create-project" element={
+            <PrivateRoute>
+              <ProjectCreate />
+            </PrivateRoute>
+          } />
+          
+          <Route path="/projects/:id" element={
+            <PrivateRoute>
+              <ProjectDetails />
             </PrivateRoute>
           } />
           
