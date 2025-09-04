@@ -39,6 +39,12 @@ from src.auth import (
 # Import export/import functionality
 from src.export_import import ExportManager, ImportManager
 
+# Import project management
+from src.project_manager import (
+    ProjectManager, ProjectCreate, ProjectUpdate, 
+    ProjectResponse, ProjectListResponse, ProjectStats
+)
+
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -682,6 +688,179 @@ async def get_export_formats(current_user: User = Depends(get_current_user)):
     }
 
 # ==================== END EXPORT/IMPORT ENDPOINTS ====================
+
+# ==================== PROJECT MANAGEMENT ENDPOINTS ====================
+
+@app.post("/api/projects", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
+async def create_project(
+    project_data: ProjectCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create a new project"""
+    project = ProjectManager.create_project(db, current_user.id, project_data)
+    return ProjectResponse(
+        id=project.id,
+        name=project.name,
+        description=project.description,
+        source_type=project.source_type,
+        source_path=project.source_path,
+        github_url=project.github_url,
+        created_at=project.created_at.isoformat(),
+        updated_at=project.updated_at.isoformat(),
+        api_count=len(project.apis),
+        task_count=len(project.tasks)
+    )
+
+@app.get("/api/projects", response_model=ProjectListResponse)
+async def list_projects(
+    page: int = 1,
+    per_page: int = 10,
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """List all projects for the current user"""
+    result = ProjectManager.list_projects(db, current_user.id, page, per_page, search)
+    
+    projects = [
+        ProjectResponse(
+            id=p["id"],
+            name=p["name"],
+            description=p["description"],
+            source_type=p["source_type"],
+            source_path=p["source_path"],
+            github_url=p["github_url"],
+            created_at=p["created_at"],
+            updated_at=p["updated_at"],
+            api_count=p["api_count"],
+            task_count=p["task_count"]
+        )
+        for p in result["projects"]
+    ]
+    
+    return ProjectListResponse(
+        projects=projects,
+        total=result["total"],
+        page=result["page"],
+        per_page=result["per_page"]
+    )
+
+@app.get("/api/projects/{project_id}", response_model=ProjectResponse)
+async def get_project(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get a specific project"""
+    project = ProjectManager.get_project(db, current_user.id, project_id)
+    return ProjectResponse(
+        id=project.id,
+        name=project.name,
+        description=project.description,
+        source_type=project.source_type,
+        source_path=project.source_path,
+        github_url=project.github_url,
+        created_at=project.created_at.isoformat(),
+        updated_at=project.updated_at.isoformat(),
+        api_count=len(project.apis),
+        task_count=len(project.tasks)
+    )
+
+@app.put("/api/projects/{project_id}", response_model=ProjectResponse)
+async def update_project(
+    project_id: int,
+    update_data: ProjectUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update a project"""
+    project = ProjectManager.update_project(db, current_user.id, project_id, update_data)
+    return ProjectResponse(
+        id=project.id,
+        name=project.name,
+        description=project.description,
+        source_type=project.source_type,
+        source_path=project.source_path,
+        github_url=project.github_url,
+        created_at=project.created_at.isoformat(),
+        updated_at=project.updated_at.isoformat(),
+        api_count=len(project.apis),
+        task_count=len(project.tasks)
+    )
+
+@app.delete("/api/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_project(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a project and all associated data"""
+    ProjectManager.delete_project(db, current_user.id, project_id)
+    return None
+
+@app.get("/api/projects/stats/overview", response_model=ProjectStats)
+async def get_project_stats(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get statistics for all user projects"""
+    return ProjectManager.get_project_stats(db, current_user.id)
+
+@app.post("/api/projects/{project_id}/clone", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
+async def clone_project(
+    project_id: int,
+    new_name: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Clone an existing project"""
+    project = ProjectManager.clone_project(db, current_user.id, project_id, new_name)
+    return ProjectResponse(
+        id=project.id,
+        name=project.name,
+        description=project.description,
+        source_type=project.source_type,
+        source_path=project.source_path,
+        github_url=project.github_url,
+        created_at=project.created_at.isoformat(),
+        updated_at=project.updated_at.isoformat(),
+        api_count=len(project.apis),
+        task_count=len(project.tasks)
+    )
+
+@app.post("/api/projects/{project_id}/orchestrate", response_model=OrchestrationResponse)
+async def orchestrate_project(
+    project_id: int,
+    current_user: User = Depends(check_api_limit),
+    db: Session = Depends(get_db)
+):
+    """Start orchestration for a specific project"""
+    
+    # Get the project
+    project = ProjectManager.get_project(db, current_user.id, project_id)
+    
+    # Create task
+    task = ProjectManager.start_orchestration(db, current_user.id, project_id)
+    
+    # Store in active tasks
+    active_tasks[task.id] = {
+        "status": "pending",
+        "created_at": datetime.now().isoformat(),
+        "project_id": project_id,
+        "source_path": project.source_path
+    }
+    
+    # Start orchestration in background
+    asyncio.create_task(run_orchestration(task.id, project.source_path or "/"))
+    
+    return OrchestrationResponse(
+        task_id=task.id,
+        status="started",
+        message=f"Orchestration started for project '{project.name}'"
+    )
+
+# ==================== END PROJECT MANAGEMENT ENDPOINTS ====================
 
 # Upload file for processing
 @app.post("/api/upload")

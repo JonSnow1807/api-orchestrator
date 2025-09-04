@@ -40,7 +40,8 @@ class Project(Base):
     __tablename__ = "projects"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), unique=True, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # Add user association
+    name = Column(String(255), index=True, nullable=False)  # Remove unique constraint, unique per user
     description = Column(Text)
     source_type = Column(String(50))  # directory, github, upload
     source_path = Column(String(500))
@@ -49,6 +50,7 @@ class Project(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
     # Relationships
+    user = relationship("User", back_populates="projects")
     apis = relationship("API", back_populates="project", cascade="all, delete-orphan")
     tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
     mock_servers = relationship("MockServer", back_populates="project", cascade="all, delete-orphan")
@@ -268,6 +270,9 @@ class User(Base):
     subscription_expires = Column(DateTime)
     api_calls_this_month = Column(Integer, default=0)
     api_calls_limit = Column(Integer, default=100)  # Based on tier
+    
+    # Relationships
+    projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
     
     def to_dict(self):
         return {
