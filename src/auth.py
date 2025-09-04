@@ -14,12 +14,13 @@ from pydantic import BaseModel, EmailStr
 import os
 
 from src.database import get_db, User, DatabaseManager
+from src.config import settings
 
-# Configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+# Configuration from secure settings
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -116,6 +117,14 @@ class AuthManager:
     @staticmethod
     def create_user(db: Session, user_data: UserCreate) -> User:
         """Create a new user"""
+        # Validate password strength
+        is_valid, message = settings.validate_password(user_data.password)
+        if not is_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=message
+            )
+        
         # Check if user exists
         existing_user = db.query(User).filter(
             (User.email == user_data.email) | (User.username == user_data.username)

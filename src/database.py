@@ -264,6 +264,7 @@ class User(Base):
     is_superuser = Column(Boolean, default=False)
     created_at = Column(DateTime, default=func.now())
     last_login = Column(DateTime)
+    password_changed_at = Column(DateTime)
     
     # Subscription
     subscription_tier = Column(String(50), default="free")  # free, starter, growth, enterprise
