@@ -51,7 +51,8 @@ from src.project_manager import (
 # Import password reset functionality
 from src.password_reset import (
     PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest,
-    request_password_reset, confirm_password_reset, change_password
+    request_password_reset, confirm_password_reset, change_password,
+    PasswordResetToken  # Import model to ensure it's registered
 )
 
 
@@ -61,6 +62,12 @@ app = FastAPI(
     description="Multi-agent AI orchestrator for API development & testing",
     version="1.0.0"
 )
+
+# Initialize database on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database tables on startup"""
+    init_db()
 
 # Import configuration
 from src.config import settings
@@ -287,6 +294,87 @@ async def change_password_endpoint(
 
 # ==================== END PASSWORD RESET ENDPOINTS ====================
 
+# ==================== USER PROFILE ENDPOINTS ====================
+@app.get("/api/users/profile")
+async def get_user_profile(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get current user's profile information"""
+    # Get user's API usage stats (simplified for now)
+    total_projects = db.query(Project).filter(Project.user_id == current_user.id).count()
+    
+    return {
+        "id": current_user.id,
+        "name": current_user.username,
+        "email": current_user.email,
+        "company": getattr(current_user, "company", ""),
+        "api_key": current_user.api_key,
+        "subscription_tier": current_user.subscription_tier,
+        "created_at": current_user.created_at.isoformat(),
+        "last_login": datetime.utcnow().isoformat(),
+        "api_calls_made": getattr(current_user, "api_calls_made", 0),
+        "api_calls_limit": 10000 if current_user.subscription_tier == "enterprise" else 1000 if current_user.subscription_tier == "pro" else 100,
+        "total_projects": total_projects
+    }
+
+@app.put("/api/users/profile")
+async def update_user_profile(
+    profile_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update current user's profile information"""
+    # Only allow updating certain fields
+    allowed_fields = ["username", "company"]
+    
+    for field in allowed_fields:
+        if field in profile_data:
+            setattr(current_user, field, profile_data[field])
+    
+    db.commit()
+    db.refresh(current_user)
+    
+    return {"message": "Profile updated successfully"}
+
+@app.post("/api/users/change-password")
+async def change_user_password(
+    password_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Change user's password"""
+    # Verify current password
+    if not pwd_context.verify(password_data.get("current_password"), current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+    
+    # Update password
+    current_user.hashed_password = pwd_context.hash(password_data.get("new_password"))
+    current_user.password_changed_at = datetime.utcnow()
+    
+    db.commit()
+    
+    return {"message": "Password changed successfully"}
+
+@app.post("/api/users/regenerate-api-key")
+async def regenerate_api_key(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Regenerate user's API key"""
+    import secrets
+    new_api_key = f"sk_{secrets.token_urlsafe(32)}"
+    
+    current_user.api_key = new_api_key
+    db.commit()
+    db.refresh(current_user)
+    
+    return {"api_key": new_api_key}
+# ==================== END USER PROFILE ENDPOINTS ====================
+
 # WebSocket endpoint for real-time updates
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -458,6 +546,46 @@ async def run_orchestration(task_id: str, source_path: str):
             "frameworks": list(set(test.get('framework') for test in tests))
         })
         
+        # Step 4: AI Analysis
+        await manager.broadcast({
+            "type": "progress",
+            "task_id": task_id,
+            "stage": "ai_analysis",
+            "message": "Running AI-powered analysis..."
+        })
+        
+        ai_agent = orchestrator.agents[AgentType.AI_INTELLIGENCE]
+        ai_analysis = await ai_agent.analyze(apis, specs)
+        
+        await manager.broadcast({
+            "type": "ai_complete",
+            "task_id": task_id,
+            "security_score": ai_analysis.get("security_score", 0),
+            "vulnerabilities": ai_analysis.get("vulnerabilities", []),
+            "optimizations": ai_analysis.get("optimizations", []),
+            "compliance": ai_analysis.get("compliance", {}),
+            "executive_summary": ai_analysis.get("executive_summary", "")
+        })
+        
+        # Step 5: Generate Mock Server
+        await manager.broadcast({
+            "type": "progress",
+            "task_id": task_id,
+            "stage": "mock_server",
+            "message": "Generating mock server..."
+        })
+        
+        mock_agent = orchestrator.agents[AgentType.MOCK_SERVER]
+        mock_config = await mock_agent.generate(specs)
+        
+        await manager.broadcast({
+            "type": "mock_complete",
+            "task_id": task_id,
+            "mock_port": mock_config.get("port", 9000),
+            "mock_endpoints": len(mock_config.get("endpoints", [])),
+            "mock_status": "ready"
+        })
+        
         # Save results
         output_dir = Path("output") / task_id
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -471,13 +599,27 @@ async def run_orchestration(task_id: str, source_path: str):
         test_agent = orchestrator.agents[AgentType.TEST_GENERATOR]
         test_agent.export_tests(str(output_dir / "tests"))
         
+        # Save AI analysis
+        ai_file = output_dir / "ai_analysis.json"
+        with open(ai_file, 'w') as f:
+            json.dump(ai_analysis, f, indent=2)
+        
+        # Save mock server config
+        mock_file = output_dir / "mock_server_config.json"
+        with open(mock_file, 'w') as f:
+            json.dump(mock_config, f, indent=2)
+        
         # Update task status
         active_tasks[task_id]["status"] = "completed"
         active_tasks[task_id]["completed_at"] = datetime.now().isoformat()
         active_tasks[task_id]["results"] = {
             "apis": len(apis),
             "specs": len(specs.get('paths', {})),
-            "tests": len(tests)
+            "tests": len(tests),
+            "security_score": ai_analysis.get("security_score", 0),
+            "vulnerabilities_found": len(ai_analysis.get("vulnerabilities", [])),
+            "mock_server_port": mock_config.get("port", 9000),
+            "ai_summary": ai_analysis.get("executive_summary", "")
         }
         
         # Broadcast completion
@@ -527,6 +669,54 @@ async def get_task_status(task_id: str):
 async def list_tasks():
     """List all orchestration tasks"""
     return {"tasks": active_tasks}
+
+# Get AI analysis results
+@app.get("/api/ai-analysis/{task_id}")
+async def get_ai_analysis(
+    task_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get AI analysis results for a task"""
+    if task_id not in active_tasks:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    try:
+        output_dir = Path("output") / task_id
+        ai_file = output_dir / "ai_analysis.json"
+        
+        if not ai_file.exists():
+            raise HTTPException(status_code=404, detail="AI analysis not found")
+        
+        with open(ai_file, 'r') as f:
+            return json.load(f)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading AI analysis: {str(e)}")
+
+# Get mock server configuration
+@app.get("/api/mock-server/{task_id}")
+async def get_mock_server_config(
+    task_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get mock server configuration for a task"""
+    if task_id not in active_tasks:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    try:
+        output_dir = Path("output") / task_id
+        mock_file = output_dir / "mock_server_config.json"
+        
+        if not mock_file.exists():
+            raise HTTPException(status_code=404, detail="Mock server config not found")
+        
+        with open(mock_file, 'r') as f:
+            return json.load(f)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading mock config: {str(e)}")
 
 # Download generated files
 @app.get("/api/download/{task_id}/{file_type}")
@@ -653,6 +843,64 @@ async def export_artifacts(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported export format: {format}"
         )
+
+# Mock server management endpoints
+@app.post("/api/mock-server/{task_id}/start")
+async def start_mock_server(
+    task_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Start the mock server for a task"""
+    if task_id not in active_tasks:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Get mock server config
+    output_dir = Path("output") / task_id
+    mock_file = output_dir / "mock_server_config.json"
+    
+    if not mock_file.exists():
+        raise HTTPException(status_code=404, detail="Mock server configuration not found")
+    
+    with open(mock_file, 'r') as f:
+        mock_config = json.load(f)
+    
+    # Start the mock server (simplified - in production you'd actually start a server process)
+    mock_config["status"] = "running"
+    mock_config["base_url"] = f"http://localhost:{mock_config.get('port', 9000)}"
+    
+    # Save updated config
+    with open(mock_file, 'w') as f:
+        json.dump(mock_config, f, indent=2)
+    
+    return {"success": True, "config": mock_config}
+
+@app.post("/api/mock-server/{task_id}/stop")
+async def stop_mock_server(
+    task_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Stop the mock server for a task"""
+    if task_id not in active_tasks:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Get mock server config
+    output_dir = Path("output") / task_id
+    mock_file = output_dir / "mock_server_config.json"
+    
+    if not mock_file.exists():
+        raise HTTPException(status_code=404, detail="Mock server configuration not found")
+    
+    with open(mock_file, 'r') as f:
+        mock_config = json.load(f)
+    
+    # Stop the mock server
+    mock_config["status"] = "stopped"
+    
+    # Save updated config
+    with open(mock_file, 'w') as f:
+        json.dump(mock_config, f, indent=2)
+    
+    return {"success": True}
 
 @app.post("/api/import")
 async def import_specification(
@@ -979,6 +1227,9 @@ async def upload_file(
 
 if __name__ == "__main__":
     import uvicorn
+    
+    # Initialize database tables
+    init_db()
     
     print("🚀 Starting API Orchestrator Server...")
     print("📡 WebSocket: ws://localhost:8000/ws")

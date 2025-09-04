@@ -6,6 +6,7 @@ import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import ProjectCreate from './components/ProjectCreate';
 import ProjectDetails from './components/ProjectDetails';
+import UserProfile from './components/UserProfile';
 import PrivateRoute from './components/PrivateRoute';
 
 function App() {
@@ -33,6 +34,12 @@ function App() {
           <Route path="/projects/:id" element={
             <PrivateRoute>
               <ProjectDetails />
+            </PrivateRoute>
+          } />
+          
+          <Route path="/profile" element={
+            <PrivateRoute>
+              <UserProfile />
             </PrivateRoute>
           } />
           

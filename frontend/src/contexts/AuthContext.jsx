@@ -43,6 +43,8 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       setError(null);
+      console.log('Attempting login with email:', email);
+      
       // OAuth2 expects form data
       const formData = new URLSearchParams();
       formData.append('username', email); // OAuth2 uses 'username' field for email
@@ -70,7 +72,15 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.detail || 'Login failed';
+      console.error('Login error:', error.response?.status, error.response?.data);
+      let message = 'Login failed';
+      
+      if (error.response?.status === 401) {
+        message = 'Incorrect email or password';
+      } else if (error.response?.data?.detail) {
+        message = error.response.data.detail;
+      }
+      
       setError(message);
       return { success: false, error: message };
     }
@@ -136,6 +146,11 @@ export const AuthProvider = ({ children }) => {
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
+        
+        // Don't retry on logout endpoint to prevent infinite loop
+        if (originalRequest.url?.includes('/auth/logout')) {
+          return Promise.reject(error);
+        }
         
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
