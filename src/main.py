@@ -3,7 +3,7 @@ API Orchestrator - FastAPI Server
 Main application server with WebSocket support for real-time updates
 """
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Depends, status
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Depends, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
@@ -17,6 +17,9 @@ import yaml
 from datetime import datetime, timedelta
 from pathlib import Path
 import uuid
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Import our orchestrator components
 from src.core.orchestrator import APIOrchestrator, AgentType
@@ -45,6 +48,12 @@ from src.project_manager import (
     ProjectResponse, ProjectListResponse, ProjectStats
 )
 
+# Import password reset functionality
+from src.password_reset import (
+    PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest,
+    request_password_reset, confirm_password_reset, change_password
+)
+
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -53,10 +62,18 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Import configuration
+from src.config import settings
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # Configure CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],  # React dev servers
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -137,7 +154,8 @@ async def health_check():
 # ==================== AUTHENTICATION ENDPOINTS ====================
 
 @app.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")  # Limit to 3 registrations per minute per IP
+async def register(request: Request, user_data: UserCreate, db: Session = Depends(get_db)):
     """Register a new user"""
     new_user = AuthManager.create_user(db, user_data)
     return UserResponse(
@@ -151,7 +169,8 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     )
 
 @app.post("/auth/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@limiter.limit("5/minute")  # Limit to 5 login attempts per minute
+async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """Login with email and password to get JWT tokens"""
     user = AuthManager.authenticate_user(db, form_data.username, form_data.password)  # username field contains email
     if not user:
@@ -227,6 +246,47 @@ async def logout(current_user: User = Depends(get_current_user)):
 
 # ==================== END AUTHENTICATION ENDPOINTS ====================
 
+# ==================== PASSWORD RESET ENDPOINTS ====================
+
+@app.post("/auth/forgot-password")
+@limiter.limit("3/hour")  # Limit to 3 password reset requests per hour per IP
+async def forgot_password(
+    request: Request,
+    reset_request: PasswordResetRequest,
+    db: Session = Depends(get_db)
+):
+    """Request a password reset email"""
+    result = await request_password_reset(db, reset_request.email)
+    return result
+
+@app.post("/auth/reset-password")
+@limiter.limit("5/hour")  # Limit to 5 reset attempts per hour per IP
+async def reset_password(
+    request: Request,
+    reset_data: PasswordResetConfirm,
+    db: Session = Depends(get_db)
+):
+    """Reset password using token from email"""
+    result = await confirm_password_reset(db, reset_data.token, reset_data.new_password)
+    return result
+
+@app.post("/auth/change-password")
+async def change_password_endpoint(
+    change_data: PasswordChangeRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Change password for authenticated user"""
+    result = await change_password(
+        db, 
+        current_user.id, 
+        change_data.current_password, 
+        change_data.new_password
+    )
+    return result
+
+# ==================== END PASSWORD RESET ENDPOINTS ====================
+
 # WebSocket endpoint for real-time updates
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -289,6 +349,13 @@ async def orchestrate(
         source_path = Path(request.source_path)
         if not source_path.exists():
             raise HTTPException(status_code=400, detail=f"Path {request.source_path} does not exist")
+        
+        # Validate path is within allowed directories (prevent path traversal)
+        if not settings.validate_path(source_path):
+            raise HTTPException(
+                status_code=403, 
+                detail="Access denied: Path is outside allowed directories"
+            )
     
     # Initialize orchestrator if not already done
     if not orchestrator.agents:
@@ -864,17 +931,38 @@ async def orchestrate_project(
 
 # Upload file for processing
 @app.post("/api/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
     """Upload a file for processing"""
     
-    # Create upload directory
-    upload_dir = Path("uploads")
-    upload_dir.mkdir(exist_ok=True)
+    # Validate file size
+    content = await file.read()
+    if len(content) > settings.MAX_UPLOAD_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large. Maximum size is {settings.MAX_UPLOAD_SIZE} bytes"
+        )
     
-    # Save uploaded file
-    file_path = upload_dir / file.filename
+    # Validate file extension
+    file_ext = Path(file.filename).suffix.lower()
+    if file_ext not in settings.ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Allowed extensions: {', '.join(settings.ALLOWED_EXTENSIONS)}"
+        )
+    
+    # Sanitize filename
+    safe_filename = settings.sanitize_filename(file.filename)
+    
+    # Create secure upload directory
+    upload_dir = settings.BASE_OUTPUT_DIR / "uploads" / str(current_user.id)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Save uploaded file with sanitized name
+    file_path = upload_dir / safe_filename
     with open(file_path, "wb") as f:
-        content = await file.read()
         f.write(content)
     
     # Start orchestration on uploaded file
