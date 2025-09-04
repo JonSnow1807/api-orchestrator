@@ -3,15 +3,18 @@ API Orchestrator - FastAPI Server
 Main application server with WebSocket support for real-time updates
 """
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import asyncio
 import json
-from datetime import datetime
+import io
+import yaml
+from datetime import datetime, timedelta
 from pathlib import Path
 import uuid
 
@@ -23,7 +26,18 @@ from src.agents.test_agent import TestGeneratorAgent
 
 from src.agents.ai_agent import AIIntelligenceAgent
 from src.agents.mock_server_agent import MockServerAgent
-from src.database import init_db, SessionLocal, DatabaseManager
+from src.database import init_db, SessionLocal, DatabaseManager, get_db, User
+from sqlalchemy.orm import Session
+
+# Import authentication
+from src.auth import (
+    AuthManager, UserCreate, UserLogin, Token, UserResponse,
+    get_current_user, get_current_active_user, check_api_limit,
+    check_subscription_feature
+)
+
+# Import export/import functionality
+from src.export_import import ExportManager, ImportManager
 
 
 # Initialize FastAPI app
@@ -114,6 +128,99 @@ async def root():
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
+# ==================== AUTHENTICATION ENDPOINTS ====================
+
+@app.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register(user_data: UserCreate, db: Session = Depends(get_db)):
+    """Register a new user"""
+    new_user = AuthManager.create_user(db, user_data)
+    return UserResponse(
+        id=new_user.id,
+        email=new_user.email,
+        username=new_user.username,
+        is_active=new_user.is_active,
+        subscription_tier=new_user.subscription_tier,
+        api_calls_remaining=new_user.api_calls_limit - new_user.api_calls_this_month,
+        created_at=new_user.created_at.isoformat()
+    )
+
+@app.post("/auth/login", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    """Login with email and password to get JWT tokens"""
+    user = AuthManager.authenticate_user(db, form_data.username, form_data.password)  # username field contains email
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Create tokens
+    access_token_expires = timedelta(minutes=30)
+    access_token = AuthManager.create_access_token(
+        data={"email": user.email, "user_id": user.id},
+        expires_delta=access_token_expires
+    )
+    refresh_token = AuthManager.create_refresh_token(
+        data={"email": user.email, "user_id": user.id}
+    )
+    
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer"
+    )
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+@app.post("/auth/refresh", response_model=Token)
+async def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
+    """Refresh access token using refresh token"""
+    payload = AuthManager.decode_token(request.refresh_token)
+    if not payload or payload.get("type") != "refresh":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token"
+        )
+    
+    email = payload.get("email")
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
+    
+    # Create new access token
+    access_token_expires = timedelta(minutes=30)
+    new_access_token = AuthManager.create_access_token(
+        data={"email": user.email, "user_id": user.id},
+        expires_delta=access_token_expires
+    )
+    
+    return Token(access_token=new_access_token)
+
+@app.get("/auth/me", response_model=UserResponse)
+async def get_current_user_info(current_user: User = Depends(get_current_user)):
+    """Get current user information"""
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        username=current_user.username,
+        is_active=current_user.is_active,
+        subscription_tier=current_user.subscription_tier,
+        api_calls_remaining=current_user.api_calls_limit - current_user.api_calls_this_month,
+        created_at=current_user.created_at.isoformat()
+    )
+
+@app.post("/auth/logout")
+async def logout(current_user: User = Depends(get_current_user)):
+    """Logout current user (client should discard tokens)"""
+    return {"message": "Successfully logged out"}
+
+# ==================== END AUTHENTICATION ENDPOINTS ====================
+
 # WebSocket endpoint for real-time updates
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -155,9 +262,13 @@ async def websocket_endpoint(websocket: WebSocket):
         print(f"WebSocket error: {e}")
         manager.disconnect(websocket)
 
-# Main orchestration endpoint
+# Main orchestration endpoint (protected)
 @app.post("/api/orchestrate", response_model=OrchestrationResponse)
-async def orchestrate(request: OrchestrationRequest):
+async def orchestrate(
+    request: OrchestrationRequest,
+    current_user: User = Depends(check_api_limit),
+    db: Session = Depends(get_db)
+):
     """Start the orchestration process"""
     
     # Generate task ID
@@ -377,6 +488,200 @@ async def download_file(task_id: str, file_type: str):
         filename=file_path.name,
         media_type='application/octet-stream'
     )
+
+# ==================== EXPORT/IMPORT ENDPOINTS ====================
+
+@app.get("/api/export/{task_id}")
+async def export_artifacts(
+    task_id: str,
+    format: str = "zip",
+    current_user: User = Depends(get_current_user)
+):
+    """Export orchestration artifacts in various formats"""
+    
+    # Check if format is allowed for user's subscription
+    if not check_subscription_feature(current_user, "export_formats", format):
+        allowed_formats = {
+            "free": ["json"],
+            "starter": ["json", "yaml"],
+            "growth": ["json", "yaml", "postman", "openapi"],
+            "enterprise": ["json", "yaml", "postman", "openapi", "markdown", "zip"]
+        }
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Export format '{format}' not available in {current_user.subscription_tier} tier. "
+                   f"Available formats: {allowed_formats[current_user.subscription_tier]}"
+        )
+    
+    if task_id not in active_tasks:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    output_dir = Path("output") / task_id
+    spec_file = output_dir / "openapi.json"
+    
+    if not spec_file.exists():
+        raise HTTPException(status_code=404, detail="OpenAPI spec not found for this task")
+    
+    # Load the OpenAPI spec
+    with open(spec_file, 'r') as f:
+        spec = json.load(f)
+    
+    # Load tests if available
+    tests = []
+    test_dir = output_dir / "tests"
+    if test_dir.exists():
+        for test_file in test_dir.glob("*.py"):
+            with open(test_file, 'r') as f:
+                tests.append({
+                    "name": test_file.stem,
+                    "framework": "pytest",
+                    "code": f.read()
+                })
+    
+    # Export based on format
+    if format == "json":
+        return JSONResponse(content=spec)
+    
+    elif format == "yaml":
+        content = ExportManager.export_openapi_spec(spec, "yaml")
+        return StreamingResponse(
+            io.BytesIO(content.encode()),
+            media_type="application/yaml",
+            headers={"Content-Disposition": f"attachment; filename=openapi_{task_id}.yaml"}
+        )
+    
+    elif format == "postman":
+        content = ExportManager.export_openapi_spec(spec, "postman")
+        return StreamingResponse(
+            io.BytesIO(content.encode()),
+            media_type="application/json",
+            headers={"Content-Disposition": f"attachment; filename=postman_collection_{task_id}.json"}
+        )
+    
+    elif format == "markdown":
+        content = ExportManager.export_openapi_spec(spec, "markdown")
+        return StreamingResponse(
+            io.BytesIO(content.encode()),
+            media_type="text/markdown",
+            headers={"Content-Disposition": f"attachment; filename=api_docs_{task_id}.md"}
+        )
+    
+    elif format == "zip":
+        # Create comprehensive ZIP bundle
+        zip_content = ExportManager._create_zip_bundle(spec, tests)
+        return StreamingResponse(
+            io.BytesIO(zip_content),
+            media_type="application/zip",
+            headers={"Content-Disposition": f"attachment; filename=api_bundle_{task_id}.zip"}
+        )
+    
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported export format: {format}"
+        )
+
+@app.post("/api/import")
+async def import_specification(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Import an existing OpenAPI specification or Postman collection"""
+    
+    # Read file content
+    content = await file.read()
+    
+    # Determine content type
+    content_type = file.content_type
+    if not content_type:
+        # Try to guess from filename
+        if file.filename.endswith(".json"):
+            content_type = "application/json"
+        elif file.filename.endswith((".yaml", ".yml")):
+            content_type = "application/yaml"
+        elif file.filename.endswith(".zip"):
+            content_type = "application/zip"
+    
+    # Check if it's a Postman collection
+    is_postman = False
+    if content_type == "application/json":
+        try:
+            data = json.loads(content)
+            if "info" in data and "schema" in data.get("info", {}) and "postman" in data["info"]["schema"]:
+                is_postman = True
+        except:
+            pass
+    
+    # Import the specification
+    if is_postman:
+        spec = ImportManager.import_postman_collection(content)
+    else:
+        spec = ImportManager.import_openapi_spec(content, content_type)
+    
+    # Validate the specification
+    ImportManager.validate_openapi_spec(spec)
+    
+    # Create a new task for the imported spec
+    task_id = str(uuid.uuid4())
+    active_tasks[task_id] = {
+        "status": "completed",
+        "created_at": datetime.now().isoformat(),
+        "completed_at": datetime.now().isoformat(),
+        "source": "import",
+        "filename": file.filename
+    }
+    
+    # Save the imported spec
+    output_dir = Path("output") / task_id
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    spec_file = output_dir / "openapi.json"
+    with open(spec_file, 'w') as f:
+        json.dump(spec, f, indent=2)
+    
+    # Create database entry
+    task = DatabaseManager.create_task(db, task_id)
+    DatabaseManager.update_task(
+        db, task_id,
+        status="completed",
+        stage="import",
+        progress=100,
+        specs_generated=1
+    )
+    
+    return {
+        "task_id": task_id,
+        "status": "success",
+        "message": f"Successfully imported {file.filename}",
+        "endpoints": len(spec.get("paths", {})),
+        "schemas": len(spec.get("components", {}).get("schemas", {}))
+    }
+
+@app.get("/api/export/formats")
+async def get_export_formats(current_user: User = Depends(get_current_user)):
+    """Get available export formats for current user's subscription tier"""
+    
+    tier_formats = {
+        "free": ["json"],
+        "starter": ["json", "yaml"],
+        "growth": ["json", "yaml", "postman", "markdown"],
+        "enterprise": ["json", "yaml", "postman", "markdown", "zip"]
+    }
+    
+    return {
+        "subscription_tier": current_user.subscription_tier,
+        "available_formats": tier_formats.get(current_user.subscription_tier, ["json"]),
+        "all_formats": {
+            "json": "OpenAPI JSON specification",
+            "yaml": "OpenAPI YAML specification",
+            "postman": "Postman collection",
+            "markdown": "Markdown documentation",
+            "zip": "Complete bundle with all formats"
+        }
+    }
+
+# ==================== END EXPORT/IMPORT ENDPOINTS ====================
 
 # Upload file for processing
 @app.post("/api/upload")
