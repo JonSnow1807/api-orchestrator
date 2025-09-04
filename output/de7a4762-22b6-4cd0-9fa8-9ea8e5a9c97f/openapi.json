@@ -1,0 +1,73 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Test API",
+    "description": "Test API for export/import",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local server"
+    }
+  ],
+  "paths": {
+    "/users": {
+      "get": {
+        "summary": "Get all users",
+        "description": "Retrieve a list of all users",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created"
+          }
+        }
+      }
+    }
+  }
+}
