@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
+import time
+import traceback
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import asyncio
@@ -56,11 +58,82 @@ from src.password_reset import (
 )
 
 
-# Initialize FastAPI app
+# Initialize FastAPI app with enhanced documentation
 app = FastAPI(
     title="API Orchestrator",
-    description="Multi-agent AI orchestrator for API development & testing",
-    version="1.0.0"
+    description="""
+## 🚀 AI-Powered API Orchestration Platform
+
+A multi-agent system that automatically discovers, documents, tests, and analyzes APIs using AI.
+
+### Key Features:
+- 🔍 **Auto-Discovery**: Scans codebases to find API endpoints
+- 📝 **Spec Generation**: Creates OpenAPI 3.0 documentation
+- 🧪 **Test Creation**: Generates comprehensive test suites
+- 🤖 **AI Analysis**: Security scoring and optimization recommendations
+- 🎭 **Mock Servers**: Instant API mocking from specifications
+- 🔄 **Real-time Updates**: WebSocket support for live progress tracking
+
+### Authentication:
+All endpoints except `/docs`, `/redoc`, and `/health` require JWT authentication.
+Use `/auth/login` to obtain access tokens.
+
+### Rate Limiting:
+- Standard API endpoints: 10 requests/second
+- Authentication endpoints: 5 requests/minute
+- Based on subscription tier (Free/Pro/Enterprise)
+    """,
+    version="2.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_tags=[
+        {
+            "name": "Authentication",
+            "description": "User registration, login, and token management"
+        },
+        {
+            "name": "Orchestration",
+            "description": "API discovery and orchestration pipeline"
+        },
+        {
+            "name": "Projects",
+            "description": "Project management and organization"
+        },
+        {
+            "name": "AI Analysis",
+            "description": "AI-powered security and optimization analysis"
+        },
+        {
+            "name": "Mock Servers",
+            "description": "Mock server generation and management"
+        },
+        {
+            "name": "Export/Import",
+            "description": "Data export and import functionality"
+        },
+        {
+            "name": "User Management",
+            "description": "User profile and settings"
+        },
+        {
+            "name": "Health",
+            "description": "System health and status"
+        }
+    ],
+    servers=[
+        {"url": "http://localhost:8000", "description": "Development server"},
+        {"url": "https://api-orchestrator.com", "description": "Production server"},
+        {"url": "https://staging.api-orchestrator.com", "description": "Staging server"}
+    ],
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT"
+    },
+    contact={
+        "name": "API Orchestrator Support",
+        "email": "support@api-orchestrator.com",
+        "url": "https://github.com/api-orchestrator/api-orchestrator"
+    }
 )
 
 # Initialize database on startup
@@ -71,6 +144,9 @@ async def startup_event():
 
 # Import configuration
 from src.config import settings
+
+# Import structured logging
+from src.utils.logger import logger, log_request
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -85,6 +161,50 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log all incoming requests and responses"""
+    # Generate request ID
+    request_id = str(uuid.uuid4())
+    request.state.request_id = request_id
+    
+    # Log request
+    start_time = time.time()
+    request_info = log_request(request)
+    request_info["request_id"] = request_id
+    
+    logger.info(f"Request started: {request.method} {request.url.path}", extra=request_info)
+    
+    try:
+        # Process request
+        response = await call_next(request)
+        
+        # Calculate duration
+        duration_ms = (time.time() - start_time) * 1000
+        
+        # Log response
+        logger.performance.log_api_call(
+            endpoint=str(request.url.path),
+            method=request.method,
+            duration_ms=duration_ms,
+            status_code=response.status_code
+        )
+        
+        # Add request ID to response headers
+        response.headers["X-Request-ID"] = request_id
+        
+        return response
+        
+    except Exception as e:
+        duration_ms = (time.time() - start_time) * 1000
+        logger.error(
+            f"Request failed: {request.method} {request.url.path}",
+            exc_info=True,
+            extra={**request_info, "duration_ms": duration_ms}
+        )
+        raise
 
 # Global orchestrator instance
 orchestrator = APIOrchestrator()
@@ -154,13 +274,13 @@ async def root():
     }
 
 # Health check
-@app.get("/health")
+@app.get("/health", tags=["Health"], summary="Check system health", description="Returns the health status of the API and its dependencies")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 # ==================== AUTHENTICATION ENDPOINTS ====================
 
-@app.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@app.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED, tags=["Authentication"], summary="Register new user", description="Create a new user account with email and password")
 @limiter.limit("3/minute")  # Limit to 3 registrations per minute per IP
 async def register(request: Request, user_data: UserCreate, db: Session = Depends(get_db)):
     """Register a new user"""
