@@ -15,8 +15,31 @@ import json
 # Database URL from environment or default to SQLite
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./api_orchestrator.db")
 
-# Create engine
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {})
+# Configure engine based on database type
+if "postgresql" in DATABASE_URL:
+    # PostgreSQL configuration
+    engine = create_engine(
+        DATABASE_URL,
+        pool_size=20,
+        max_overflow=40,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+        echo=os.getenv("DB_ECHO", "False").lower() == "true"
+    )
+elif "sqlite" in DATABASE_URL:
+    # SQLite configuration
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        echo=os.getenv("DB_ECHO", "False").lower() == "true"
+    )
+else:
+    # Default configuration for other databases
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        echo=os.getenv("DB_ECHO", "False").lower() == "true"
+    )
 
 # Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
