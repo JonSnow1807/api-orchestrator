@@ -15,8 +15,16 @@ import {
   TrendingUp,
   Plus,
   Search,
-  MoreVertical
+  MoreVertical,
+  BarChart3,
+  History,
+  Upload,
+  FileArchive
 } from 'lucide-react';
+import StatsDashboard from './StatsDashboard';
+import TaskManager from './TaskManager';
+import FileUpload from './FileUpload';
+import ExportImport from './ExportImport';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -25,6 +33,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('projects');
 
   useEffect(() => {
     fetchProjects();
@@ -142,8 +151,70 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Projects Section */}
-        <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700">
+        {/* Tab Navigation */}
+        <div className="mb-8">
+          <nav className="flex space-x-1 bg-gray-800/50 backdrop-blur rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab('projects')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'projects' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <FolderOpen className="w-5 h-5" />
+              <span>Projects</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('statistics')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'statistics' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <BarChart3 className="w-5 h-5" />
+              <span>Statistics</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('tasks')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'tasks' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <History className="w-5 h-5" />
+              <span>Tasks</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('upload')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'upload' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Upload className="w-5 h-5" />
+              <span>Upload</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('export')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'export' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <FileArchive className="w-5 h-5" />
+              <span>Export/Import</span>
+            </button>
+          </nav>
+        </div>
+
+        {/* Content based on active tab */}
+        {activeTab === 'projects' && (
+          <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700">
           <div className="p-6 border-b border-gray-700">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-bold text-white">Your Projects</h2>
@@ -238,8 +309,37 @@ const Dashboard = () => {
             )}
           </div>
         </div>
+        )}
 
-        {/* API Limits */}
+        {/* Statistics Tab */}
+        {activeTab === 'statistics' && (
+          <StatsDashboard />
+        )}
+
+        {/* Tasks Tab */}
+        {activeTab === 'tasks' && (
+          <TaskManager />
+        )}
+
+        {/* Upload Tab */}
+        {activeTab === 'upload' && (
+          <FileUpload 
+            onUploadSuccess={(data) => {
+              console.log('Upload success:', data);
+              // Optionally refresh projects or show success message
+              fetchProjects();
+            }}
+          />
+        )}
+
+        {/* Export/Import Tab */}
+        {activeTab === 'export' && (
+          <ExportImport 
+            taskId={projects[0]?.last_task_id} // Use the most recent task ID
+          />
+        )}
+
+        {/* API Limits - Show on all tabs */}
         <div className="mt-8 bg-gray-800/50 backdrop-blur rounded-xl p-6 border border-gray-700">
           <div className="flex justify-between items-center">
             <div>
