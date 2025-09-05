@@ -4,6 +4,7 @@ Test the complete orchestration pipeline including the new Test Generator Agent
 Run this after adding test_agent.py to your project
 """
 
+import pytest
 import asyncio
 import json
 from pathlib import Path
@@ -17,6 +18,8 @@ from src.agents.discovery_agent import DiscoveryAgent
 from src.agents.spec_agent import SpecGeneratorAgent
 from src.agents.test_agent import TestGeneratorAgent
 
+@pytest.mark.integration
+@pytest.mark.asyncio
 async def test_full_pipeline():
     """Test the complete orchestration with all three agents"""
     
