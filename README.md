@@ -2,9 +2,14 @@
 
 An intelligent multi-agent system that automatically discovers, documents, tests, and manages APIs. Transform your codebase into production-ready APIs with comprehensive documentation and test suites in minutes.
 
+![CI/CD Pipeline](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/ci-cd.yml/badge.svg)
+![Auto Deploy](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/auto-deploy.yml/badge.svg)
+![Docker](https://img.shields.io/badge/docker-ready-blue)
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Node](https://img.shields.io/badge/node-20%2B-green)
+![Tests](https://img.shields.io/badge/tests-97%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-48%25-yellow)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## 🚀 Features
@@ -98,7 +103,44 @@ npm install
 npm run dev
 ```
 
-## 🚀 Usage
+## 🚀 Deployment
+
+### One-Click Deployment
+
+```bash
+# Run the automated deployment wizard
+chmod +x deploy/one-click-deploy.sh
+./deploy/one-click-deploy.sh
+```
+
+Supports deployment to:
+- **Railway** (Easiest - No server needed, $5 free credits)
+- **Render** (Free tier available)
+- **DigitalOcean** ($6/month)
+- **AWS EC2** (Free tier eligible)
+- **Docker** (Local deployment)
+
+### Production Deployment
+
+```bash
+# Using Docker Compose
+docker-compose -f deploy/docker-compose.prod.yml up -d
+
+# Or deploy to your VPS
+DOMAIN=yourdomain.com ./deploy/deploy.sh
+```
+
+### CI/CD Pipeline
+
+The repository includes automated CI/CD:
+- Automatic testing on every push
+- Docker image building and pushing to GitHub Container Registry
+- Automated deployment to production on main branch merge
+- Multi-environment support (production, staging, development)
+
+See [deployment documentation](deploy/README.md) for detailed instructions.
+
+## 💻 Development Usage
 
 ### Start the Application
 
