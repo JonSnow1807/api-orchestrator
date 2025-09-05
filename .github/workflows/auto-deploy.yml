@@ -74,12 +74,24 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event.inputs.environment == 'production'
+    continue-on-error: true  # Don't fail the workflow if deployment fails
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Check VPS secrets
+        id: check-secrets
+        run: |
+          if [[ -z "${{ secrets.VPS_HOST }}" || -z "${{ secrets.VPS_USER }}" || -z "${{ secrets.VPS_SSH_KEY }}" ]]; then
+            echo "::warning::VPS deployment skipped - secrets not configured. Run ./deploy/setup-github-secrets.sh to configure."
+            echo "configured=false" >> $GITHUB_OUTPUT
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Deploy to VPS
+        if: steps.check-secrets.outputs.configured == 'true'
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -96,15 +108,28 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging'
+    continue-on-error: true
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Check Railway token
+        id: check-railway
+        run: |
+          if [[ -z "${{ secrets.RAILWAY_TOKEN }}" ]]; then
+            echo "::warning::Railway deployment skipped - RAILWAY_TOKEN not configured"
+            echo "configured=false" >> $GITHUB_OUTPUT
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Install Railway CLI
+        if: steps.check-railway.outputs.configured == 'true'
         run: npm install -g @railway/cli
       
       - name: Deploy to Railway
+        if: steps.check-railway.outputs.configured == 'true'
         run: |
           railway login --token ${{ secrets.RAILWAY_TOKEN }}
           railway up
@@ -115,9 +140,21 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'development'
+    continue-on-error: true
     
     steps:
+      - name: Check Render webhook
+        id: check-render
+        run: |
+          if [[ -z "${{ secrets.RENDER_DEPLOY_HOOK }}" ]]; then
+            echo "::warning::Render deployment skipped - RENDER_DEPLOY_HOOK not configured"
+            echo "configured=false" >> $GITHUB_OUTPUT
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Deploy to Render
+        if: steps.check-render.outputs.configured == 'true'
         run: |
           curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
 
