@@ -5,17 +5,17 @@ FROM python:3.11-slim as backend-builder
 
 WORKDIR /app
 
-# Install system dependencies
+# Copy requirements first for better caching
+COPY backend/requirements.txt .
+
+# Install system dependencies and Python packages in one layer
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     git \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements and install Python dependencies
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Node Frontend Builder
 FROM node:20-alpine as frontend-builder
