@@ -30,3 +30,44 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# Generated files
+generated_*.json
+generated_*.yaml
+output/
+mock_servers/
+ai_analysis_results/
+sample_generated_tests/
+generated_tests/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+api_orchestrator.db
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.next/
+frontend/coverage/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Test artifacts
+test_*.html
+pytest_cache/
+.pytest_cache/
+
+# Docker volumes
+data/
+postgres_data/
+redis_data/
+
+# Temporary files
+*.tmp
+tmp/
+temp/

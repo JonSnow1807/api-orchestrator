@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
@@ -49,9 +49,8 @@ COPY --from=backend-builder /usr/local/lib/python3.11/site-packages /usr/local/l
 COPY --from=backend-builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY --chown=orchestrator:orchestrator src/ ./src/
-COPY --chown=orchestrator:orchestrator *.py ./
-COPY --chown=orchestrator:orchestrator requirements.txt ./
+COPY --chown=orchestrator:orchestrator backend/src/ ./src/
+COPY --chown=orchestrator:orchestrator backend/requirements.txt ./
 
 # Copy built frontend from builder
 COPY --from=frontend-builder --chown=orchestrator:orchestrator /frontend/dist ./frontend/dist
