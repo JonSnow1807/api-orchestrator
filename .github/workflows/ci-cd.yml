@@ -68,6 +68,15 @@ jobs:
       run: mypy backend/src/ --ignore-missing-imports
       continue-on-error: true
     
+    - name: Start test server
+      env:
+        DATABASE_URL: postgresql://postgres:testpass@localhost/test_db
+        SECRET_KEY: test-secret-key
+        ENVIRONMENT: test
+      run: |
+        cd backend && python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 &
+        sleep 5  # Wait for server to start
+    
     - name: Run tests with coverage
       env:
         DATABASE_URL: postgresql://postgres:testpass@localhost/test_db
@@ -75,7 +84,16 @@ jobs:
         ENVIRONMENT: test
         PYTHONPATH: backend
       run: |
-        cd backend && pytest tests/ --cov=src --cov-report=xml --cov-report=html
+        cd backend && pytest tests/ --cov=src --cov-report=xml --cov-report=html -m "not integration"
+    
+    - name: Run integration tests
+      env:
+        DATABASE_URL: postgresql://postgres:testpass@localhost/test_db
+        SECRET_KEY: test-secret-key
+        ENVIRONMENT: test
+        PYTHONPATH: backend
+      run: |
+        cd backend && pytest tests/integration/ --cov=src --cov-append --cov-report=xml --cov-report=html || true
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3

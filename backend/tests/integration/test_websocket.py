@@ -4,11 +4,14 @@ WebSocket Test Client for API Orchestrator
 Tests real-time communication with the server
 """
 
+import pytest
 import asyncio
 import websockets
 import json
 from datetime import datetime
 
+@pytest.mark.integration
+@pytest.mark.asyncio
 async def test_websocket():
     """Test WebSocket connection and messaging"""
     

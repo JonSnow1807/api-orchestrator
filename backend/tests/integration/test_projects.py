@@ -3,12 +3,14 @@
 Test project management CRUD endpoints
 """
 
+import pytest
 import requests
 import json
 import time
 
 BASE_URL = "http://localhost:8000"
 
+@pytest.mark.integration
 def test_project_crud():
     """Test project CRUD operations"""
     
