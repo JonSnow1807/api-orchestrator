@@ -1,0 +1,264 @@
+{
+  "name": "api-orchestrator",
+  "displayName": "API Orchestrator",
+  "description": "AI-powered API development right in VS Code. Transform your code into production-ready APIs instantly.",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other",
+    "Snippets",
+    "Linters"
+  ],
+  "keywords": [
+    "api",
+    "openapi",
+    "swagger",
+    "rest",
+    "fastapi",
+    "flask",
+    "express",
+    "django",
+    "ai",
+    "automation"
+  ],
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#7C3AED",
+    "theme": "dark"
+  },
+  "publisher": "api-orchestrator",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JonSnow1807/api-orchestrator"
+  },
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "api-orchestrator.scan",
+        "title": "API Orchestrator: Scan Current Project",
+        "icon": "$(search)"
+      },
+      {
+        "command": "api-orchestrator.scanFile",
+        "title": "API Orchestrator: Scan Current File",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "api-orchestrator.generateSpec",
+        "title": "API Orchestrator: Generate OpenAPI Spec",
+        "icon": "$(file-text)"
+      },
+      {
+        "command": "api-orchestrator.startMockServer",
+        "title": "API Orchestrator: Start Mock Server",
+        "icon": "$(server)"
+      },
+      {
+        "command": "api-orchestrator.generateTests",
+        "title": "API Orchestrator: Generate Tests",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "api-orchestrator.aiAnalyze",
+        "title": "API Orchestrator: AI Security & Performance Analysis",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "api-orchestrator.showDashboard",
+        "title": "API Orchestrator: Show Dashboard",
+        "icon": "$(dashboard)"
+      },
+      {
+        "command": "api-orchestrator.login",
+        "title": "API Orchestrator: Login",
+        "icon": "$(sign-in)"
+      },
+      {
+        "command": "api-orchestrator.logout",
+        "title": "API Orchestrator: Logout",
+        "icon": "$(sign-out)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "api-orchestrator",
+          "title": "API Orchestrator",
+          "icon": "media/logo.svg"
+        }
+      ]
+    },
+    "views": {
+      "api-orchestrator": [
+        {
+          "id": "apiEndpoints",
+          "name": "Discovered APIs",
+          "icon": "$(globe)",
+          "contextualTitle": "API Endpoints"
+        },
+        {
+          "id": "mockServers",
+          "name": "Mock Servers",
+          "icon": "$(server-process)",
+          "contextualTitle": "Mock Servers"
+        },
+        {
+          "id": "apiTasks",
+          "name": "Tasks",
+          "icon": "$(checklist)",
+          "contextualTitle": "Orchestration Tasks"
+        },
+        {
+          "id": "apiStats",
+          "name": "Statistics",
+          "icon": "$(graph)",
+          "contextualTitle": "API Statistics"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "apiEndpoints",
+        "contents": "No APIs discovered yet.\n[Scan Project](command:api-orchestrator.scan)\n[Scan Current File](command:api-orchestrator.scanFile)"
+      },
+      {
+        "view": "mockServers",
+        "contents": "No mock servers running.\n[Start Mock Server](command:api-orchestrator.startMockServer)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "api-orchestrator.scanFile",
+          "group": "api-orchestrator",
+          "when": "resourceExtname == .py || resourceExtname == .js || resourceExtname == .ts"
+        },
+        {
+          "command": "api-orchestrator.generateSpec",
+          "group": "api-orchestrator",
+          "when": "resourceExtname == .py || resourceExtname == .js || resourceExtname == .ts"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "api-orchestrator.scan",
+          "group": "api-orchestrator",
+          "when": "explorerResourceIsFolder"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "api-orchestrator.scan",
+          "when": "view == apiEndpoints",
+          "group": "navigation"
+        },
+        {
+          "command": "api-orchestrator.startMockServer",
+          "when": "view == mockServers",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "API Orchestrator",
+      "properties": {
+        "api-orchestrator.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "API Orchestrator server URL"
+        },
+        "api-orchestrator.autoScan": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically scan files on save"
+        },
+        "api-orchestrator.includeMockServer": {
+          "type": "boolean",
+          "default": true,
+          "description": "Generate mock servers automatically"
+        },
+        "api-orchestrator.includeTests": {
+          "type": "boolean",
+          "default": true,
+          "description": "Generate test suites automatically"
+        },
+        "api-orchestrator.includeAiAnalysis": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include AI-powered analysis"
+        },
+        "api-orchestrator.outputDirectory": {
+          "type": "string",
+          "default": "./api-output",
+          "description": "Output directory for generated artifacts"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "api-orchestrator.scan",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a"
+      },
+      {
+        "command": "api-orchestrator.showDashboard",
+        "key": "ctrl+shift+d",
+        "mac": "cmd+shift+d"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "python",
+        "path": "./snippets/python.json"
+      },
+      {
+        "language": "javascript",
+        "path": "./snippets/javascript.json"
+      },
+      {
+        "language": "typescript",
+        "path": "./snippets/typescript.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.0.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "@vscode/test-electron": "^2.2.0",
+    "eslint": "^8.28.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.1.0",
+    "typescript": "^4.9.3",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "socket.io-client": "^4.5.4"
+  },
+  "activationEvents": [
+    "workspaceContains:**/*.py",
+    "workspaceContains:**/*.js",
+    "workspaceContains:**/*.ts",
+    "workspaceContains:**/*.java",
+    "workspaceContains:**/*.go",
+    "workspaceContains:**/*.rb"
+  ]
+}
