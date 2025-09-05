@@ -1,0 +1,41 @@
+name: api-orchestrator
+region: nyc
+services:
+  - name: backend
+    github:
+      repo: YOUR_GITHUB_USERNAME/api-orchestrator
+      branch: main
+      deploy_on_push: true
+    build_command: cd backend && pip install -r requirements.txt
+    run_command: cd backend && python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+    http_port: 8000
+    instance_count: 2
+    instance_size_slug: professional-xs
+    health_check:
+      http_path: /health
+    envs:
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: STRIPE_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: JWT_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+    
+static_sites:
+  - name: frontend
+    github:
+      repo: YOUR_GITHUB_USERNAME/api-orchestrator
+      branch: main
+      deploy_on_push: true
+    build_command: cd frontend && npm install && npm run build
+    output_dir: frontend/dist
+    
+databases:
+  - name: api-db
+    engine: PG
+    version: "15"
+    size: professional-xs
+    num_nodes: 1

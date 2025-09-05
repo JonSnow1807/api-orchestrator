@@ -7,6 +7,7 @@ import Dashboard from './components/Dashboard';
 import ProjectCreate from './components/ProjectCreate';
 import ProjectDetails from './components/ProjectDetails';
 import UserProfile from './components/UserProfile';
+import Billing from './components/Billing';
 import PrivateRoute from './components/PrivateRoute';
 
 function App() {
@@ -40,6 +41,12 @@ function App() {
           <Route path="/profile" element={
             <PrivateRoute>
               <UserProfile />
+            </PrivateRoute>
+          } />
+          
+          <Route path="/billing" element={
+            <PrivateRoute>
+              <Billing />
             </PrivateRoute>
           } />
           

@@ -26,6 +26,7 @@ An intelligent multi-agent system that automatically discovers, documents, tests
 - **Business Value Analytics** - Calculates time saved, cost reduction, and ROI metrics
 
 ### New Features (v1.0.0)
+- **💳 Usage-Based Billing** - Stripe integration with 4 subscription tiers
 - **CLI Tool** - Command-line interface for CI/CD integration
 - **VS Code Extension** - Direct IDE integration with real-time API discovery
 - **Enhanced Dashboard** - Statistics, task management, file upload, export/import

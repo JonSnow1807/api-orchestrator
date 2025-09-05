@@ -207,16 +207,51 @@ async def check_api_limit(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) -> User:
-    """Check if user has API calls remaining"""
-    if current_user.api_calls_this_month >= current_user.api_calls_limit:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"API limit exceeded. Upgrade to a higher tier for more API calls."
-        )
+    """Check if user has API calls remaining and track usage for billing"""
+    from src.billing import BillingManager, PRICING_TIERS
     
-    # Increment API call count
-    current_user.api_calls_this_month += 1
-    db.commit()
+    # Get tier configuration
+    tier_config = PRICING_TIERS.get(current_user.subscription_tier, PRICING_TIERS["free"])
+    api_limit = tier_config["api_calls"]
+    
+    # Check if unlimited (-1 means unlimited)
+    if api_limit == -1:
+        # Track usage for enterprise users
+        billing = BillingManager(db)
+        billing.track_usage(
+            user_id=current_user.id,
+            event_type="api_call",
+            quantity=1,
+            metadata={"tier": "enterprise"}
+        )
+        return current_user
+    
+    # Check if within limits
+    if current_user.api_calls_this_month >= api_limit:
+        # Allow overage for paid tiers (usage-based billing)
+        if current_user.subscription_tier != "free":
+            billing = BillingManager(db)
+            billing.track_usage(
+                user_id=current_user.id,
+                event_type="api_call",
+                quantity=1,
+                metadata={"overage": True}
+            )
+            return current_user
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"API limit exceeded. Upgrade to a paid tier for more API calls."
+            )
+    
+    # Track normal usage
+    billing = BillingManager(db)
+    billing.track_usage(
+        user_id=current_user.id,
+        event_type="api_call",
+        quantity=1,
+        metadata={"within_limit": True}
+    )
     
     return current_user
 

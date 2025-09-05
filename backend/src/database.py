@@ -290,13 +290,39 @@ class User(Base):
     password_changed_at = Column(DateTime)
     
     # Subscription
-    subscription_tier = Column(String(50), default="free")  # free, starter, growth, enterprise
+    subscription_tier = Column(String(50), default="free")  # free, starter, professional, enterprise
     subscription_expires = Column(DateTime)
     api_calls_this_month = Column(Integer, default=0)
-    api_calls_limit = Column(Integer, default=100)  # Based on tier
+    api_calls_limit = Column(Integer, default=1000)  # Based on tier
+    
+    # Billing
+    stripe_customer_id = Column(String(255), unique=True)
+    stripe_subscription_id = Column(String(255))
+    stripe_payment_method_id = Column(String(255))
+    subscription_id = Column(String(255))
+    subscription_item_id = Column(String(255))
+    subscription_status = Column(String(50), default="active")  # active, past_due, canceled, trialing
+    subscription_end_date = Column(DateTime)
+    trial_end_date = Column(DateTime)
+    
+    # Usage metrics
+    ai_analyses_this_month = Column(Integer, default=0)
+    mock_server_hours_this_month = Column(Float, default=0.0)
+    exports_this_month = Column(Integer, default=0)
+    
+    # Profile
+    full_name = Column(String(255))
+    company_name = Column(String(255))
+    phone_number = Column(String(50))
+    country = Column(String(100))
+    
+    # API Keys
+    api_key = Column(String(255), unique=True)
+    api_key_created_at = Column(DateTime)
     
     # Relationships
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
+    usage_events = relationship("UsageEvent", back_populates="user", cascade="all, delete-orphan")
     
     def to_dict(self):
         return {
@@ -306,6 +332,35 @@ class User(Base):
             "is_active": self.is_active,
             "subscription_tier": self.subscription_tier,
             "api_calls_remaining": self.api_calls_limit - self.api_calls_this_month,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+class UsageEvent(Base):
+    """Track usage events for billing"""
+    __tablename__ = "usage_events"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    event_type = Column(String(50), nullable=False)  # api_call, ai_analysis, mock_server_hour, export
+    quantity = Column(Integer, default=1)
+    unit_price = Column(Float)
+    total_price = Column(Float)
+    metadata = Column(JSON)
+    created_at = Column(DateTime, default=func.now())
+    billing_period = Column(String(20))  # YYYY-MM format
+    
+    # Relationships
+    user = relationship("User", back_populates="usage_events")
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "event_type": self.event_type,
+            "quantity": self.quantity,
+            "unit_price": self.unit_price,
+            "total_price": self.total_price,
+            "metadata": self.metadata,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
 
