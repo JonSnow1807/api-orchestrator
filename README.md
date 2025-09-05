@@ -1,4 +1,6 @@
-# API Orchestrator AI
+# API Orchestrator 🚀
+
+> Transform any codebase into production-ready APIs with AI-powered automation
 
 An intelligent multi-agent system that automatically discovers, documents, tests, and manages APIs. Transform your codebase into production-ready APIs with comprehensive documentation and test suites in minutes.
 
@@ -23,39 +25,59 @@ An intelligent multi-agent system that automatically discovers, documents, tests
 - **Real-Time Processing** - WebSocket-based live updates during orchestration
 - **Business Value Analytics** - Calculates time saved, cost reduction, and ROI metrics
 
+### New Features (v1.0.0)
+- **CLI Tool** - Command-line interface for CI/CD integration
+- **VS Code Extension** - Direct IDE integration with real-time API discovery
+- **Enhanced Dashboard** - Statistics, task management, file upload, export/import
+- **Password Reset** - Secure password recovery system
+- **User Profiles** - Account management with API keys and usage tracking
+- **Team Collaboration** - Project sharing and team workspaces (coming soon)
+
 ### Technical Architecture
 - **Multi-Agent System** - Five specialized agents working in coordination
 - **Modern Tech Stack** - FastAPI backend, React frontend, SQLAlchemy ORM
 - **Secure Authentication** - JWT-based auth with subscription tier support
 - **Export/Import Support** - JSON, YAML, Markdown, and ZIP formats
 - **Database Persistence** - SQLite/PostgreSQL compatible data layer
+- **WebSocket Integration** - Real-time updates and progress tracking
 
 ## 📁 Project Structure
 
 ```
 api-orchestrator/
-├── src/
-│   ├── agents/              # Multi-agent orchestration system
-│   │   ├── discovery_agent.py
-│   │   ├── spec_agent.py
-│   │   ├── test_agent.py
-│   │   ├── ai_agent.py
-│   │   └── mock_server_agent.py
-│   ├── core/
-│   │   ├── orchestrator.py  # Agent coordination
-│   │   └── config.py
-│   ├── main.py              # FastAPI server
-│   ├── database.py          # SQLAlchemy models
-│   ├── auth.py              # JWT authentication
-│   └── export_import.py     # Export/Import functionality
+├── backend/
+│   └── src/
+│       ├── agents/              # Multi-agent orchestration system
+│       │   ├── discovery_agent.py
+│       │   ├── spec_agent.py
+│       │   ├── test_agent.py
+│       │   ├── ai_agent.py
+│       │   └── mock_server_agent.py
+│       ├── core/
+│       │   ├── orchestrator.py  # Agent coordination
+│       │   └── config.py
+│       ├── main.py              # FastAPI server
+│       ├── database.py          # SQLAlchemy models
+│       ├── auth.py              # JWT authentication
+│       └── export_import.py     # Export/Import functionality
 ├── frontend/
 │   └── src/
-│       ├── components/       # React components
-│       ├── pages/           # Application pages
-│       ├── services/        # API services
-│       └── styles/          # CSS styling
-├── mock_servers/            # Generated mock servers
-└── output/                  # Generated artifacts
+│       ├── components/          # React components
+│       ├── pages/              # Application pages
+│       ├── contexts/           # React contexts
+│       └── services/           # API services
+├── cli/                        # Command-line interface
+│   ├── api-orchestrator.py
+│   └── setup.py
+├── vscode-extension/           # VS Code extension
+│   ├── src/
+│   └── package.json
+├── deploy/                     # Deployment scripts
+│   ├── one-click-deploy.sh
+│   ├── aws-production-deploy.sh
+│   └── docker-compose.prod.yml
+├── mock_servers/               # Generated mock servers
+└── output/                     # Generated artifacts
 ```
 
 ## 🛠️ Installation
@@ -114,11 +136,22 @@ chmod +x deploy/one-click-deploy.sh
 ```
 
 Supports deployment to:
-- **Railway** (Easiest - No server needed, $5 free credits)
-- **Render** (Free tier available)
+- **Railway** (FREE tier available - Recommended for starters)
+- **Render** (FREE tier with auto-sleep)
 - **DigitalOcean** ($6/month)
-- **AWS EC2** (Free tier eligible)
+- **AWS ECS Fargate** (Production-grade, ~$150/month)
+- **Heroku** ($7/month)
 - **Docker** (Local deployment)
+
+### Low-Budget Options
+
+For FREE hosting:
+```bash
+# Deploy to Railway (best free option)
+cd deploy
+./launch-production.sh
+# Choose option 1
+```
 
 ### Production Deployment
 
@@ -276,6 +309,34 @@ For issues, questions, or suggestions:
 - Open an issue on GitHub
 - Email: cshrivastava2000@gmail.com
 
+## 🛠️ Available Tools
+
+### CLI Tool
+```bash
+cd cli
+pip install -e .
+api-orchestrator scan ./my-project
+api-orchestrator mock ./openapi.json --port 3000
+```
+
+### VS Code Extension
+- Scan projects with `Cmd/Ctrl+Shift+A`
+- View discovered APIs in sidebar
+- Generate specs and tests directly from IDE
+- Real-time WebSocket updates
+
+### Web Dashboard
+- Project management
+- Real-time orchestration
+- Statistics and analytics
+- Team collaboration (coming soon)
+
+## 👨‍💻 Author
+
+**Chinmay Shrivastava**
+- GitHub: [@JonSnow1807](https://github.com/JonSnow1807)
+- Email: cshrivastava2000@gmail.com
+
 ---
 
-**Built with ❤️ for developers who value their time**
+**Built with ❤️ by Chinmay Shrivastava for developers who value their time**
