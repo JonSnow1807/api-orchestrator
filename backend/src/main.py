@@ -38,7 +38,7 @@ from sqlalchemy.orm import Session
 from src.auth import (
     AuthManager, UserCreate, UserLogin, Token, UserResponse,
     get_current_user, get_current_active_user, check_api_limit,
-    check_subscription_feature
+    check_subscription_feature, pwd_context
 )
 
 # Import export/import functionality

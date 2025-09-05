@@ -65,7 +65,7 @@ async def create_post(title: str, content: str, user_id: str):
 async def test_orchestration():
     # Create test file
     test_file = Path("test_api.py")
-    test_file.write_text(test_content)
+    test_file.write_text(test_content)  # noqa: F823
     
     try:
         # Initialize orchestrator
