@@ -17,8 +17,9 @@ python-dotenv==1.0.0
 aiofiles==23.2.1
 jinja2==3.1.2
 gitpython==3.1.40
-ast-grep-py==0.12.0
-faker
-sqlalchemy
-alembic
-psycopg2-binary
+ast-grep-py==0.13.0
+faker==20.1.0
+alembic==1.13.0
+psycopg2-binary==2.9.9
+slowapi==0.1.9
+bcrypt==4.1.2
