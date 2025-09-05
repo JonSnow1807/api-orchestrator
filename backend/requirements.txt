@@ -24,3 +24,4 @@ psycopg2-binary==2.9.9
 slowapi==0.1.9
 bcrypt==4.1.2
 pytest-asyncio==0.21.1
+email-validator==2.1.0
