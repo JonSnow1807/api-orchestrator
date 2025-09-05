@@ -121,21 +121,24 @@ jobs:
         run: |
           curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
 
-  notify:
-    needs: [deploy-vps, deploy-railway, deploy-render]
-    runs-on: ubuntu-latest
-    if: always()
-    
-    steps:
-      - name: Send deployment notification
-        uses: 8398a7/action-slack@v3
-        if: always()
-        with:
-          status: ${{ job.status }}
-          text: |
-            Deployment Status: ${{ job.status }}
-            Environment: ${{ github.event.inputs.environment || 'production' }}
-            Commit: ${{ github.sha }}
-            Author: ${{ github.actor }}
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-        continue-on-error: true
+  # Slack notifications can be enabled by setting SLACK_WEBHOOK_URL secret
+  # and uncommenting the notify job below
+  
+  # notify:
+  #   needs: [deploy-vps, deploy-railway, deploy-render]
+  #   runs-on: ubuntu-latest
+  #   if: always()
+  #   
+  #   steps:
+  #     - name: Send deployment notification
+  #       uses: 8398a7/action-slack@v3
+  #       if: always() && secrets.SLACK_WEBHOOK_URL != ''
+  #       with:
+  #         status: ${{ job.status }}
+  #         text: |
+  #           Deployment Status: ${{ job.status }}
+  #           Environment: ${{ github.event.inputs.environment || 'production' }}
+  #           Commit: ${{ github.sha }}
+  #           Author: ${{ github.actor }}
+  #       env:
+  #         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
