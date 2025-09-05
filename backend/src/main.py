@@ -22,6 +22,7 @@ import uuid
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+import stripe
 
 # Import our orchestrator components
 from src.core.orchestrator import APIOrchestrator, AgentType
@@ -1297,6 +1298,135 @@ async def orchestrate_project(
     )
 
 # ==================== END PROJECT MANAGEMENT ENDPOINTS ====================
+
+# ==================== BILLING ENDPOINTS ====================
+
+from src.billing import (
+    BillingManager, 
+    SubscriptionRequest, 
+    SubscriptionResponse,
+    UsageEventRequest,
+    UsageResponse,
+    BillingInfoResponse,
+    PaymentMethodRequest
+)
+from fastapi import Request, Header
+
+@app.post("/api/billing/subscription", response_model=SubscriptionResponse)
+async def create_or_update_subscription(
+    subscription: SubscriptionRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create or update user subscription"""
+    billing = BillingManager(db)
+    result = billing.create_subscription(
+        user_id=current_user.id,
+        tier=subscription.tier,
+        payment_method_id=subscription.payment_method_id
+    )
+    
+    return SubscriptionResponse(**result)
+
+@app.delete("/api/billing/subscription")
+async def cancel_subscription(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Cancel user subscription"""
+    billing = BillingManager(db)
+    return billing.cancel_subscription(current_user.id)
+
+@app.get("/api/billing/info", response_model=BillingInfoResponse)
+async def get_billing_info(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get billing information and usage for current user"""
+    billing = BillingManager(db)
+    return billing.get_billing_info(current_user.id)
+
+@app.post("/api/billing/usage", response_model=UsageResponse)
+async def track_usage(
+    usage: UsageEventRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Track usage event for billing"""
+    billing = BillingManager(db)
+    result = billing.track_usage(
+        user_id=current_user.id,
+        event_type=usage.event_type,
+        quantity=usage.quantity,
+        metadata=usage.metadata
+    )
+    
+    return UsageResponse(**result)
+
+@app.post("/api/billing/payment-method")
+async def add_payment_method(
+    payment_method: PaymentMethodRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Add a payment method to user account"""
+    billing = BillingManager(db)
+    
+    if not current_user.stripe_customer_id:
+        billing.create_customer(current_user.id, current_user.email, current_user.full_name)
+    
+    stripe.PaymentMethod.attach(
+        payment_method.payment_method_id,
+        customer=current_user.stripe_customer_id
+    )
+    
+    return {"message": "Payment method added successfully"}
+
+@app.post("/api/billing/webhook")
+async def stripe_webhook(
+    request: Request,
+    stripe_signature: str = Header(None),
+    db: Session = Depends(get_db)
+):
+    """Handle Stripe webhook events"""
+    payload = await request.body()
+    billing = BillingManager(db)
+    
+    return billing.process_webhook(payload, stripe_signature)
+
+@app.get("/api/billing/pricing")
+async def get_pricing_tiers():
+    """Get available pricing tiers"""
+    from billing import PRICING_TIERS
+    
+    return {
+        "tiers": PRICING_TIERS,
+        "usage_pricing": {
+            "api_call": 0.001,
+            "ai_analysis": 0.10,
+            "mock_server_hour": 0.05,
+            "export_operation": 0.01
+        }
+    }
+
+@app.post("/api/billing/upgrade-to-enterprise")
+async def request_enterprise_upgrade(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Request enterprise tier upgrade (manual approval required)"""
+    # Send notification to sales team
+    logger.info(f"Enterprise upgrade requested by user {current_user.email}")
+    
+    # TODO: Integrate with CRM/sales system
+    # TODO: Send email to sales team
+    
+    return {
+        "message": "Enterprise upgrade request submitted. Our sales team will contact you within 24 hours.",
+        "email": "enterprise@api-orchestrator.com"
+    }
+
+# ==================== END BILLING ENDPOINTS ====================
 
 # Upload file for processing
 @app.post("/api/upload")

@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: api-orchestrator
+    runtime: python
+    buildCommand: "cd backend && pip install -r requirements.txt"
+    startCommand: "cd backend && python -m uvicorn src.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:///./api_orchestrator.db
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+    healthCheckPath: /health
+    autoDeploy: true
