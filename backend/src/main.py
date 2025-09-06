@@ -1478,19 +1478,23 @@ async def upload_file(
 
 if __name__ == "__main__":
     import uvicorn
+    import os
     
     # Initialize database tables
     init_db()
     
+    # Get port from environment variable (Railway provides this)
+    port = int(os.environ.get("PORT", 8000))
+    
     print("🚀 Starting API Orchestrator Server...")
-    print("📡 WebSocket: ws://localhost:8000/ws")
-    print("🌐 API: http://localhost:8000")
-    print("📚 Docs: http://localhost:8000/docs")
+    print(f"📡 WebSocket: ws://0.0.0.0:{port}/ws")
+    print(f"🌐 API: http://0.0.0.0:{port}")
+    print(f"📚 Docs: http://0.0.0.0:{port}/docs")
     
     # Fixed: Use string import for reload to work
     uvicorn.run(
         "src.main:app",
         host="0.0.0.0",
-        port=8000,
-        reload=True
+        port=port,
+        reload=False  # Disable reload in production
     )
