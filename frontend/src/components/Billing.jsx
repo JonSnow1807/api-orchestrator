@@ -117,8 +117,12 @@ const Billing = () => {
       
       console.log('Subscription response:', response.data);
       
-      if (response.data.client_secret) {
-        // Real Stripe payment flow
+      if (response.data.checkout_url) {
+        // Redirect to Stripe Checkout
+        console.log('Redirecting to Stripe Checkout...');
+        window.location.href = response.data.checkout_url;
+      } else if (response.data.client_secret) {
+        // Real Stripe payment flow (for existing customers)
         if (!stripePromise) {
           setError('Payment system is not configured.');
           return;
@@ -236,12 +240,14 @@ const Billing = () => {
           <p className="text-xl text-gray-600">
             Scale your API operations with flexible pricing
           </p>
-          {/* Demo Mode Banner */}
-          <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg">
-            <AlertCircle className="w-5 h-5" />
-            <span className="font-semibold">Demo Mode Active</span>
-            <span className="text-sm">- No actual payments will be processed</span>
-          </div>
+          {/* Demo Mode Banner - Only show if using test key */}
+          {STRIPE_KEY && STRIPE_KEY.startsWith('pk_test_') && (
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg">
+              <AlertCircle className="w-5 h-5" />
+              <span className="font-semibold">Test Mode Active</span>
+              <span className="text-sm">- Using Stripe test environment</span>
+            </div>
+          )}
         </div>
 
         {/* Alerts */}
