@@ -29,6 +29,6 @@ RUN chmod +x /app/entrypoint.sh
 # Expose port (Railway will override with PORT env var)
 EXPOSE 8000
 
-# Use shell script to bypass any Railway command caching
-ENTRYPOINT ["/bin/sh"]
-CMD ["/app/entrypoint.sh"]
+# Force Python execution, ignore any Railway overrides
+ENTRYPOINT ["/usr/local/bin/python", "-u", "/app/start.py"]
+CMD []
