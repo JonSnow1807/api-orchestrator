@@ -7,8 +7,6 @@
   "deploy": {
     "startCommand": "python -u start.py",
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10,
-    "healthcheckPath": "/health",
-    "healthcheckTimeout": 300
+    "restartPolicyMaxRetries": 10
   }
 }
