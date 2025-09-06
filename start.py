@@ -17,15 +17,30 @@ logger = logging.getLogger(__name__)
 # Add backend to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
-# Ensure data directory exists for SQLite (handle both local and Railway)
+# Database setup
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+if DATABASE_URL and "postgres" in DATABASE_URL:
+    logger.info("🐘 PostgreSQL detected - using PostgreSQL database")
+else:
+    logger.info("📁 No PostgreSQL found - using SQLite database")
+    # Ensure data directory exists for SQLite
+    try:
+        if os.path.exists('/app'):
+            os.makedirs('/app/data', exist_ok=True)
+            logger.info("Created/verified /app/data directory for Railway")
+        else:
+            logger.info("Running in local mode")
+    except Exception as e:
+        logger.warning(f"Could not create data directory: {e}")
+
+# Initialize database
 try:
-    if os.path.exists('/app'):
-        os.makedirs('/app/data', exist_ok=True)
-        logger.info("Created/verified /app/data directory for Railway")
-    else:
-        logger.info("Running in local mode")
+    from src.database import init_db
+    init_db()
+    logger.info("✅ Database initialized successfully!")
 except Exception as e:
-    logger.warning(f"Could not create data directory: {e}")
+    logger.error(f"❌ Database initialization failed: {e}")
+    # Continue anyway - the app might still work
 
 if __name__ == "__main__":
     # Railway provides PORT environment variable
