@@ -348,7 +348,9 @@ const Dashboard = () => {
                 {user?.api_calls_remaining || 0} calls remaining this month
               </p>
             </div>
-            <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition">
+            <button 
+              onClick={() => navigate('/billing')}
+              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition">
               Upgrade Plan
             </button>
           </div>

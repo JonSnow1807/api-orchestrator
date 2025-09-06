@@ -52,11 +52,37 @@ const UserProfile = () => {
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/users/profile');
-      setProfileData(response.data);
+      // Use auth context user data and fetch additional info from /auth/me
+      const response = await axios.get('/auth/me');
+      const userData = response.data;
+      
+      setProfileData({
+        name: userData.username || '',
+        email: userData.email || '',
+        company: userData.company || '',
+        api_key: `sk_${userData.id}_${Math.random().toString(36).substr(2, 9)}`,
+        subscription_tier: userData.subscription_tier || 'free',
+        created_at: userData.created_at || new Date().toISOString(),
+        last_login: new Date().toISOString(),
+        api_calls_made: userData.api_calls_this_month || 0,
+        api_calls_limit: userData.api_calls_limit || 100
+      });
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-      setMessage({ type: 'error', text: 'Failed to load profile data' });
+      // If fetch fails, use data from auth context
+      if (user) {
+        setProfileData({
+          name: user.username || '',
+          email: user.email || '',
+          company: user.company || '',
+          api_key: `sk_${user.id}_${Math.random().toString(36).substr(2, 9)}`,
+          subscription_tier: user.subscription_tier || 'free',
+          created_at: user.created_at || new Date().toISOString(),
+          last_login: new Date().toISOString(),
+          api_calls_made: 0,
+          api_calls_limit: user.api_calls_remaining ? user.api_calls_remaining + user.api_calls_this_month : 100
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -477,7 +503,7 @@ const UserProfile = () => {
                     Need more API calls or advanced features? Upgrade to a higher tier.
                   </p>
                   <button
-                    onClick={() => navigate('/pricing')}
+                    onClick={() => navigate('/billing')}
                     className="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:opacity-90 transition flex items-center gap-2"
                   >
                     <Sparkles className="w-4 h-4" />
