@@ -592,7 +592,11 @@ class BillingManager:
             )
             
             # Handle different event types
-            if event.type == "invoice.payment_succeeded":
+            if event.type == "checkout.session.completed":
+                # Checkout completed successfully
+                self._handle_checkout_completed(event.data.object)
+                
+            elif event.type == "invoice.payment_succeeded":
                 # Payment successful, update user status
                 self._handle_payment_success(event.data.object)
                 
@@ -622,6 +626,56 @@ class BillingManager:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Webhook processing failed: {str(e)}"
             )
+    
+    def _handle_checkout_completed(self, session):
+        """Handle completed checkout session"""
+        from src.database import User
+        
+        logger.info(f"Processing checkout.session.completed for session {session.id}")
+        
+        # Get the customer and subscription info
+        customer_id = session.customer
+        subscription_id = session.subscription
+        metadata = session.metadata or {}
+        
+        # Find user by customer ID or metadata
+        user = None
+        if customer_id:
+            user = self.db.query(User).filter(
+                User.stripe_customer_id == customer_id
+            ).first()
+        
+        if not user and metadata.get('user_id'):
+            user = self.db.query(User).filter(
+                User.id == int(metadata['user_id'])
+            ).first()
+        
+        if user:
+            # Get the subscription details
+            if subscription_id:
+                subscription = stripe.Subscription.retrieve(subscription_id)
+                
+                # Determine tier from price ID
+                price_id = subscription.items.data[0].price.id if subscription.items.data else None
+                tier = metadata.get('tier', 'starter')  # Default to starter if not specified
+                
+                # Update user subscription
+                user.subscription_id = subscription_id
+                user.subscription_tier = tier
+                user.subscription_status = subscription.status
+                user.stripe_customer_id = customer_id
+                
+                if subscription.current_period_end:
+                    user.subscription_end_date = datetime.fromtimestamp(
+                        subscription.current_period_end
+                    )
+                
+                self.db.commit()
+                logger.info(f"Updated user {user.id} subscription to {tier} tier")
+            else:
+                logger.warning(f"No subscription ID in checkout session {session.id}")
+        else:
+            logger.error(f"User not found for checkout session {session.id}")
     
     def _handle_payment_success(self, invoice):
         """Handle successful payment"""

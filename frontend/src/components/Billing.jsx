@@ -73,26 +73,7 @@ const Billing = () => {
       return;
     }
     
-    // Determine if this is an upgrade or downgrade
-    const currentTier = billingInfo?.subscription?.tier || 'free';
-    const tierOrder = ['free', 'starter', 'professional', 'enterprise'];
-    const isDowngrade = tierOrder.indexOf(tier) < tierOrder.indexOf(currentTier);
-    
-    // Show confirmation dialog
-    const confirmMessage = `
-      ${isDowngrade ? 'Downgrade' : 'Upgrade'} to ${tierConfig.name} Plan?
-      
-      Price: $${tierConfig.price}/month
-      API Calls: ${tierConfig.api_calls === -1 ? 'Unlimited' : tierConfig.api_calls.toLocaleString()}
-      Projects: ${tierConfig.projects === -1 ? 'Unlimited' : tierConfig.projects}
-      
-      Continue with ${isDowngrade ? 'downgrade' : 'upgrade'}?
-    `;
-    
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
-    
+    // Skip confirmation and go straight to checkout
     setProcessing(true);
     setError('');
     
