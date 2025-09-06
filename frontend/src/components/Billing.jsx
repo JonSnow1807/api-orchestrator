@@ -65,6 +65,37 @@ const Billing = () => {
 
   const handleSubscribe = async (tier) => {
     console.log('Subscribing to tier:', tier);
+    
+    // Get tier details for confirmation
+    const tierConfig = pricingTiers?.[tier];
+    if (!tierConfig) {
+      setError('Invalid subscription tier');
+      return;
+    }
+    
+    // Determine if this is an upgrade or downgrade
+    const currentTier = billingInfo?.subscription?.tier || 'free';
+    const tierOrder = ['free', 'starter', 'professional', 'enterprise'];
+    const isDowngrade = tierOrder.indexOf(tier) < tierOrder.indexOf(currentTier);
+    
+    // Show confirmation dialog
+    const confirmMessage = `
+      ${isDowngrade ? 'Downgrade' : 'Upgrade'} to ${tierConfig.name} Plan?
+      
+      Price: $${tierConfig.price}/month
+      API Calls: ${tierConfig.api_calls === -1 ? 'Unlimited' : tierConfig.api_calls.toLocaleString()}
+      Projects: ${tierConfig.projects === -1 ? 'Unlimited' : tierConfig.projects}
+      
+      Note: This is currently in DEMO MODE for testing.
+      No actual payment will be processed.
+      
+      Continue with ${isDowngrade ? 'downgrade' : 'upgrade'}?
+    `;
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+    
     setProcessing(true);
     setError('');
     
@@ -73,11 +104,6 @@ const Billing = () => {
       if (!token) {
         setError('Please login to subscribe');
         navigate('/login');
-        return;
-      }
-      
-      if (!stripePromise) {
-        setError('Payment system is not configured. Please contact support.');
         return;
       }
       
@@ -92,7 +118,11 @@ const Billing = () => {
       console.log('Subscription response:', response.data);
       
       if (response.data.client_secret) {
-        // Real Stripe payment
+        // Real Stripe payment flow
+        if (!stripePromise) {
+          setError('Payment system is not configured.');
+          return;
+        }
         const stripe = await stripePromise;
         const result = await stripe.confirmCardPayment(response.data.client_secret);
         
@@ -103,8 +133,14 @@ const Billing = () => {
           fetchBillingInfo();
         }
       } else {
-        setSuccess('Subscription updated successfully!');
+        // Demo mode - no payment needed
+        setSuccess(`✅ Demo subscription to ${tierConfig.name} tier activated! (No payment required in test mode)`);
         fetchBillingInfo();
+        
+        // Refresh pricing tiers to update UI
+        setTimeout(() => {
+          fetchPricingTiers();
+        }, 1000);
       }
     } catch (error) {
       console.error('Subscription error:', error);
@@ -200,6 +236,12 @@ const Billing = () => {
           <p className="text-xl text-gray-600">
             Scale your API operations with flexible pricing
           </p>
+          {/* Demo Mode Banner */}
+          <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg">
+            <AlertCircle className="w-5 h-5" />
+            <span className="font-semibold">Demo Mode Active</span>
+            <span className="text-sm">- No actual payments will be processed</span>
+          </div>
         </div>
 
         {/* Alerts */}
@@ -269,6 +311,9 @@ const Billing = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {pricingTiers && Object.entries(pricingTiers).map(([tierName, tierConfig]) => {
             const isCurrentTier = billingInfo?.subscription.tier === tierName;
+            const currentTierIndex = ['free', 'starter', 'professional', 'enterprise'].indexOf(billingInfo?.subscription.tier || 'free');
+            const targetTierIndex = ['free', 'starter', 'professional', 'enterprise'].indexOf(tierName);
+            const isDowngrade = targetTierIndex < currentTierIndex;
             const features = getTierFeatures(tierName);
             
             return (
@@ -324,6 +369,8 @@ const Billing = () => {
                       <Loader2 className="w-5 h-5 animate-spin mx-auto" />
                     ) : tierName === 'enterprise' ? (
                       'Contact Sales'
+                    ) : isDowngrade ? (
+                      'Downgrade'
                     ) : (
                       'Upgrade'
                     )}
