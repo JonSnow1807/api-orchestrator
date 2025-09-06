@@ -270,9 +270,9 @@ class StatusResponse(BaseModel):
 # Active orchestration tasks
 active_tasks = {}
 
-# Root endpoint
-@app.get("/")
-async def root():
+# Root endpoint - only for API calls
+@app.get("/api")
+async def api_root():
     return {
         "name": "API Orchestrator",
         "version": "1.0.0",
@@ -1474,9 +1474,14 @@ async def upload_file(
     
     return await orchestrate(request)
 
-# Serve static files (for frontend later)
-# Uncomment when frontend is ready
-# app.mount("/static", StaticFiles(directory="frontend/build"), name="static")
+# Serve frontend static files
+import os
+frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "dist")
+if os.path.exists(frontend_path):
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+else:
+    # Fallback for development
+    logger.warning(f"Frontend not found at {frontend_path}")
 
 if __name__ == "__main__":
     import uvicorn
