@@ -45,6 +45,17 @@ from src.auth import (
 # Import export/import functionality
 from src.export_import import ExportManager, ImportManager
 
+# Import billing (moved here to avoid circular imports)
+from src.billing import (
+    BillingManager, 
+    SubscriptionRequest, 
+    SubscriptionResponse,
+    UsageEventRequest,
+    UsageResponse,
+    BillingInfoResponse,
+    PaymentMethodRequest
+)
+
 # Import project management
 from src.project_manager import (
     ProjectManager, ProjectCreate, ProjectUpdate, 
@@ -1301,15 +1312,6 @@ async def orchestrate_project(
 
 # ==================== BILLING ENDPOINTS ====================
 
-from src.billing import (
-    BillingManager, 
-    SubscriptionRequest, 
-    SubscriptionResponse,
-    UsageEventRequest,
-    UsageResponse,
-    BillingInfoResponse,
-    PaymentMethodRequest
-)
 from fastapi import Request, Header
 
 @app.post("/api/billing/subscription", response_model=SubscriptionResponse)
