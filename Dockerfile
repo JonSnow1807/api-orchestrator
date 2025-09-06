@@ -47,20 +47,20 @@ COPY --from=frontend-builder /app/frontend/dist frontend/dist
 # Copy other necessary files
 COPY requirements.txt .
 
-# Create startup script before changing user
-RUN echo '#!/bin/sh\ncd /app/backend && exec python -m uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}' > /app/start.sh && \
-    chmod +x /app/start.sh
-
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
+# Set working directory
+WORKDIR /app/backend
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
+    CMD curl -f http://localhost:8000/health || exit 1
 
-# Expose port
-EXPOSE ${PORT:-8000}
+# Expose port (Railway will override this)
+EXPOSE 8000
 
-# Start the application
-CMD ["/app/start.sh"]
+# Start the application using shell form to allow variable expansion
+ENTRYPOINT ["/bin/sh", "-c"]
+CMD ["python -m uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
