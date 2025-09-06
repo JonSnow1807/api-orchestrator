@@ -20,11 +20,12 @@ logger = logging.getLogger(__name__)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
 
-if not STRIPE_SECRET_KEY:
-    raise ValueError("STRIPE_SECRET_KEY is required. Please set it in your .env file")
-
-stripe.api_key = STRIPE_SECRET_KEY
-logger.info(f"Stripe initialized with {'test' if 'test' in STRIPE_SECRET_KEY else 'live'} API keys")
+# Only initialize Stripe if key is provided
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
+    logger.info(f"Stripe initialized with {'test' if 'test' in STRIPE_SECRET_KEY else 'live'} API keys")
+else:
+    logger.warning("STRIPE_SECRET_KEY not configured - billing features will be disabled")
 
 # Pricing Configuration
 PRICING_TIERS = {
@@ -97,6 +98,10 @@ class BillingManager:
         
     def create_customer(self, user_id: int, email: str, name: str = None) -> str:
         """Create a Stripe customer for a user"""
+        if not STRIPE_SECRET_KEY:
+            logger.warning("Stripe not configured - skipping customer creation")
+            return f"mock_customer_{user_id}"
+            
         try:
             customer = stripe.Customer.create(
                 email=email,
@@ -143,6 +148,14 @@ class BillingManager:
         # Free tier doesn't need Stripe
         if tier == "free":
             return self._set_free_tier(user_id)
+        
+        # Check if Stripe is configured
+        if not STRIPE_SECRET_KEY:
+            logger.warning("Stripe not configured - cannot create paid subscription")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Billing system not configured. Please contact support."
+            )
         
         from database import User
         user = self.db.query(User).filter(User.id == user_id).first()
