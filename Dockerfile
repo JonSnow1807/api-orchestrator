@@ -26,5 +26,6 @@ COPY . .
 # Expose port (Railway will override with PORT env var)
 EXPOSE 8000
 
-# Start command - Railway will provide PORT env var
-CMD ["python", "-u", "start.py"]
+# Override any Railway cached commands
+ENTRYPOINT ["python", "-u"]
+CMD ["start.py"]
