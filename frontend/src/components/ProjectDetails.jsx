@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { getApiUrl, getWebSocketURL } from '../config';
 import axios from 'axios';
 import AIAnalysisDisplay from './AIAnalysisDisplay';
 import MockServerManager from './MockServerManager';
@@ -63,7 +64,7 @@ const ProjectDetails = () => {
 
   const fetchProject = async () => {
     try {
-      const response = await axios.get(`/api/projects/${id}`);
+      const response = await axios.get(getApiUrl(`/api/projects/${id}`));
       setProject(response.data);
       
       // Check if there's an active task
@@ -83,7 +84,7 @@ const ProjectDetails = () => {
 
   const connectWebSocket = () => {
     try {
-      const ws = new WebSocket('ws://localhost:8000/ws');
+      const ws = new WebSocket(getWebSocketURL());
       
       ws.onopen = () => {
         setWsConnected(true);
@@ -222,7 +223,7 @@ const ProjectDetails = () => {
         mock: { status: 'pending', count: 0 }
       });
       
-      const response = await axios.post(`/api/projects/${id}/orchestrate`);
+      const response = await axios.post(getApiUrl(`/api/projects/${id}/orchestrate`));
       setCurrentTask(response.data);
       addMessage(`Orchestration started: Task ${response.data.task_id}`, 'info');
     } catch (error) {
@@ -233,7 +234,7 @@ const ProjectDetails = () => {
 
   const downloadArtifact = async (format) => {
     try {
-      const response = await axios.get(`/api/export/${currentTask?.task_id || project.tasks[0]?.task_id}?format=${format}`, {
+      const response = await axios.get(getApiUrl(`/api/export/${currentTask?.task_id || project.tasks[0]?.task_id}?format=${format}`), {
         responseType: format === 'zip' ? 'blob' : 'json'
       });
       

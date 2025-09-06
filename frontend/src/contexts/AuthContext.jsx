@@ -3,7 +3,9 @@ import axios from 'axios';
 
 const AuthContext = createContext({});
 
-const API_BASE_URL = 'http://localhost:8000';
+// Use relative URL in production (same origin), or environment variable, or fallback to localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD ? '' : 'http://localhost:8000');
 
 // Configure axios defaults
 axios.defaults.baseURL = API_BASE_URL;

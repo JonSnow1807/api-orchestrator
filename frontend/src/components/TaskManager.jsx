@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { getApiUrl } from '../config';
 import axios from 'axios';
 import {
   Clock,
@@ -29,7 +30,7 @@ const TaskManager = () => {
 
   const fetchTasks = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/tasks', {
+      const response = await axios.get(getApiUrl('/api/tasks'), {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTasks(response.data.tasks || []);
@@ -42,7 +43,7 @@ const TaskManager = () => {
 
   const fetchTaskDetails = async (taskId) => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/tasks/${taskId}`, {
+      const response = await axios.get(getApiUrl(`/api/tasks/${taskId}`), {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSelectedTask(response.data);
@@ -54,7 +55,7 @@ const TaskManager = () => {
   const downloadArtifact = async (taskId, fileType) => {
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/download/${taskId}/${fileType}`,
+        getApiUrl(`/api/download/${taskId}/${fileType}`),
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob'
