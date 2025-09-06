@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "cd backend && pip install -r requirements.txt && cd ../frontend && npm install && npm run build"
+buildCommand = "python -m pip install --upgrade pip && cd backend && python -m pip install -r requirements.txt && cd ../frontend && npm install && npm run build"
 
 [deploy]
 startCommand = "cd backend && python -m uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}"
