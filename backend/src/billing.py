@@ -195,8 +195,12 @@ class BillingManager:
             return {
                 "checkout_url": session.url,
                 "session_id": session.id,
+                "subscription_id": None,  # Will be set after checkout completes
                 "tier": tier,
-                "status": "pending"
+                "status": "pending",
+                "current_period_end": None,
+                "client_secret": None,
+                "message": f"Redirecting to Stripe checkout..."
             }
             
         except stripe.error.StripeError as e:
