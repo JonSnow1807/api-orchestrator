@@ -1475,13 +1475,42 @@ async def upload_file(
     return await orchestrate(request)
 
 # Serve frontend static files
+# The path needs to work both locally and in Docker
 import os
-frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "dist")
-if os.path.exists(frontend_path):
-    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
-else:
-    # Fallback for development
-    logger.warning(f"Frontend not found at {frontend_path}")
+frontend_paths = [
+    "/app/frontend/dist",  # Docker path
+    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "dist"),  # Local path
+    "./frontend/dist",  # Relative path
+]
+
+frontend_found = False
+for frontend_path in frontend_paths:
+    if os.path.exists(frontend_path):
+        logger.info(f"Serving frontend from: {frontend_path}")
+        # Mount frontend at root, but only for non-API routes
+        from fastapi.responses import HTMLResponse
+        
+        # Serve index.html for root
+        @app.get("/", response_class=HTMLResponse)
+        async def serve_frontend():
+            index_path = os.path.join(frontend_path, "index.html")
+            if os.path.exists(index_path):
+                with open(index_path, "r") as f:
+                    return f.read()
+            return "<h1>Frontend not found</h1>"
+        
+        # Mount static files for assets if they exist
+        assets_path = os.path.join(frontend_path, "assets")
+        if os.path.exists(assets_path):
+            app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
+        
+        # Also mount the entire dist directory for other static files
+        app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+        frontend_found = True
+        break
+
+if not frontend_found:
+    logger.warning("Frontend not found in any expected location")
 
 if __name__ == "__main__":
     import uvicorn
