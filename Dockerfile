@@ -26,8 +26,5 @@ COPY . .
 # Expose port (Railway will override with PORT env var)
 EXPOSE 8000
 
-# Use tini to handle signals properly
-ENTRYPOINT ["/usr/bin/tini", "--"]
-
-# Start command
+# Start command - Railway will provide PORT env var
 CMD ["python", "-u", "start.py"]
