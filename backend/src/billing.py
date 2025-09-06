@@ -290,7 +290,7 @@ class BillingManager:
                 quantity=quantity,
                 unit_price=float(USAGE_PRICING[event_type]),
                 total_price=float(USAGE_PRICING[event_type] * quantity),
-                metadata=metadata or {},
+                event_metadata=metadata or {},
                 created_at=datetime.utcnow()
             )
             self.db.add(usage_event)
