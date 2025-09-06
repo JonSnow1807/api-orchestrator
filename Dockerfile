@@ -23,9 +23,12 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application code
 COPY . .
 
+# Make entrypoint script executable
+RUN chmod +x /app/entrypoint.sh
+
 # Expose port (Railway will override with PORT env var)
 EXPOSE 8000
 
-# Override any Railway cached commands
-ENTRYPOINT ["python", "-u"]
-CMD ["start.py"]
+# Use shell script to bypass any Railway command caching
+ENTRYPOINT ["/bin/sh"]
+CMD ["/app/entrypoint.sh"]
