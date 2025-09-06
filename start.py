@@ -28,15 +28,24 @@ except Exception as e:
     logger.warning(f"Could not create data directory: {e}")
 
 if __name__ == "__main__":
+    # Railway provides PORT environment variable
     port = int(os.environ.get("PORT", 8000))
-    logger.info(f"Starting server on port {port}")
+    host = "0.0.0.0"
     
-    # Configure uvicorn with proper settings for Railway
-    uvicorn.run(
-        "src.main:app",
-        host="0.0.0.0",
-        port=port,
-        reload=False,
-        access_log=True,
-        log_level="info"
-    )
+    logger.info(f"Starting server on {host}:{port}")
+    logger.info(f"Environment PORT: {os.environ.get('PORT', 'not set')}")
+    
+    try:
+        # Configure uvicorn with proper settings for Railway
+        uvicorn.run(
+            "src.main:app",
+            host=host,
+            port=port,
+            reload=False,
+            access_log=True,
+            log_level="info",
+            workers=1
+        )
+    except Exception as e:
+        logger.error(f"Failed to start server: {e}")
+        raise
