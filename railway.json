@@ -10,16 +10,15 @@
         },
         "install": {
           "cmds": [
-            "python -m ensurepip",
             "python -m pip install --upgrade pip",
-            "cd backend && python -m pip install -r requirements.txt"
+            "python -m pip install -r requirements.txt"
           ]
         }
       }
     }
   },
   "deploy": {
-    "startCommand": "cd backend && python -m uvicorn src.main:app --host 0.0.0.0 --port $PORT",
+    "startCommand": "python start.py",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

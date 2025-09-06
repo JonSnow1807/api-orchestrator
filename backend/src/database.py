@@ -345,7 +345,7 @@ class UsageEvent(Base):
     quantity = Column(Integer, default=1)
     unit_price = Column(Float)
     total_price = Column(Float)
-    metadata = Column(JSON)
+    event_metadata = Column(JSON)
     created_at = Column(DateTime, default=func.now())
     billing_period = Column(String(20))  # YYYY-MM format
     
@@ -360,7 +360,7 @@ class UsageEvent(Base):
             "quantity": self.quantity,
             "unit_price": self.unit_price,
             "total_price": self.total_price,
-            "metadata": self.metadata,
+            "metadata": self.event_metadata,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
 
