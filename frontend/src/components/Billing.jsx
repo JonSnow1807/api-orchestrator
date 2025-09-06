@@ -86,9 +86,6 @@ const Billing = () => {
       API Calls: ${tierConfig.api_calls === -1 ? 'Unlimited' : tierConfig.api_calls.toLocaleString()}
       Projects: ${tierConfig.projects === -1 ? 'Unlimited' : tierConfig.projects}
       
-      Note: This is currently in DEMO MODE for testing.
-      No actual payment will be processed.
-      
       Continue with ${isDowngrade ? 'downgrade' : 'upgrade'}?
     `;
     
