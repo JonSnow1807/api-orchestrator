@@ -13,7 +13,13 @@ from typing import Optional
 import json
 
 # Database URL from environment or default to SQLite
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./api_orchestrator.db")
+# Use /app/data for Railway persistent storage
+if os.path.exists('/app'):
+    # Running on Railway
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////app/data/api_orchestrator.db")
+else:
+    # Local development
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./api_orchestrator.db")
 
 # Configure engine based on database type
 if "postgresql" in DATABASE_URL:
