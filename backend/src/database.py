@@ -14,12 +14,25 @@ import json
 
 # Database URL from environment or default to SQLite
 # Use /app/data for Railway persistent storage
-if os.path.exists('/app'):
-    # Running on Railway
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////app/data/api_orchestrator.db")
-else:
-    # Local development
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./api_orchestrator.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+
+# Railway PostgreSQL URLs use 'postgres://' but SQLAlchemy needs 'postgresql://'
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# If no DATABASE_URL, use SQLite
+if not DATABASE_URL:
+    if os.path.exists('/app'):
+        # Running on Railway without PostgreSQL
+        DATABASE_URL = "sqlite:////app/data/api_orchestrator.db"
+    else:
+        # Local development
+        DATABASE_URL = "sqlite:///./api_orchestrator.db"
+
+# Log database type being used
+import logging
+logger = logging.getLogger(__name__)
+logger.info(f"Using database: {DATABASE_URL.split('://')[0]}")
 
 # Configure engine based on database type
 if "postgresql" in DATABASE_URL:
