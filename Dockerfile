@@ -2,6 +2,10 @@
 # Stage 1: Build frontend
 FROM node:18-slim as frontend-builder
 
+# Accept build args for frontend environment variables
+ARG VITE_STRIPE_PUBLISHABLE_KEY
+ENV VITE_STRIPE_PUBLISHABLE_KEY=$VITE_STRIPE_PUBLISHABLE_KEY
+
 WORKDIR /frontend
 COPY frontend/package*.json ./
 RUN npm ci
