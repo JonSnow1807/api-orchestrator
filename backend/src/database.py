@@ -417,9 +417,11 @@ class DatabaseManager:
     
     @staticmethod
     def create_project(db: Session, name: str, description: str = None, 
-                       source_type: str = "directory", source_path: str = None) -> Project:
+                       source_type: str = "directory", source_path: str = None,
+                       user_id: int = None) -> Project:
         """Create a new project"""
         project = Project(
+            user_id=user_id,
             name=name,
             description=description,
             source_type=source_type,

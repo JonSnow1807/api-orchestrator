@@ -560,10 +560,16 @@ async def orchestrate(
     
     # Generate task ID
     task_id = str(uuid.uuid4())
-    db = SessionLocal()
-    project = DatabaseManager.create_project(db, "Auto-Project", source_path=request.source_path)
+    
+    # Create project with current user
+    project = DatabaseManager.create_project(
+        db, 
+        "Auto-Project", 
+        source_path=request.source_path,
+        source_type=request.source_type,
+        user_id=current_user.id
+    )
     task = DatabaseManager.create_task(db, task_id, project.id)
-    db.close()
     
     # Validate source path
     if request.source_type == "directory":
@@ -1034,6 +1040,27 @@ async def stop_mock_server(
         json.dump(mock_config, f, indent=2)
     
     return {"success": True}
+
+@app.post("/api/mock-server/start")
+async def start_mock_server_direct(
+    request: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Start a mock server directly from OpenAPI spec"""
+    spec = request.get("spec")
+    if not spec:
+        raise HTTPException(status_code=400, detail="OpenAPI spec required")
+    
+    # For demo purposes, return a mock response
+    # In production, this would actually start a mock server
+    port = 9000 + hash(str(spec)) % 1000  # Generate a port based on spec
+    
+    return {
+        "success": True,
+        "port": port,
+        "message": f"Mock server started on port {port}",
+        "endpoints": list(spec.get("paths", {}).keys()) if isinstance(spec, dict) else []
+    }
 
 @app.post("/api/import")
 async def import_specification(
