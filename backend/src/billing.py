@@ -149,13 +149,10 @@ class BillingManager:
         if tier == "free":
             return self._set_free_tier(user_id)
         
-        # Check if Stripe is configured
-        if not STRIPE_SECRET_KEY:
-            logger.warning("Stripe not configured - cannot create paid subscription")
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Billing system not configured. Please contact support."
-            )
+        # For demo/testing without Stripe configuration
+        if not STRIPE_SECRET_KEY or not tier_config.get("stripe_price_id"):
+            logger.info(f"Demo mode: Setting user to {tier} tier without Stripe")
+            return self._set_demo_subscription(user_id, tier)
         
         from src.database import User
         user = self.db.query(User).filter(User.id == user_id).first()
@@ -456,12 +453,50 @@ class BillingManager:
             user.subscription_status = "active"
             user.subscription_id = None
             user.subscription_end_date = None
+            user.api_calls_limit = PRICING_TIERS["free"]["api_calls"]
             self.db.commit()
         
         return {
+            "subscription_id": None,
             "tier": "free",
             "status": "active",
+            "current_period_end": None,
+            "client_secret": None,
             "message": "Successfully switched to free tier"
+        }
+    
+    def _set_demo_subscription(self, user_id: int, tier: str) -> Dict[str, Any]:
+        """Set demo subscription without Stripe (for testing)"""
+        from src.database import User
+        from datetime import datetime, timedelta
+        
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        tier_config = PRICING_TIERS[tier]
+        
+        # Update user subscription details
+        user.subscription_tier = tier
+        user.subscription_status = "active"
+        user.subscription_id = f"demo_{tier}_{user.id}"
+        user.subscription_end_date = datetime.utcnow() + timedelta(days=30)
+        user.api_calls_limit = tier_config["api_calls"]
+        user.api_calls_this_month = 0
+        
+        self.db.commit()
+        
+        # Return in SubscriptionResponse format
+        return {
+            "subscription_id": user.subscription_id,
+            "tier": tier,
+            "status": "active",
+            "current_period_end": int(user.subscription_end_date.timestamp()),
+            "client_secret": None,  # No payment needed in demo mode
+            "message": f"Demo subscription to {tier} tier activated (no payment required in test mode)"
         }
     
     def process_webhook(self, payload: bytes, signature: str) -> Dict[str, Any]:
