@@ -711,6 +711,8 @@ class SubscriptionResponse(BaseModel):
     current_period_end: Optional[int]
     client_secret: Optional[str]
     message: Optional[str]
+    checkout_url: Optional[str] = None  # For Stripe Checkout sessions
+    session_id: Optional[str] = None  # Stripe session ID
 
 
 class UsageResponse(BaseModel):
