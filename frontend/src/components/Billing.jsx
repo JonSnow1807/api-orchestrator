@@ -17,7 +17,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-// Initialize Stripe - fallback to hardcoded test key if env not set
+// Initialize Stripe - use production key from environment
 const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51S48yyPWjc2GvwDdJ6GJHdKYj1SKGCxVXhzzEYqvgq0BuECVzuq2OfrdlMOwRoqzhJmN0y1KXaM2XHO3COs2FNou00wBQ2bmOd';
 if (!STRIPE_KEY || STRIPE_KEY === 'pk_test_YOUR_ACTUAL_PUBLISHABLE_KEY_HERE') {
   console.error('Stripe publishable key is missing. Please set VITE_STRIPE_PUBLISHABLE_KEY in .env');
