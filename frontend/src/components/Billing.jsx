@@ -17,12 +17,12 @@ import {
   Loader2
 } from 'lucide-react';
 
-// Initialize Stripe
-const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-if (!STRIPE_KEY) {
+// Initialize Stripe - fallback to hardcoded test key if env not set
+const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51S48yyPWjc2GvwDdJ6GJHdKYj1SKGCxVXhzzEYqvgq0BuECVzuq2OfrdlMOwRoqzhJmN0y1KXaM2XHO3COs2FNou00wBQ2bmOd';
+if (!STRIPE_KEY || STRIPE_KEY === 'pk_test_YOUR_ACTUAL_PUBLISHABLE_KEY_HERE') {
   console.error('Stripe publishable key is missing. Please set VITE_STRIPE_PUBLISHABLE_KEY in .env');
 }
-const stripePromise = loadStripe(STRIPE_KEY);
+const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
 const Billing = () => {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const Billing = () => {
 
   const fetchBillingInfo = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(getApiUrl('/api/billing/info'), {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -64,18 +64,32 @@ const Billing = () => {
   };
 
   const handleSubscribe = async (tier) => {
+    console.log('Subscribing to tier:', tier);
     setProcessing(true);
     setError('');
     
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        setError('Please login to subscribe');
+        navigate('/login');
+        return;
+      }
+      
+      if (!stripePromise) {
+        setError('Payment system is not configured. Please contact support.');
+        return;
+      }
       
       // Create subscription
+      console.log('Calling subscription API...');
       const response = await axios.post(
         getApiUrl('/api/billing/subscription'),
         { tier },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
+      console.log('Subscription response:', response.data);
       
       if (response.data.client_secret) {
         // Real Stripe payment
@@ -93,7 +107,9 @@ const Billing = () => {
         fetchBillingInfo();
       }
     } catch (error) {
-      setError(error.response?.data?.detail || 'Failed to update subscription');
+      console.error('Subscription error:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to update subscription';
+      setError(errorMessage);
     } finally {
       setProcessing(false);
     }
@@ -104,7 +120,7 @@ const Billing = () => {
     
     setProcessing(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.delete(getApiUrl('/api/billing/subscription'), {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -291,7 +307,12 @@ const Billing = () => {
                   </button>
                 ) : (
                   <button
-                    onClick={() => handleSubscribe(tierName)}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSubscribe(tierName);
+                    }}
                     disabled={processing}
                     className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
                       tierName === 'enterprise'
