@@ -24,6 +24,25 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 import stripe
 
+# Sentry error tracking
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+from src.config import settings
+
+# Initialize Sentry if enabled
+if settings.SENTRY_ENABLED and settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.SENTRY_ENVIRONMENT,
+        integrations=[
+            FastApiIntegration(transaction_style="endpoint"),
+            SqlalchemyIntegration(),
+        ],
+        traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
+        profiles_sample_rate=0.1,
+    )
+
 # Import our orchestrator components
 from src.core.orchestrator import APIOrchestrator, AgentType
 from src.agents.discovery_agent import DiscoveryAgent

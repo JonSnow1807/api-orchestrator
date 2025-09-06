@@ -129,13 +129,94 @@ class BillingManager:
                 detail=f"Failed to create customer: {str(e)}"
             )
     
+    def create_checkout_session(
+        self, 
+        user_id: int, 
+        tier: str,
+        success_url: str = None,
+        cancel_url: str = None
+    ) -> Dict[str, Any]:
+        """Create a Stripe Checkout session for subscription"""
+        
+        if tier not in PRICING_TIERS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid subscription tier: {tier}"
+            )
+        
+        tier_config = PRICING_TIERS[tier]
+        
+        # Free tier doesn't need Stripe
+        if tier == "free":
+            return self._set_free_tier(user_id)
+        
+        # For demo/testing without Stripe configuration
+        if not STRIPE_SECRET_KEY or not tier_config.get("stripe_price_id"):
+            logger.info(f"Demo mode: Setting user to {tier} tier without Stripe")
+            return self._set_demo_subscription(user_id, tier)
+        
+        from src.database import User
+        user = self.db.query(User).filter(User.id == user_id).first()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        try:
+            # Create Stripe customer if doesn't exist
+            if not user.stripe_customer_id:
+                user.stripe_customer_id = self.create_customer(
+                    user_id, user.email, user.full_name
+                )
+                self.db.commit()
+            
+            # Create checkout session
+            frontend_url = os.getenv("FRONTEND_URL", "https://streamapi.dev")
+            session = stripe.checkout.Session.create(
+                customer=user.stripe_customer_id,
+                payment_method_types=['card'],
+                line_items=[{
+                    'price': tier_config["stripe_price_id"],
+                    'quantity': 1,
+                }],
+                mode='subscription',
+                success_url=success_url or f"{frontend_url}/billing?success=true&tier={tier}",
+                cancel_url=cancel_url or f"{frontend_url}/billing?canceled=true",
+                metadata={
+                    'user_id': str(user_id),
+                    'tier': tier
+                }
+            )
+            
+            logger.info(f"Created checkout session {session.id} for user {user_id}")
+            
+            return {
+                "checkout_url": session.url,
+                "session_id": session.id,
+                "tier": tier,
+                "status": "pending"
+            }
+            
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe error creating checkout session: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to create checkout session: {str(e)}"
+            )
+    
     def create_subscription(
         self, 
         user_id: int, 
         tier: str, 
         payment_method_id: str = None
     ) -> Dict[str, Any]:
-        """Create or update a subscription for a user"""
+        """Create or update a subscription for a user (use create_checkout_session for initial purchase)"""
+        
+        # For initial purchase, use checkout session instead
+        if not payment_method_id:
+            return self.create_checkout_session(user_id, tier)
         
         if tier not in PRICING_TIERS:
             raise HTTPException(

@@ -66,6 +66,25 @@ class Settings:
     PASSWORD_REQUIRE_NUMBERS: bool = True
     PASSWORD_REQUIRE_SPECIAL: bool = False
     
+    # Email Settings for Password Reset
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "noreply@streamapi.dev")
+    EMAIL_FROM_NAME: str = os.getenv("EMAIL_FROM_NAME", "StreamAPI")
+    EMAIL_ENABLED: bool = os.getenv("EMAIL_ENABLED", "false").lower() == "true"
+    
+    # Password Reset Settings
+    PASSWORD_RESET_TOKEN_EXPIRE_HOURS: int = int(os.getenv("PASSWORD_RESET_TOKEN_EXPIRE_HOURS", "24"))
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "https://streamapi.dev")
+    
+    # Error Tracking with Sentry
+    SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")
+    SENTRY_ENVIRONMENT: str = os.getenv("SENTRY_ENVIRONMENT", "production")
+    SENTRY_TRACES_SAMPLE_RATE: float = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1"))
+    SENTRY_ENABLED: bool = os.getenv("SENTRY_ENABLED", "false").lower() == "true"
+    
     @classmethod
     def validate_path(cls, path: Path) -> bool:
         """Validate that a path is within allowed directories"""
