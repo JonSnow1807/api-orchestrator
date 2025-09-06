@@ -1399,7 +1399,7 @@ async def stripe_webhook(
 @app.get("/api/billing/pricing")
 async def get_pricing_tiers():
     """Get available pricing tiers"""
-    from billing import PRICING_TIERS
+    from src.billing import PRICING_TIERS
     
     return {
         "tiers": PRICING_TIERS,
