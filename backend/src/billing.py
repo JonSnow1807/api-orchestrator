@@ -113,7 +113,7 @@ class BillingManager:
             )
             
             # Store customer ID in database
-            from database import User
+            from src.database import User
             user = self.db.query(User).filter(User.id == user_id).first()
             if user:
                 user.stripe_customer_id = customer.id
@@ -157,7 +157,7 @@ class BillingManager:
                 detail="Billing system not configured. Please contact support."
             )
         
-        from database import User
+        from src.database import User
         user = self.db.query(User).filter(User.id == user_id).first()
         
         if not user:
@@ -241,7 +241,7 @@ class BillingManager:
     def cancel_subscription(self, user_id: int) -> Dict[str, Any]:
         """Cancel a user's subscription"""
         try:
-            from database import User
+            from src.database import User
             user = self.db.query(User).filter(User.id == user_id).first()
             
             if not user or not user.subscription_id:
@@ -287,7 +287,7 @@ class BillingManager:
             )
         
         try:
-            from database import User, UsageEvent
+            from src.database import User, UsageEvent
             
             user = self.db.query(User).filter(User.id == user_id).first()
             if not user:
@@ -352,7 +352,7 @@ class BillingManager:
     def get_billing_info(self, user_id: int) -> Dict[str, Any]:
         """Get billing information for a user"""
         try:
-            from database import User, UsageEvent
+            from src.database import User, UsageEvent
             
             user = self.db.query(User).filter(User.id == user_id).first()
             if not user:
@@ -448,7 +448,7 @@ class BillingManager:
     
     def _set_free_tier(self, user_id: int) -> Dict[str, Any]:
         """Set user to free tier"""
-        from database import User
+        from src.database import User
         
         user = self.db.query(User).filter(User.id == user_id).first()
         if user:
@@ -505,7 +505,7 @@ class BillingManager:
     
     def _handle_payment_success(self, invoice):
         """Handle successful payment"""
-        from database import User
+        from src.database import User
         
         customer_id = invoice.customer
         user = self.db.query(User).filter(
@@ -519,7 +519,7 @@ class BillingManager:
     
     def _handle_payment_failure(self, invoice):
         """Handle failed payment"""
-        from database import User
+        from src.database import User
         
         customer_id = invoice.customer
         user = self.db.query(User).filter(
@@ -535,7 +535,7 @@ class BillingManager:
     
     def _handle_subscription_deleted(self, subscription):
         """Handle subscription deletion"""
-        from database import User
+        from src.database import User
         
         customer_id = subscription.customer
         user = self.db.query(User).filter(
@@ -552,7 +552,7 @@ class BillingManager:
     
     def _handle_subscription_updated(self, subscription):
         """Handle subscription update"""
-        from database import User
+        from src.database import User
         
         customer_id = subscription.customer
         user = self.db.query(User).filter(
