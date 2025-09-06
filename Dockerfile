@@ -47,6 +47,10 @@ COPY --from=frontend-builder /app/frontend/dist frontend/dist
 # Copy other necessary files
 COPY requirements.txt .
 
+# Create startup script before changing user
+RUN echo '#!/bin/sh\ncd /app/backend && exec python -m uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}' > /app/start.sh && \
+    chmod +x /app/start.sh
+
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
@@ -59,4 +63,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 EXPOSE ${PORT:-8000}
 
 # Start the application
-CMD ["sh", "-c", "cd backend && python -m uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["/app/start.sh"]
