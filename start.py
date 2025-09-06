@@ -37,6 +37,17 @@ if __name__ == "__main__":
     
     try:
         # Configure uvicorn with proper settings for Railway
+        # Railway requires the app to stay running
+        import signal
+        import sys
+        
+        def signal_handler(sig, frame):
+            logger.info('Gracefully shutting down...')
+            sys.exit(0)
+        
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+        
         uvicorn.run(
             "src.main:app",
             host=host,
@@ -44,7 +55,7 @@ if __name__ == "__main__":
             reload=False,
             access_log=True,
             log_level="info",
-            workers=1
+            loop="asyncio"
         )
     except Exception as e:
         logger.error(f"Failed to start server: {e}")
