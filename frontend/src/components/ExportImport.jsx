@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { getApiUrl } from '../config';
 import axios from 'axios';
 import {
   Download,
@@ -28,7 +29,7 @@ const ExportImport = ({ projectId, taskId }) => {
 
   const fetchExportFormats = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/export/formats', {
+      const response = await axios.get(getApiUrl('/api/export/formats'), {
         headers: { Authorization: `Bearer ${token}` }
       });
       setExportFormats(response.data.formats || ['json', 'yaml', 'markdown', 'zip']);
@@ -49,7 +50,7 @@ const ExportImport = ({ projectId, taskId }) => {
 
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/export/${taskId}?format=${format}`,
+        getApiUrl(`/api/export/${taskId}?format=${format}`),
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: format === 'zip' ? 'blob' : 'json'
@@ -102,7 +103,7 @@ const ExportImport = ({ projectId, taskId }) => {
 
     try {
       const response = await axios.post(
-        'http://localhost:8000/api/import',
+        getApiUrl('/api/import'),
         formData,
         {
           headers: {

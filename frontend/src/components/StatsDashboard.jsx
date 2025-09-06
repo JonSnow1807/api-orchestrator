@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { getApiUrl } from '../config';
 import {
   TrendingUp,
   Package,
@@ -30,7 +31,7 @@ const StatsDashboard = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/projects/stats/overview?range=${timeRange}`,
+        getApiUrl(`/api/projects/stats/overview?range=${timeRange}`),
         {
           headers: { Authorization: `Bearer ${token}` }
         }

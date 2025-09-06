@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { loadStripe } from '@stripe/stripe-js';
+import { getApiUrl } from '../config';
 import {
   CreditCard,
   Check,
@@ -41,7 +42,7 @@ const Billing = () => {
   const fetchBillingInfo = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8000/api/billing/info', {
+      const response = await axios.get(getApiUrl('/api/billing/info'), {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBillingInfo(response.data);
@@ -53,7 +54,7 @@ const Billing = () => {
 
   const fetchPricingTiers = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/billing/pricing');
+      const response = await axios.get(getApiUrl('/api/billing/pricing'));
       setPricingTiers(response.data.tiers);
       setLoading(false);
     } catch (error) {
@@ -71,7 +72,7 @@ const Billing = () => {
       
       // Create subscription
       const response = await axios.post(
-        'http://localhost:8000/api/billing/subscription',
+        getApiUrl('/api/billing/subscription'),
         { tier },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -104,7 +105,7 @@ const Billing = () => {
     setProcessing(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.delete('http://localhost:8000/api/billing/subscription', {
+      await axios.delete(getApiUrl('/api/billing/subscription'), {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuccess('Subscription will be canceled at the end of the billing period');

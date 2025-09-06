@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { getApiUrl } from '../config';
 import axios from 'axios';
 import {
   Upload,
@@ -98,7 +99,7 @@ const FileUpload = ({ onUploadSuccess }) => {
 
     try {
       const response = await axios.post(
-        'http://localhost:8000/api/upload',
+        getApiUrl('/api/upload'),
         formData,
         {
           headers: {
