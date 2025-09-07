@@ -19,12 +19,18 @@ import {
   BarChart3,
   History,
   Upload,
-  FileArchive
+  FileArchive,
+  Code2
 } from 'lucide-react';
 import StatsDashboard from './StatsDashboard';
 import TaskManager from './TaskManager';
 import FileUpload from './FileUpload';
 import ExportImport from './ExportImport';
+import CodeEditor from './CodeEditor';
+import OrchestrationHub from './OrchestrationHub';
+import RealtimeMonitor from './RealtimeMonitor';
+import AIAnalysis from './AIAnalysis';
+import MockServerManager from './MockServerManager';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -33,7 +39,8 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('projects');
+  const [activeTab, setActiveTab] = useState('orchestration');
+  const [currentTaskId, setCurrentTaskId] = useState(null);
 
   useEffect(() => {
     fetchProjects();
@@ -155,6 +162,17 @@ const Dashboard = () => {
         <div className="mb-8">
           <nav className="flex space-x-1 bg-gray-800/50 backdrop-blur rounded-lg p-1">
             <button
+              onClick={() => setActiveTab('orchestration')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'orchestration' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Zap className="w-5 h-5" />
+              <span>Orchestration</span>
+            </button>
+            <button
               onClick={() => setActiveTab('projects')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
                 activeTab === 'projects' 
@@ -188,6 +206,17 @@ const Dashboard = () => {
               <span>Tasks</span>
             </button>
             <button
+              onClick={() => setActiveTab('code')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'code' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Code2 className="w-5 h-5" />
+              <span>Code</span>
+            </button>
+            <button
               onClick={() => setActiveTab('upload')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
                 activeTab === 'upload' 
@@ -213,6 +242,10 @@ const Dashboard = () => {
         </div>
 
         {/* Content based on active tab */}
+        {activeTab === 'orchestration' && (
+          <OrchestrationHub />
+        )}
+
         {activeTab === 'projects' && (
           <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700">
           <div className="p-6 border-b border-gray-700">
@@ -320,6 +353,7 @@ const Dashboard = () => {
         {activeTab === 'tasks' && (
           <TaskManager />
         )}
+
 
         {/* Upload Tab */}
         {activeTab === 'upload' && (
