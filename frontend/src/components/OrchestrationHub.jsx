@@ -5,12 +5,6 @@ import FileUpload from './FileUpload';
 import RealtimeMonitor from './RealtimeMonitor';
 import AIAnalysis from './AIAnalysis';
 import MockServerManager from './MockServerManager';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from 'lucide-react';
 
 const OrchestrationHub = () => {
   const { user } = useAuth();
