@@ -21,6 +21,7 @@ const TaskManager = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [selectedTask, setSelectedTask] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchTasks();
@@ -30,12 +31,18 @@ const TaskManager = () => {
 
   const fetchTasks = async () => {
     try {
+      setError(null);
       const response = await axios.get(getApiUrl('/api/tasks'), {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
-      setTasks(response.data.tasks || []);
+      const tasksData = response.data.tasks || [];
+      // Ensure tasks is always an array
+      setTasks(Array.isArray(tasksData) ? tasksData : Object.values(tasksData));
     } catch (error) {
       console.error('Failed to fetch tasks:', error);
+      setError('Failed to load tasks. Please try again.');
+      // Set empty array on error to prevent white screen
+      setTasks([]);
     } finally {
       setLoading(false);
     }
@@ -106,9 +113,9 @@ const TaskManager = () => {
     }
   };
 
-  const filteredTasks = tasks.filter(task => {
+  const filteredTasks = (tasks || []).filter(task => {
     if (filter === 'all') return true;
-    return task.status === filter;
+    return task && task.status === filter;
   });
 
   const formatDate = (dateString) => {
@@ -161,7 +168,18 @@ const TaskManager = () => {
       </div>
 
       {/* Task List */}
-      {loading ? (
+      {error ? (
+        <div className="text-center py-12">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
+          <p className="text-red-500">{error}</p>
+          <button 
+            onClick={fetchTasks}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      ) : loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
         </div>
@@ -169,6 +187,7 @@ const TaskManager = () => {
         <div className="text-center py-12">
           <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-500">No tasks found</p>
+          <p className="text-gray-400 text-sm mt-2">Tasks will appear here when you run orchestrations</p>
         </div>
       ) : (
         <div className="divide-y divide-gray-200">
