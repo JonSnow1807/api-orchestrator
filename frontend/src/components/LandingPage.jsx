@@ -76,38 +76,10 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900/20 to-gray-900 text-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-gray-900/80 backdrop-blur-md z-50 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Zap className="w-8 h-8 text-purple-500" />
-              <span className="text-xl font-bold">API Orchestrator</span>
-            </div>
-            <div className="flex items-center space-x-6">
-              <a href="#features" className="hover:text-purple-400 transition">Features</a>
-              <a href="#how-it-works" className="hover:text-purple-400 transition">How it Works</a>
-              <a href="#tech" className="hover:text-purple-400 transition">Technology</a>
-              <button
-                onClick={() => navigate('/login')}
-                className="px-4 py-2 text-purple-400 border border-purple-400 rounded-lg hover:bg-purple-400 hover:text-white transition"
-              >
-                Login
-              </button>
-              <button
-                onClick={() => navigate('/register')}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-              >
-                Get Started
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
+    <Layout>
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900/20 to-gray-900 text-white">
+        {/* Hero Section */}
+        <section className="pt-20 pb-20 px-6">
         <div className="max-w-7xl mx-auto text-center">
           <div className="inline-flex items-center px-4 py-2 bg-purple-500/20 rounded-full mb-6">
             <Sparkles className="w-4 h-4 text-purple-400 mr-2" />
@@ -270,7 +242,8 @@ const LandingPage = () => {
           </p>
         </div>
       </footer>
-    </div>
+      </div>
+    </Layout>
   );
 };
 
