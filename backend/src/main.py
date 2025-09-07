@@ -1587,9 +1587,16 @@ for frontend_path in frontend_paths:
         # Mount frontend at root, but only for non-API routes
         from fastapi.responses import HTMLResponse
         
-        # Serve index.html for root
+        # Serve index.html for root and all SPA routes
         @app.get("/", response_class=HTMLResponse)
-        async def serve_frontend():
+        @app.get("/login", response_class=HTMLResponse)
+        @app.get("/register", response_class=HTMLResponse)
+        @app.get("/dashboard", response_class=HTMLResponse)
+        @app.get("/profile", response_class=HTMLResponse)
+        @app.get("/billing", response_class=HTMLResponse)
+        @app.get("/create-project", response_class=HTMLResponse)
+        @app.get("/projects/{project_id}", response_class=HTMLResponse)
+        async def serve_frontend(project_id: str = None):
             index_path = os.path.join(frontend_path, "index.html")
             if os.path.exists(index_path):
                 with open(index_path, "r") as f:
