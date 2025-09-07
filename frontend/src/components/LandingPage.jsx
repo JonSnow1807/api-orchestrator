@@ -1,5 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Zap, 
   Code2, 
@@ -20,11 +21,16 @@ import {
   Github,
   Cloud,
   Database,
-  Activity
+  Activity,
+  LayoutDashboard,
+  User,
+  CreditCard,
+  LogOut
 } from 'lucide-react';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const features = [
     {
@@ -89,18 +95,54 @@ const LandingPage = () => {
               <a href="#features" className="hover:text-purple-400 transition">Features</a>
               <a href="#how-it-works" className="hover:text-purple-400 transition">How it Works</a>
               <a href="#tech" className="hover:text-purple-400 transition">Technology</a>
-              <button
-                onClick={() => navigate('/login')}
-                className="px-4 py-2 text-purple-400 border border-purple-400 rounded-lg hover:bg-purple-400 hover:text-white transition"
-              >
-                Login
-              </button>
-              <button
-                onClick={() => navigate('/register')}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-              >
-                Get Started
-              </button>
+              
+              {user ? (
+                // Logged in navigation
+                <>
+                  <Link
+                    to="/dashboard"
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"
+                  >
+                    <LayoutDashboard className="w-5 h-5" />
+                    <span>Dashboard</span>
+                  </Link>
+                  <Link
+                    to="/profile"
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"
+                  >
+                    <User className="w-5 h-5" />
+                    <span>{user.username || 'Profile'}</span>
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout();
+                      navigate('/');
+                    }}
+                    className="px-4 py-2 text-red-400 border border-red-400 rounded-lg hover:bg-red-400 hover:text-white transition"
+                  >
+                    <span className="flex items-center space-x-1">
+                      <LogOut className="w-4 h-4" />
+                      <span>Logout</span>
+                    </span>
+                  </button>
+                </>
+              ) : (
+                // Not logged in navigation
+                <>
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="px-4 py-2 text-purple-400 border border-purple-400 rounded-lg hover:bg-purple-400 hover:text-white transition"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => navigate('/register')}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                  >
+                    Get Started
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -126,25 +168,50 @@ const LandingPage = () => {
           </p>
 
           <div className="flex items-center justify-center space-x-4 mb-12">
-            <button
-              onClick={() => navigate('/register')}
-              className="px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition transform hover:scale-105 flex items-center space-x-2"
-            >
-              <Rocket className="w-5 h-5" />
-              <span>Start Free Trial</span>
-            </button>
-            <button
-              onClick={() => navigate('/login')}
-              className="px-8 py-4 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition flex items-center space-x-2"
-            >
-              <span>View Demo</span>
-              <ArrowRight className="w-5 h-5" />
-            </button>
+            {user ? (
+              // Show Dashboard button for logged-in users
+              <>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition transform hover:scale-105 flex items-center space-x-2"
+                >
+                  <LayoutDashboard className="w-5 h-5" />
+                  <span>Go to Dashboard</span>
+                </button>
+                <button
+                  onClick={() => navigate('/create-project')}
+                  className="px-8 py-4 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition flex items-center space-x-2"
+                >
+                  <span>Create New Project</span>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </>
+            ) : (
+              // Show login/register for non-logged in users
+              <>
+                <button
+                  onClick={() => navigate('/register')}
+                  className="px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition transform hover:scale-105 flex items-center space-x-2"
+                >
+                  <Rocket className="w-5 h-5" />
+                  <span>Start Free Trial</span>
+                </button>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-8 py-4 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition flex items-center space-x-2"
+                >
+                  <span>View Demo</span>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </>
+            )}
           </div>
 
-          <p className="text-gray-400 text-sm">
-            Demo Account: demo@example.com / Demo123!
-          </p>
+          {!user && (
+            <p className="text-gray-400 text-sm">
+              Demo Account: demo@example.com / Demo123!
+            </p>
+          )}
         </div>
       </section>
 
@@ -244,12 +311,21 @@ const LandingPage = () => {
             Join developers who are already using AI to orchestrate their APIs
           </p>
           <div className="flex items-center justify-center space-x-4">
-            <button
-              onClick={() => navigate('/register')}
-              className="px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition transform hover:scale-105"
-            >
-              Start Free Trial
-            </button>
+            {user ? (
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition transform hover:scale-105"
+              >
+                Go to Dashboard
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/register')}
+                className="px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition transform hover:scale-105"
+              >
+                Start Free Trial
+              </button>
+            )}
             <button
               onClick={() => window.open('https://github.com/JonSnow1807/api-orchestrator', '_blank')}
               className="px-8 py-4 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition flex items-center space-x-2"
