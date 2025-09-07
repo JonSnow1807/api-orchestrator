@@ -146,24 +146,30 @@ class DiscoveryAgent:
         return endpoints
     
     def _parse_flask(self, content: str, file_path: str) -> List[APIEndpoint]:
-        """Parse Flask endpoints"""
+        """Parse Flask endpoints with improved detection"""
         endpoints = []
         
-        # Regex patterns for Flask routes
-        route_pattern = r'@app\.route\([\'"]([^\'"]+)[\'"](?:.*methods=\[([^\]]+)\])?\)'
-        blueprint_pattern = r'@\w+\.route\([\'"]([^\'"]+)[\'"](?:.*methods=\[([^\]]+)\])?\)'
+        # Multiple patterns for Flask routes
+        route_patterns = [
+            (r'@app\.route\([\'"]([^\'"]+)[\'"](?:.*methods=\[([^\]]+)\])?\)', 'route'),
+            (r'@\w+\.route\([\'"]([^\'"]+)[\'"](?:.*methods=\[([^\]]+)\])?\)', 'blueprint'),
+            (r'@app\.(get|post|put|delete|patch)\([\'"]([^\'"]+)[\'"]', 'method'),
+        ]
         
-        for pattern in [route_pattern, blueprint_pattern]:
+        for pattern, pattern_type in route_patterns:
             matches = re.finditer(pattern, content)
             for match in matches:
-                path = match.group(1)
-                methods = match.group(2) if match.group(2) else "'GET'"
+                if pattern_type == 'method':
+                    method = match.group(1)
+                    path = match.group(2)
+                    methods_list = [method]
+                else:
+                    path = match.group(1)
+                    methods = match.group(2) if match.group(2) else "'GET'"
+                    methods = methods.replace("'", "").replace('"', '').replace(' ', '')
+                    methods_list = methods.split(',')
                 
-                # Clean up methods
-                methods = methods.replace("'", "").replace('"', '').replace(' ', '')
-                method_list = methods.split(',')
-                
-                for method in method_list:
+                for method in methods_list:
                     endpoint = APIEndpoint(
                         path=path,
                         method=method.upper(),
@@ -171,7 +177,7 @@ class DiscoveryAgent:
                         parameters=[]
                     )
                     endpoints.append(endpoint)
-                    print(f"  ✓ Found: {method.upper()} {path}")
+                    print(f"  ✓ Found Flask: {method.upper()} {path}")
                     
         return endpoints
     
@@ -203,23 +209,69 @@ class DiscoveryAgent:
         return endpoints
     
     def _parse_django(self, content: str, file_path: str) -> List[APIEndpoint]:
-        """Parse Django URLs and views"""
+        """Parse Django URLs and views with improved detection"""
         endpoints = []
         
-        # Look for url patterns
-        url_pattern = r'path\([\'"]([^\'"]+)[\'"]'
-        matches = re.finditer(url_pattern, content)
+        # Check for Django REST Framework
+        if '@api_view' in content:
+            # Parse DRF function-based views
+            api_view_pattern = r'@api_view\(\[([^\]]+)\]\)\s+def\s+(\w+)'
+            matches = re.finditer(api_view_pattern, content)
+            for match in matches:
+                methods = match.group(1).replace("'", "").replace('"', '').replace(' ', '')
+                func_name = match.group(2)
+                for method in methods.split(','):
+                    endpoint = APIEndpoint(
+                        path=f"/{func_name}/",
+                        method=method.upper(),
+                        handler_name=func_name,
+                        parameters=[]
+                    )
+                    endpoints.append(endpoint)
+                    print(f"  ✓ Found Django DRF: {method.upper()} /{func_name}/")
         
-        for match in matches:
-            path = match.group(1)
-            endpoint = APIEndpoint(
-                path=f"/{path}",
-                method="GET",  # Default, Django doesn't specify in URLs
-                handler_name=f"django_view_{path.replace('/', '_')}",
-                parameters=[]
-            )
-            endpoints.append(endpoint)
-            print(f"  ✓ Found: GET /{path}")
+        # Look for url patterns
+        patterns = [
+            r'path\([\'"]([^\'"]+)[\'"]',
+            r'url\(r?[\'"]\^?([^\'"\$]+)\$?[\'"]',
+            r're_path\(r?[\'"]\^?([^\'"\$]+)\$?[\'"]',
+        ]
+        
+        for pattern in patterns:
+            matches = re.finditer(pattern, content)
+            for match in matches:
+                path = match.group(1)
+                # Clean up regex patterns
+                path = path.replace('(?P<', '{').replace('>[^/]+)', '}')
+                path = path.replace('\\d+', '{id}')
+                
+                endpoint = APIEndpoint(
+                    path=f"/{path}" if not path.startswith('/') else path,
+                    method="GET",  # Default, will be refined with view analysis
+                    handler_name=f"django_view_{path.replace('/', '_')}",
+                    parameters=[]
+                )
+                endpoints.append(endpoint)
+                print(f"  ✓ Found Django: GET {endpoint.path}")
+        
+        # Check for ViewSet or APIView classes
+        class_pattern = r'class\s+(\w+)\(.*(?:ViewSet|APIView|View).*\):'
+        class_matches = re.finditer(class_pattern, content)
+        for class_match in class_matches:
+            class_name = class_match.group(1)
+            # Check for REST methods in the class
+            rest_methods = ['get', 'post', 'put', 'patch', 'delete', 'list', 'create', 'retrieve', 'update', 'destroy']
+            for method in rest_methods:
+                if f'def {method}(' in content[class_match.start():class_match.start() + 2000]:
+                    http_method = method.upper() if method in ['get', 'post', 'put', 'patch', 'delete'] else 'GET'
+                    endpoint = APIEndpoint(
+                        path=f"/{class_name.lower()}/",
+                        method=http_method,
+                        handler_name=f"{class_name}.{method}",
+                        parameters=[]
+                    )
+                    endpoints.append(endpoint)
+                    print(f"  ✓ Found Django Class: {http_method} /{class_name.lower()}/")
             
         return endpoints
     

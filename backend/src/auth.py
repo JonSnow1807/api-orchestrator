@@ -33,6 +33,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     username: str
     password: str
+    full_name: Optional[str] = None
     
 class UserLogin(BaseModel):
     email: EmailStr
@@ -148,6 +149,7 @@ class AuthManager:
             email=user_data.email,
             username=user_data.username,
             hashed_password=hashed_password,
+            full_name=user_data.full_name or user_data.username,
             is_active=True,
             subscription_tier="free",
             api_calls_limit=100  # Free tier limit

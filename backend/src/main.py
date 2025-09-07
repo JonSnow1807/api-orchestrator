@@ -16,6 +16,7 @@ import asyncio
 import json
 import io
 import yaml
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 import uuid
@@ -271,8 +272,9 @@ manager = ConnectionManager()
 
 # Request/Response models
 class OrchestrationRequest(BaseModel):
-    source_type: str = "directory"  # "directory", "github", "upload"
+    source_type: str = "directory"  # "directory", "github", "upload", "code"
     source_path: str
+    code_content: Optional[str] = None  # For source_type="code"
     options: Optional[Dict] = None
 
 class OrchestrationResponse(BaseModel):
@@ -590,8 +592,43 @@ async def orchestrate(
     )
     task = DatabaseManager.create_task(db, task_id, project.id)
     
-    # Validate source path
-    if request.source_type == "directory":
+    # Handle different source types
+    actual_source_path = request.source_path
+    temp_file_path = None
+    
+    if request.source_type == "code":
+        # Create a temporary file for code content
+        import tempfile
+        import os
+        
+        # Create temp directory if it doesn't exist
+        temp_dir = Path("/tmp/api-orchestrator")
+        temp_dir.mkdir(exist_ok=True)
+        
+        # Detect file extension from code content
+        file_ext = ".py"  # Default to Python
+        if request.code_content:
+            if "const " in request.code_content or "function " in request.code_content:
+                file_ext = ".js"
+            elif "@app.route" in request.code_content or "Flask" in request.code_content:
+                file_ext = ".py"
+            elif "@app.get" in request.code_content or "FastAPI" in request.code_content:
+                file_ext = ".py"
+        
+        # Create temporary file
+        temp_file = tempfile.NamedTemporaryFile(
+            mode='w',
+            suffix=file_ext,
+            dir=str(temp_dir),
+            delete=False
+        )
+        temp_file.write(request.code_content or "")
+        temp_file.flush()
+        temp_file_path = temp_file.name
+        actual_source_path = temp_file_path
+        temp_file.close()
+        
+    elif request.source_type == "directory":
         source_path = Path(request.source_path)
         if not source_path.exists():
             raise HTTPException(status_code=400, detail=f"Path {request.source_path} does not exist")
@@ -607,8 +644,8 @@ async def orchestrate(
     if not orchestrator.agents:
         await initialize_orchestrator()
     
-    # Start orchestration in background
-    asyncio.create_task(run_orchestration(task_id, request.source_path))
+    # Start orchestration in background with cleanup
+    asyncio.create_task(run_orchestration(task_id, actual_source_path, temp_file_path))
     
     # Store task
     active_tasks[task_id] = {
@@ -641,7 +678,7 @@ async def initialize_orchestrator():
         "timestamp": datetime.now().isoformat()
     })
 
-async def run_orchestration(task_id: str, source_path: str):
+async def run_orchestration(task_id: str, source_path: str, temp_file_path: str = None):
     """Run the orchestration process with real-time updates"""
     
     try:
@@ -680,11 +717,15 @@ async def run_orchestration(task_id: str, source_path: str):
         
         specs = await orchestrator.generate_specs(apis)
         
+        # Handle None specs
+        if specs is None:
+            specs = {"openapi": "3.0.0", "info": {"title": "Generated API", "version": "1.0.0"}, "paths": {}}
+        
         await manager.broadcast({
             "type": "spec_complete",
             "task_id": task_id,
-            "paths": len(specs.get('paths', {})),
-            "schemas": len(specs.get('components', {}).get('schemas', {}))
+            "paths": len(specs.get('paths', {})) if specs else 0,
+            "schemas": len(specs.get('components', {}).get('schemas', {})) if specs and 'components' in specs else 0
         })
         
         # Step 3: Generate Tests
@@ -757,10 +798,11 @@ async def run_orchestration(task_id: str, source_path: str):
         test_agent = orchestrator.agents[AgentType.TEST_GENERATOR]
         test_agent.export_tests(str(output_dir / "tests"))
         
-        # Save AI analysis
-        ai_file = output_dir / "ai_analysis.json"
-        with open(ai_file, 'w') as f:
-            json.dump(ai_analysis, f, indent=2)
+        # Save AI analysis (if available)
+        if ai_analysis:
+            ai_file = output_dir / "ai_analysis.json"
+            with open(ai_file, 'w') as f:
+                json.dump(ai_analysis, f, indent=2)
         
         # Save mock server config
         mock_file = output_dir / "mock_server_config.json"
@@ -771,13 +813,13 @@ async def run_orchestration(task_id: str, source_path: str):
         active_tasks[task_id]["status"] = "completed"
         active_tasks[task_id]["completed_at"] = datetime.now().isoformat()
         active_tasks[task_id]["results"] = {
-            "apis": len(apis),
-            "specs": len(specs.get('paths', {})),
-            "tests": len(tests),
-            "security_score": ai_analysis.get("security_score", 0),
-            "vulnerabilities_found": len(ai_analysis.get("vulnerabilities", [])),
-            "mock_server_port": mock_config.get("port", 9000),
-            "ai_summary": ai_analysis.get("executive_summary", "")
+            "apis": len(apis) if apis else 0,
+            "specs": len(specs.get('paths', {})) if specs else 0,
+            "tests": len(tests) if tests else 0,
+            "security_score": ai_analysis.get("security_score", 0) if ai_analysis else 0,
+            "vulnerabilities_found": len(ai_analysis.get("vulnerabilities", [])) if ai_analysis else 0,
+            "mock_server_port": mock_config.get("port", 9000) if mock_config else 9000,
+            "ai_summary": ai_analysis.get("executive_summary", "") if ai_analysis else ""
         }
         
         # Broadcast completion
@@ -799,6 +841,14 @@ async def run_orchestration(task_id: str, source_path: str):
             "task_id": task_id,
             "error": str(e)
         })
+    finally:
+        # Clean up temporary file if it was created
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.remove(temp_file_path)
+                print(f"✓ Cleaned up temporary file: {temp_file_path}")
+            except Exception as e:
+                print(f"⚠️ Failed to clean up temp file: {e}")
 
 # Get orchestrator status
 @app.get("/api/status", response_model=StatusResponse)
@@ -925,6 +975,7 @@ async def export_artifacts(
         allowed_formats = {
             "free": ["json"],
             "starter": ["json", "yaml"],
+            "professional": ["json", "yaml", "postman", "openapi"],
             "growth": ["json", "yaml", "postman", "openapi"],
             "enterprise": ["json", "yaml", "postman", "openapi", "markdown", "zip"]
         }

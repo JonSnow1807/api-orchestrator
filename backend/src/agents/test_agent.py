@@ -564,6 +564,22 @@ class AdminUser(HttpUser):
             'type': 'load_tests'
         }]
     
+    def export_tests(self, output_dir: str):
+        """Export generated tests to files"""
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        for test in self.generated_tests:
+            filename = test.get('filename', 'test.py')
+            filepath = output_path / filename
+            
+            with open(filepath, 'w') as f:
+                f.write(test.get('content', ''))
+            
+            print(f"  ✓ Exported {test.get('framework')} tests to {filepath}")
+        
+        return len(self.generated_tests)
+    
     def _generate_unittest(self, spec: Dict, options: Dict) -> List[Dict]:
         """Generate unittest test suites"""
         # Similar structure to pytest but using unittest framework

@@ -26,6 +26,10 @@ class MockServerAgent:
         self.mock_servers = {}  # Track running mock servers
         self.mock_data_store = {}  # In-memory data store for stateful mocks
         
+    async def generate(self, api_spec: Dict, options: Dict = None) -> Dict:
+        """Alias for create_mock_server to match interface"""
+        return await self.create_mock_server(api_spec, options)
+    
     async def create_mock_server(self, api_spec: Dict, options: Dict = None) -> Dict:
         """
         Create a mock server from OpenAPI specification
