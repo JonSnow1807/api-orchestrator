@@ -1589,6 +1589,7 @@ for frontend_path in frontend_paths:
         
         # Serve index.html for root and all SPA routes
         @app.get("/", response_class=HTMLResponse)
+        @app.get("/landing", response_class=HTMLResponse)
         @app.get("/login", response_class=HTMLResponse)
         @app.get("/register", response_class=HTMLResponse)
         @app.get("/dashboard", response_class=HTMLResponse)
