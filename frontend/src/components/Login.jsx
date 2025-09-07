@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Layout from './Layout';
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
 
 const Login = () => {
@@ -30,9 +29,8 @@ const Login = () => {
   };
 
   return (
-    <Layout>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
-        <div className="max-w-md w-full mx-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
+      <div className="max-w-md w-full mx-4">
         <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-purple-500/20">
           {/* Header */}
           <div className="text-center mb-8">
@@ -144,7 +142,6 @@ const Login = () => {
         </div>
       </div>
     </div>
-    </Layout>
   );
 };
 

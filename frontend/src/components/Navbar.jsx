@@ -13,9 +13,20 @@ import {
 } from 'lucide-react';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Safely get auth context
+  let user = null;
+  let logout = () => {};
+  
+  try {
+    const auth = useAuth();
+    user = auth?.user;
+    logout = auth?.logout || (() => {});
+  } catch (error) {
+    console.error('Auth context error:', error);
+  }
 
   const handleLogout = () => {
     logout();
@@ -113,7 +124,7 @@ const Navbar = () => {
                 </Link>
                 <div className="flex items-center space-x-3 ml-4">
                   <span className="text-gray-400 text-sm">
-                    {user.email}
+                    {user?.email || 'User'}
                   </span>
                   <button
                     onClick={handleLogout}
