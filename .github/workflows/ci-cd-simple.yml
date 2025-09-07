@@ -121,8 +121,8 @@ jobs:
         file: ./Dockerfile
         push: true
         tags: |
-          ghcr.io/${{ github.repository }}:latest
-          ghcr.io/${{ github.repository }}:${{ github.sha }}
+          ghcr.io/jonsnow1807/api-orchestrator:latest
+          ghcr.io/jonsnow1807/api-orchestrator:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
