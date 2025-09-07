@@ -20,6 +20,7 @@ import os
 from datetime import datetime, timedelta
 from pathlib import Path
 import uuid
+import httpx
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -274,6 +275,13 @@ manager = ConnectionManager()
 class OrchestrationRequest(BaseModel):
     source_type: str = "directory"  # "directory", "github", "upload", "code"
     source_path: str
+
+class ProxyRequest(BaseModel):
+    method: str
+    url: str
+    headers: Optional[Dict[str, str]] = None
+    params: Optional[Dict[str, str]] = None
+    data: Optional[Any] = None
     code_content: Optional[str] = None  # For source_type="code"
     options: Optional[Dict] = None
 
@@ -1110,6 +1118,47 @@ async def stop_mock_server(
         json.dump(mock_config, f, indent=2)
     
     return {"success": True}
+
+# Proxy endpoint for API Request Builder
+@app.post("/api/proxy-request")
+async def proxy_request(
+    request: ProxyRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Proxy API requests to avoid CORS issues"""
+    try:
+        # Create httpx client with timeout
+        async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
+            # Prepare the request
+            response = await client.request(
+                method=request.method.upper(),
+                url=request.url,
+                headers=request.headers,
+                params=request.params,
+                json=request.data if isinstance(request.data, dict) else None,
+                content=request.data if isinstance(request.data, str) else None
+            )
+            
+            # Return response data
+            try:
+                response_data = response.json()
+            except:
+                response_data = response.text
+            
+            return {
+                "status": response.status_code,
+                "statusText": response.reason_phrase,
+                "headers": dict(response.headers),
+                "data": response_data,
+                "cookies": dict(response.cookies) if response.cookies else {}
+            }
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="Request timeout")
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=500, detail=f"Request failed: {str(e)}")
+    except Exception as e:
+        logger.error(f"Proxy request error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Proxy error: {str(e)}")
 
 @app.post("/api/mock-server/start")
 async def start_mock_server_direct(

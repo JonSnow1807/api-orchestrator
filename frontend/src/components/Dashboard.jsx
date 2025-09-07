@@ -33,6 +33,7 @@ import OrchestrationHub from './OrchestrationHub';
 import RealtimeMonitor from './RealtimeMonitor';
 import AIAnalysis from './AIAnalysis';
 import MockServerManager from './MockServerManager';
+import APIRequestBuilder from './APIRequestBuilder';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -264,6 +265,17 @@ const Dashboard = () => {
               <FileArchive className="w-5 h-5" />
               <span>Export/Import</span>
             </button>
+            <button
+              onClick={() => setActiveTab('api-tester')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'api-tester' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Zap className="w-5 h-5" />
+              <span>API Tester</span>
+            </button>
           </nav>
         </div>
 
@@ -397,6 +409,11 @@ const Dashboard = () => {
           <ExportImport 
             taskId={projects[0]?.last_task_id} // Use the most recent task ID
           />
+        )}
+
+        {/* API Tester Tab */}
+        {activeTab === 'api-tester' && (
+          <APIRequestBuilder />
         )}
 
         {/* API Limits - Show on all tabs */}
