@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { 
@@ -17,7 +17,11 @@ import {
   Building,
   Sparkles,
   Clock,
-  TrendingUp
+  TrendingUp,
+  Home,
+  LayoutDashboard,
+  Zap,
+  LogOut
 } from 'lucide-react';
 
 const UserProfile = () => {
@@ -203,16 +207,64 @@ const UserProfile = () => {
 
   return (
     <div className="min-h-screen bg-gray-900">
+      {/* Navigation Header */}
+      <header className="bg-gray-800/50 backdrop-blur-lg border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-6">
+              <Link to="/" className="flex items-center space-x-2">
+                <Zap className="w-8 h-8 text-purple-500" />
+                <span className="text-xl font-bold text-white">API Orchestrator</span>
+              </Link>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <Link
+                to="/"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"
+              >
+                <Home className="w-5 h-5" />
+                <span>Home</span>
+              </Link>
+              <Link
+                to="/dashboard"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"
+              >
+                <LayoutDashboard className="w-5 h-5" />
+                <span>Dashboard</span>
+              </Link>
+              <Link
+                to="/billing"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"
+              >
+                <CreditCard className="w-5 h-5" />
+                <span>Billing</span>
+              </Link>
+              <Link
+                to="/profile"
+                className="flex items-center space-x-2 px-4 py-2 text-purple-400 transition"
+              >
+                <User className="w-5 h-5" />
+                <span>Profile</span>
+              </Link>
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/');
+                }}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
+        {/* Page Header */}
         <div className="mb-8">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center text-gray-400 hover:text-white transition mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </button>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">Account Settings</h1>

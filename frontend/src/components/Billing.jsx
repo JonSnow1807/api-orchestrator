@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { loadStripe } from '@stripe/stripe-js';
 import { getApiUrl } from '../config';
@@ -14,7 +15,11 @@ import {
   BarChart3,
   AlertCircle,
   Download,
-  Loader2
+  Loader2,
+  Home,
+  LayoutDashboard,
+  User,
+  LogOut
 } from 'lucide-react';
 
 // Initialize Stripe - use production key from environment
@@ -26,6 +31,7 @@ const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
 const Billing = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [billingInfo, setBillingInfo] = useState(null);
   const [pricingTiers, setPricingTiers] = useState(null);
@@ -208,14 +214,69 @@ const Billing = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gray-900">
+      {/* Navigation Header */}
+      <header className="bg-gray-800/50 backdrop-blur-lg border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-6">
+              <Link to="/" className="flex items-center space-x-2">
+                <Zap className="w-8 h-8 text-purple-500" />
+                <span className="text-xl font-bold text-white">API Orchestrator</span>
+              </Link>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <Link
+                to="/"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"
+              >
+                <Home className="w-5 h-5" />
+                <span>Home</span>
+              </Link>
+              <Link
+                to="/dashboard"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"
+              >
+                <LayoutDashboard className="w-5 h-5" />
+                <span>Dashboard</span>
+              </Link>
+              <Link
+                to="/billing"
+                className="flex items-center space-x-2 px-4 py-2 text-purple-400 transition"
+              >
+                <CreditCard className="w-5 h-5" />
+                <span>Billing</span>
+              </Link>
+              <Link
+                to="/profile"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"
+              >
+                <User className="w-5 h-5" />
+                <span>Profile</span>
+              </Link>
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/');
+                }}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        {/* Page Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-white mb-4">
             Choose Your Plan
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-gray-400">
             Scale your API operations with flexible pricing
           </p>
           {/* Demo Mode Banner - Only show if using test key */}
@@ -245,8 +306,8 @@ const Billing = () => {
 
         {/* Current Usage */}
         {billingInfo && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Current Usage</h2>
+          <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-6 mb-8">
+            <h2 className="text-2xl font-semibold text-white mb-4">Current Usage</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div>
                 <p className="text-sm text-gray-500">Current Plan</p>
