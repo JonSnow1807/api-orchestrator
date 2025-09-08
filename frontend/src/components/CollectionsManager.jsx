@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
+import { getApiUrl } from '../config';
 import {
   Folder,
   FolderOpen,
@@ -13,10 +16,13 @@ import {
   Upload,
   Search,
   Star,
-  StarOff
+  StarOff,
+  FileUp,
+  CheckCircle
 } from 'lucide-react';
 
 const CollectionsManager = ({ onRequestSelect, onRequestSave, currentRequest }) => {
+  const { token } = useAuth();
   const [collections, setCollections] = useState([]);
   const [expandedCollections, setExpandedCollections] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,6 +30,9 @@ const CollectionsManager = ({ onRequestSelect, onRequestSave, currentRequest }) 
   const [newCollectionName, setNewCollectionName] = useState('');
   const [editingCollection, setEditingCollection] = useState(null);
   const [editingRequest, setEditingRequest] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [importSuccess, setImportSuccess] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     // Load collections from localStorage
@@ -169,18 +178,75 @@ const CollectionsManager = ({ onRequestSelect, onRequestSave, currentRequest }) 
     linkElement.click();
   };
 
-  const importCollection = (event) => {
+  const importCollection = async (event) => {
     const file = event.target.files[0];
     if (file) {
+      setImporting(true);
+      setImportSuccess(false);
+      
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
           const imported = JSON.parse(e.target.result);
-          imported.id = `col_${Date.now()}`;
-          imported.name = `${imported.name} (Imported)`;
-          setCollections([...collections, imported]);
+          
+          // Check if it's a Postman collection
+          if (imported.info && imported.item) {
+            // It's a Postman collection, use the backend endpoint to convert it
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+              const response = await axios.post(
+                getApiUrl('/api/collections/import-postman'),
+                formData,
+                {
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                  }
+                }
+              );
+              
+              if (response.data) {
+                const newCollection = {
+                  id: `col_${Date.now()}`,
+                  name: response.data.name || 'Imported from Postman',
+                  description: response.data.description || 'Collection imported from Postman',
+                  requests: response.data.requests || [],
+                  createdAt: new Date().toISOString()
+                };
+                
+                setCollections([...collections, newCollection]);
+                setExpandedCollections(new Set([...expandedCollections, newCollection.id]));
+                setImportSuccess(true);
+                
+                // Reset success message after 3 seconds
+                setTimeout(() => setImportSuccess(false), 3000);
+              }
+            } catch (error) {
+              console.error('Failed to import Postman collection:', error);
+              alert('Failed to import Postman collection. Please check the file format.');
+            }
+          } else if (imported.id && imported.requests) {
+            // It's already an API Orchestrator collection format
+            imported.id = `col_${Date.now()}`;
+            imported.name = `${imported.name} (Imported)`;
+            setCollections([...collections, imported]);
+            setExpandedCollections(new Set([...expandedCollections, imported.id]));
+            setImportSuccess(true);
+            
+            // Reset success message after 3 seconds
+            setTimeout(() => setImportSuccess(false), 3000);
+          } else {
+            throw new Error('Invalid collection format');
+          }
         } catch (error) {
-          alert('Invalid collection file');
+          console.error('Import error:', error);
+          alert('Invalid collection file. Please upload a valid Postman or API Orchestrator collection.');
+        } finally {
+          setImporting(false);
+          // Reset file input
+          event.target.value = '';
         }
       };
       reader.readAsText(file);
@@ -219,14 +285,28 @@ const CollectionsManager = ({ onRequestSelect, onRequestSave, currentRequest }) 
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-white">Collections</h3>
           <div className="flex items-center gap-2">
-            <label className="p-1.5 text-gray-400 hover:text-white cursor-pointer transition">
-              <Upload className="w-4 h-4" />
+            <label className={`p-1.5 cursor-pointer transition relative group ${
+              importing ? 'text-yellow-400' : importSuccess ? 'text-green-400' : 'text-gray-400 hover:text-white'
+            }`} title="Import collection (Postman or API Orchestrator format)">
+              {importing ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : importSuccess ? (
+                <CheckCircle className="w-4 h-4" />
+              ) : (
+                <Upload className="w-4 h-4" />
+              )}
               <input
                 type="file"
                 accept=".json"
                 onChange={importCollection}
                 className="hidden"
+                disabled={importing}
+                ref={fileInputRef}
               />
+              {/* Tooltip */}
+              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                Import Postman/API Orchestrator collection
+              </div>
             </label>
             <button
               onClick={() => setShowNewCollection(true)}

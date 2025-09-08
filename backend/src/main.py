@@ -1226,6 +1226,148 @@ async def proxy_request(
         logger.error(f"Proxy request error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Proxy error: {str(e)}")
 
+# Collections Import endpoint
+@app.post("/api/collections/import-postman")
+async def import_postman_to_collections(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Import a Postman collection and convert to our collections format"""
+    from src.export_import import ImportManager
+    
+    # Read file content
+    content = await file.read()
+    
+    try:
+        # Parse Postman collection
+        collection = json.loads(content)
+        
+        # Convert to our format
+        imported_collection = {
+            "id": str(uuid.uuid4()),
+            "name": collection.get("info", {}).get("name", "Imported Collection"),
+            "description": collection.get("info", {}).get("description", ""),
+            "requests": [],
+            "created_at": datetime.now().isoformat()
+        }
+        
+        # Convert items to requests
+        def process_items(items, parent_path=""):
+            requests = []
+            for item in items:
+                if "item" in item:
+                    # It's a folder
+                    folder_name = item.get("name", "Folder")
+                    requests.extend(process_items(item["item"], f"{parent_path}/{folder_name}"))
+                elif "request" in item:
+                    # It's a request
+                    request = item["request"]
+                    url_data = request.get("url", {})
+                    
+                    # Build URL
+                    if isinstance(url_data, str):
+                        url = url_data
+                    else:
+                        protocol = url_data.get("protocol", "https")
+                        host = ".".join(url_data.get("host", []))
+                        path = "/" + "/".join(url_data.get("path", []))
+                        url = f"{protocol}://{host}{path}"
+                    
+                    # Convert headers
+                    headers = []
+                    for header in request.get("header", []):
+                        headers.append({
+                            "key": header.get("key", ""),
+                            "value": header.get("value", ""),
+                            "enabled": not header.get("disabled", False)
+                        })
+                    
+                    # Convert query params
+                    query_params = []
+                    if isinstance(url_data, dict) and "query" in url_data:
+                        for param in url_data["query"]:
+                            query_params.append({
+                                "key": param.get("key", ""),
+                                "value": param.get("value", ""),
+                                "enabled": not param.get("disabled", False)
+                            })
+                    
+                    # Convert body
+                    body_content = ""
+                    body_type = "none"
+                    if "body" in request:
+                        body = request["body"]
+                        if body.get("mode") == "raw":
+                            body_content = body.get("raw", "")
+                            body_type = "json"  # Default to JSON
+                            options = body.get("options", {})
+                            if options.get("raw", {}).get("language") == "json":
+                                body_type = "json"
+                            elif options.get("raw", {}).get("language") == "xml":
+                                body_type = "raw"
+                        elif body.get("mode") == "formdata":
+                            body_type = "form-data"
+                            # Convert form data to a structured format
+                            form_data = []
+                            for field in body.get("formdata", []):
+                                form_data.append({
+                                    "key": field.get("key", ""),
+                                    "value": field.get("value", ""),
+                                    "type": field.get("type", "text")
+                                })
+                            body_content = json.dumps(form_data)
+                    
+                    # Build authorization
+                    authorization = {"type": "none", "value": ""}
+                    if "auth" in request:
+                        auth = request["auth"]
+                        if auth.get("type") == "bearer":
+                            bearer_token = ""
+                            for token_item in auth.get("bearer", []):
+                                if token_item.get("key") == "token":
+                                    bearer_token = token_item.get("value", "")
+                            authorization = {"type": "bearer", "value": bearer_token}
+                        elif auth.get("type") == "apikey":
+                            api_key = ""
+                            for key_item in auth.get("apikey", []):
+                                if key_item.get("key") == "value":
+                                    api_key = key_item.get("value", "")
+                            authorization = {"type": "api-key", "value": api_key}
+                    
+                    # Create request object
+                    imported_request = {
+                        "id": str(uuid.uuid4()),
+                        "name": item.get("name", "Imported Request"),
+                        "method": request.get("method", "GET"),
+                        "url": url,
+                        "headers": headers,
+                        "queryParams": query_params,
+                        "bodyType": body_type,
+                        "bodyContent": body_content,
+                        "authorization": authorization,
+                        "folder": parent_path.strip("/"),
+                        "createdAt": datetime.now().isoformat()
+                    }
+                    
+                    requests.append(imported_request)
+            
+            return requests
+        
+        # Process all items
+        imported_collection["requests"] = process_items(collection.get("item", []))
+        
+        return {
+            "success": True,
+            "collection": imported_collection,
+            "message": f"Successfully imported {len(imported_collection['requests'])} requests"
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to import Postman collection: {str(e)}"
+        )
+
 # Request History endpoints
 @app.get("/api/request-history")
 async def get_request_history(
