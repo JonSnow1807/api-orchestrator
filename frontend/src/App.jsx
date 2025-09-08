@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import LandingPage from './components/LandingPage';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -13,9 +15,11 @@ import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <Routes>
+    <ErrorBoundary>
+      <Router>
+        <AuthProvider>
+          <ToastProvider>
+            <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -57,8 +61,10 @@ function App() {
           {/* Catch all - redirect to landing */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </AuthProvider>
-    </Router>
+          </ToastProvider>
+        </AuthProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
 
