@@ -1834,6 +1834,66 @@ async def ai_chat(
             "action": None
         }
 
+# Code Generation endpoint
+@app.post("/api/generate-code")
+async def generate_code(
+    request: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generate production-ready SDK code in 30+ languages
+    Better than Postman!
+    """
+    try:
+        from src.agents.code_generator_agent import code_generator_agent
+        
+        # Extract parameters
+        api_spec = request.get('apiSpec', {})
+        request_data = request.get('requestData', {})
+        selected_endpoint = request.get('selectedEndpoint')
+        language = request.get('language', 'javascript')
+        library = request.get('library', 'axios')
+        options = request.get('options', {})
+        
+        # Combine API spec and request data
+        if request_data:
+            api_spec = request_data
+        
+        # Generate SDK
+        result = code_generator_agent.generate_sdk(
+            api_spec=api_spec,
+            language=language,
+            library=library,
+            options=options
+        )
+        
+        # Track usage
+        await track_api_usage(current_user.id, "code_generation")
+        
+        return result
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Code generation failed: {str(e)}")
+        # Fallback to basic generation
+        from src.utils.code_templates import generate_basic_code
+        
+        return {
+            "code": generate_basic_code(
+                language,
+                library,
+                request.get('apiSpec', {}),
+                request.get('options', {})
+            ),
+            "packageFiles": {},
+            "tests": "// Tests to be implemented",
+            "documentation": "# API Client SDK\n\nGenerated SDK for your API.",
+            "aiGenerated": False,
+            "complexity": "Medium",
+            "estimatedTime": "< 5 min"
+        }
+
 @app.post("/api/mock-server/start")
 async def start_mock_server_direct(
     request: dict,

@@ -39,6 +39,7 @@ import AIAssistant from './AIAssistant';
 import APIDocumentation from './APIDocumentation';
 import RequestHistory from './RequestHistory';
 import MonitoringDashboard from './MonitoringDashboard';
+import CodeGenerator from './CodeGenerator/CodeGenerator';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -273,6 +274,17 @@ const Dashboard = () => {
               <span>API Tester</span>
             </button>
             <button
+              onClick={() => setActiveTab('code-generator')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'code-generator' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Code2 className="w-4 h-4" />
+              <span>Code Gen</span>
+            </button>
+            <button
               onClick={() => setActiveTab('documentation')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
                 activeTab === 'documentation' 
@@ -443,6 +455,15 @@ const Dashboard = () => {
         {/* API Tester Tab */}
         {activeTab === 'api-tester' && (
           <APIRequestBuilder />
+        )}
+
+        {/* Code Generator Tab */}
+        {activeTab === 'code-generator' && (
+          <CodeGenerator 
+            apiSpec={projects[0]?.api_spec}
+            requestData={null}
+            selectedEndpoint={null}
+          />
         )}
 
         {/* API Documentation Tab */}
