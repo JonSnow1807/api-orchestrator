@@ -29,10 +29,14 @@ Third-Party Software
 This software incorporates or depends on third-party software subject to the
 following licenses:
 
-- FastAPI: MIT License
-- React: MIT License
-- SQLAlchemy: MIT License
-- Stripe SDK: MIT License
+- FastAPI: MIT License (Copyright (c) 2018 Sebastián Ramírez)
+- React: MIT License (Copyright (c) Meta Platforms, Inc.)
+- SQLAlchemy: MIT License (Copyright (c) 2005-2024 SQLAlchemy authors)
+- Stripe SDK: MIT License (Copyright (c) Stripe, Inc.)
+- Axios: MIT License (Copyright (c) 2014-present Matt Zabriskie)
+- Tailwind CSS: MIT License (Copyright (c) Tailwind Labs, Inc.)
 - Various Python and JavaScript packages: See requirements.txt and package.json
 
 All third-party software retains its original license and copyright.
+These MIT-licensed dependencies are used under their respective licenses and
+do not affect the Apache 2.0 license of the StreamAPI codebase itself.
