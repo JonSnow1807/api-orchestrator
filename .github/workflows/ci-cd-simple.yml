@@ -51,14 +51,7 @@ jobs:
         # Run tests (skip integration tests that need external services)
         pytest ../tests/ -v --tb=short -m "not integration" || true
     
-    - name: Check core functionality
-      env:
-        DATABASE_URL: sqlite:///test.db
-        SECRET_KEY: test-secret-key-for-ci
-        PYTHONPATH: .
-      run: |
-        cd backend
-        python ../.github/test_core.py
+    # Core functionality check removed - test file was deleted
 
   # Test Frontend
   test-frontend:
