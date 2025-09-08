@@ -42,15 +42,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (email, password, rememberMe = false) => {
     try {
       setError(null);
-      console.log('Attempting login with email:', email);
+      console.log('Attempting login with email:', email, 'Remember Me:', rememberMe);
       
       // OAuth2 expects form data
       const formData = new URLSearchParams();
       formData.append('username', email); // OAuth2 uses 'username' field for email
       formData.append('password', password);
+      formData.append('remember_me', rememberMe.toString());
 
       const response = await axios.post('/auth/login', formData, {
         headers: {
@@ -99,7 +100,7 @@ export const AuthProvider = ({ children }) => {
 
       // Auto-login after successful registration
       if (response.status === 201) {
-        return await login(email, password);
+        return await login(email, password, false);
       }
       
       return { success: true };

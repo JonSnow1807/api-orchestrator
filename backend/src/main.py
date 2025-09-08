@@ -62,6 +62,10 @@ from src.auth import (
     get_current_user, get_current_active_user, check_api_limit,
     check_subscription_feature, pwd_context
 )
+from jose import jwt
+from src.config import settings as auth_settings
+SECRET_KEY = auth_settings.SECRET_KEY
+ALGORITHM = auth_settings.ALGORITHM
 
 # Import export/import functionality
 from src.export_import import ExportManager, ImportManager
@@ -356,15 +360,39 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Create tokens
-    access_token_expires = timedelta(minutes=30)
+    # Check if remember_me was sent in the form data
+    # Parse the body to get remember_me value (OAuth2PasswordRequestForm doesn't include custom fields)
+    body = await request.body()
+    remember_me = False
+    if body:
+        try:
+            from urllib.parse import parse_qs
+            params = parse_qs(body.decode('utf-8'))
+            remember_me = params.get('remember_me', ['false'])[0].lower() == 'true'
+        except:
+            pass
+    
+    # Create tokens with different expiration based on remember_me
+    if remember_me:
+        # If remember me is checked, use longer expiration (30 days for access, 90 days for refresh)
+        access_token_expires = timedelta(days=30)
+        refresh_token_expires = timedelta(days=90)
+    else:
+        # Default shorter expiration (30 minutes for access, 7 days for refresh)
+        access_token_expires = timedelta(minutes=30)
+        refresh_token_expires = timedelta(days=7)
+    
     access_token = AuthManager.create_access_token(
         data={"email": user.email, "user_id": user.id},
         expires_delta=access_token_expires
     )
-    refresh_token = AuthManager.create_refresh_token(
-        data={"email": user.email, "user_id": user.id}
-    )
+    
+    # Create refresh token with custom expiration
+    from datetime import datetime
+    to_encode = {"email": user.email, "user_id": user.id}
+    expire = datetime.utcnow() + refresh_token_expires
+    to_encode.update({"exp": expire, "type": "refresh"})
+    refresh_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     
     return Token(
         access_token=access_token,

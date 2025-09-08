@@ -6,6 +6,7 @@ import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -17,7 +18,7 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    const result = await login(email, password);
+    const result = await login(email, password, rememberMe);
     
     if (result.success) {
       navigate('/dashboard');
@@ -95,6 +96,8 @@ const Login = () => {
               <label className="flex items-center">
                 <input
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 bg-gray-900 border-gray-700 rounded text-purple-600 focus:ring-purple-500"
                 />
                 <span className="ml-2 text-sm text-gray-400">Remember me</span>
