@@ -2,7 +2,7 @@
 
 > Auto-discover APIs in your codebase and generate tests, docs, and SDKs with AI
 
-**Live at: [https://streamapi.dev](https://streamapi.dev)**
+**Live at: [https://streamapi.dev](https://streamapi.dev)** | **License: Apache 2.0** | **Copyright © 2024 Chinmay Shrivastava**
 
 Stop manually writing API tests and documentation. StreamAPI scans your codebase, discovers all endpoints, generates OpenAPI specs, creates test suites, and builds SDKs in 30+ languages - all powered by AI. Built by developers who were tired of Postman's limitations.
 
@@ -27,7 +27,7 @@ https://streamapi.dev
 ![License](https://img.shields.io/badge/license-Apache%202.0-green)
 ![YC Ready](https://img.shields.io/badge/YC-Ready-orange)
 
-## 🆕 What's New in v3.0.0 - Enterprise Edition
+## 🆕 What's New in v3.0.0 - Enterprise Edition (Apache 2.0 Licensed)
 
 ### 🏢 Enterprise Team Collaboration
 - **Multi-Tenant Workspaces** - Create isolated workspaces for different teams and projects
