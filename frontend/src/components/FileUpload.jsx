@@ -158,13 +158,13 @@ const FileUpload = ({ onUploadSuccess }) => {
   };
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-6">
-      <h3 className="text-lg font-semibold mb-4">File Upload</h3>
+    <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 p-6">
+      <h3 className="text-lg font-semibold text-white mb-4">File Upload</h3>
 
       {/* Message Display */}
       {message.text && (
         <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 ${
-          message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          message.type === 'success' ? 'bg-green-900/20 text-green-400 border border-green-700' : 'bg-red-900/20 text-red-400 border border-red-700'
         }`}>
           {message.type === 'success' ? (
             <CheckCircle className="w-5 h-5" />
@@ -179,8 +179,8 @@ const FileUpload = ({ onUploadSuccess }) => {
       <div
         className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
           dragActive 
-            ? 'border-blue-400 bg-blue-50' 
-            : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+            ? 'border-purple-400 bg-purple-900/10' 
+            : 'border-gray-600 bg-gray-700/30 hover:bg-gray-700/50'
         }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -230,7 +230,7 @@ const FileUpload = ({ onUploadSuccess }) => {
             {files.map((fileObj) => (
               <div
                 key={fileObj.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg border border-gray-700"
               >
                 <div className="flex items-center gap-3 flex-1">
                   {getFileIcon(fileObj.file.name)}
@@ -247,9 +247,9 @@ const FileUpload = ({ onUploadSuccess }) => {
                 {/* Progress/Status */}
                 {fileObj.status === 'uploading' && (
                   <div className="w-20">
-                    <div className="bg-gray-200 rounded-full h-1.5">
+                    <div className="bg-gray-700 rounded-full h-1.5">
                       <div
-                        className="bg-blue-500 h-1.5 rounded-full transition-all"
+                        className="bg-purple-500 h-1.5 rounded-full transition-all"
                         style={{ width: `${fileObj.progress}%` }}
                       />
                     </div>
@@ -281,8 +281,8 @@ const FileUpload = ({ onUploadSuccess }) => {
             disabled={uploading || files.every(f => f.status === 'completed')}
             className={`mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               uploading || files.every(f => f.status === 'completed')
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                : 'bg-purple-600 text-white hover:bg-purple-700'
             }`}
           >
             {uploading ? (

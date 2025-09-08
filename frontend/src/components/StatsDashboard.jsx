@@ -113,7 +113,7 @@ const StatsDashboard = () => {
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 bg-gray-700/50 border border-gray-600 text-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="day">Today</option>
               <option value="week">This Week</option>
@@ -123,7 +123,7 @@ const StatsDashboard = () => {
             </select>
             <button
               onClick={fetchStats}
-              className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+              className="p-2 text-gray-400 hover:text-purple-400 transition-colors"
               title="Refresh"
             >
               <RefreshCw className="w-5 h-5" />
@@ -175,7 +175,7 @@ const StatsDashboard = () => {
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{stats?.successful_tasks || 0}</span>
-                <div className="w-32 bg-gray-200 rounded-full h-2">
+                <div className="w-32 bg-gray-700 rounded-full h-2">
                   <div
                     className="bg-green-500 h-2 rounded-full"
                     style={{
@@ -195,7 +195,7 @@ const StatsDashboard = () => {
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{stats?.failed_tasks || 0}</span>
-                <div className="w-32 bg-gray-200 rounded-full h-2">
+                <div className="w-32 bg-gray-700 rounded-full h-2">
                   <div
                     className="bg-red-500 h-2 rounded-full"
                     style={{
@@ -215,7 +215,7 @@ const StatsDashboard = () => {
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{stats?.pending_tasks || 0}</span>
-                <div className="w-32 bg-gray-200 rounded-full h-2">
+                <div className="w-32 bg-gray-700 rounded-full h-2">
                   <div
                     className="bg-yellow-500 h-2 rounded-full"
                     style={{
@@ -234,7 +234,7 @@ const StatsDashboard = () => {
         <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-6">
           <h3 className="text-lg font-semibold mb-4">Generation Metrics</h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg border border-gray-700">
               <div className="flex items-center gap-3">
                 <FileCode className="w-5 h-5 text-blue-500" />
                 <span className="text-gray-300">APIs Discovered</span>
@@ -242,7 +242,7 @@ const StatsDashboard = () => {
               <span className="font-semibold text-lg">{stats?.total_apis_discovered || 0}</span>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg border border-gray-700">
               <div className="flex items-center gap-3">
                 <BarChart3 className="w-5 h-5 text-green-500" />
                 <span className="text-gray-300">Tests Generated</span>
@@ -250,7 +250,7 @@ const StatsDashboard = () => {
               <span className="font-semibold text-lg">{stats?.total_tests_generated || 0}</span>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg border border-gray-700">
               <div className="flex items-center gap-3">
                 <Package className="w-5 h-5 text-purple-500" />
                 <span className="text-gray-300">Mock Servers</span>
@@ -267,7 +267,7 @@ const StatsDashboard = () => {
           <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
           <div className="space-y-3">
             {stats.recent_activity.map((activity, index) => (
-              <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center gap-3 p-3 bg-gray-700/30 rounded-lg border border-gray-700">
                 <Activity className="w-4 h-4 text-blue-500" />
                 <div className="flex-1">
                   <p className="text-sm text-gray-300">{activity.description}</p>

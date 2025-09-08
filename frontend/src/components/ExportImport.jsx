@@ -152,13 +152,13 @@ const ExportImport = ({ projectId, taskId }) => {
   };
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-6">
-      <h3 className="text-lg font-semibold mb-4">Export & Import</h3>
+    <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 p-6">
+      <h3 className="text-lg font-semibold text-white mb-4">Export & Import</h3>
 
       {/* Message Display */}
       {message.text && (
         <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 ${
-          message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          message.type === 'success' ? 'bg-green-900/20 text-green-400 border border-green-700' : 'bg-red-900/20 text-red-400 border border-red-700'
         }`}>
           {message.type === 'success' ? (
             <CheckCircle className="w-5 h-5" />
@@ -181,8 +181,8 @@ const ExportImport = ({ projectId, taskId }) => {
                 disabled={loading || !taskId}
                 className={`w-full flex items-center justify-between px-4 py-2 border rounded-lg transition-colors ${
                   loading || !taskId
-                    ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-purple-400 border-gray-600 hover:border-purple-500'
+                    ? 'bg-gray-700/30 text-gray-500 border-gray-700 cursor-not-allowed'
+                    : 'bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-purple-400 border-gray-600 hover:border-purple-500'
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -221,8 +221,8 @@ const ExportImport = ({ projectId, taskId }) => {
               htmlFor="import-file"
               className={`w-full flex items-center justify-center gap-2 px-4 py-6 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
                 loading
-                  ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-purple-400 border-gray-600 hover:border-purple-500'
+                  ? 'bg-gray-700/30 text-gray-500 border-gray-700 cursor-not-allowed'
+                  : 'bg-gray-700/30 hover:bg-gray-700/50 text-gray-300 hover:text-purple-400 border-gray-600 hover:border-purple-500'
               }`}
             >
               {loading ? (
