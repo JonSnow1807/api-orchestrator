@@ -44,6 +44,7 @@ import MonitoringDashboard from './MonitoringDashboard';
 import CodeGenerator from './CodeGenerator/CodeGenerator';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import TeamManagement from './TeamManagement';
+import AdvancedAnalytics from './AdvancedAnalytics';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -324,6 +325,17 @@ const Dashboard = () => {
               <span>Monitoring</span>
             </button>
             <button
+              onClick={() => setActiveTab('analytics')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'analytics' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>Analytics</span>
+            </button>
+            <button
               onClick={() => setActiveTab('team')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
                 activeTab === 'team' 
@@ -505,6 +517,11 @@ const Dashboard = () => {
         {/* Monitoring Tab */}
         {activeTab === 'monitoring' && (
           <MonitoringDashboard />
+        )}
+        
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <AdvancedAnalytics workspaceId={currentWorkspace?.id} />
         )}
         
         {/* Team Management Tab */}
