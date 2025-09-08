@@ -282,8 +282,8 @@ const MonitoringDashboard = ({ onCreateFromRequest = null }) => {
     : 0;
 
   return (
-    <div className="h-full max-h-[calc(100vh-300px)] overflow-y-auto">
-      <div className="space-y-6 p-2">
+    <div className="h-full max-h-[calc(100vh-300px)] overflow-auto">
+      <div className="space-y-6">
       {/* Header with Stats */}
       <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 p-6">
         <div className="flex items-center justify-between mb-6">
@@ -301,7 +301,7 @@ const MonitoringDashboard = ({ onCreateFromRequest = null }) => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-gray-900/50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <Activity className="w-5 h-5 text-purple-400" />
@@ -560,7 +560,7 @@ const MonitoringDashboard = ({ onCreateFromRequest = null }) => {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Method</label>
                   <select
@@ -592,7 +592,7 @@ const MonitoringDashboard = ({ onCreateFromRequest = null }) => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Expected Status</label>
                   <input

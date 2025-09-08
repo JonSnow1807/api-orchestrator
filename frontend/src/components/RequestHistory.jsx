@@ -226,8 +226,8 @@ const RequestHistory = ({ onReplay = null }) => {
   }
 
   return (
-    <div className="h-full max-h-[calc(100vh-300px)] overflow-y-auto">
-      <div className="space-y-6 p-2">
+    <div className="h-full max-h-[calc(100vh-300px)] overflow-auto">
+      <div className="space-y-6">
       {/* Header */}
       <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 p-6">
         <div className="flex items-center justify-between mb-6">
