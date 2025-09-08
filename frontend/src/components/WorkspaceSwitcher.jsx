@@ -132,7 +132,7 @@ const WorkspaceSwitcher = ({ onWorkspaceChange }) => {
 
         {/* Dropdown Menu */}
         {isOpen && (
-          <div className="absolute top-full left-0 mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
+          <div className="absolute top-full left-0 mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-[9999]">
             <div className="p-2">
               <div className="text-xs text-gray-500 px-3 py-2 font-semibold uppercase">
                 Your Workspaces
@@ -218,7 +218,7 @@ const WorkspaceSwitcher = ({ onWorkspaceChange }) => {
 
       {/* Create Workspace Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]">
           <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
             <h3 className="text-xl font-bold text-white mb-4">Create New Workspace</h3>
             

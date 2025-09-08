@@ -53,7 +53,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('orchestration');
+  const [activeTab, setActiveTab] = useState('analytics');
   const [currentTaskId, setCurrentTaskId] = useState(null);
   const [currentWorkspace, setCurrentWorkspace] = useState(null);
 
@@ -205,7 +205,7 @@ const Dashboard = () => {
           <nav className="flex gap-1 bg-gray-800/50 backdrop-blur rounded-lg p-1 min-w-fit">
             <button
               onClick={() => setActiveTab('orchestration')}
-              className={`flex items-center space-x-1 px-2.5 py-1.5 text-sm rounded-lg transition whitespace-nowrap ${
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
                 activeTab === 'orchestration' 
                   ? 'bg-purple-600 text-white' 
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
@@ -213,6 +213,17 @@ const Dashboard = () => {
             >
               <Zap className="w-4 h-4" />
               <span>Orchestration</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'analytics' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>Analytics</span>
             </button>
             <button
               onClick={() => setActiveTab('projects')}
@@ -224,17 +235,6 @@ const Dashboard = () => {
             >
               <FolderOpen className="w-4 h-4" />
               <span>Projects</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('statistics')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
-                activeTab === 'statistics' 
-                  ? 'bg-purple-600 text-white' 
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
-              }`}
-            >
-              <BarChart3 className="w-4 h-4" />
-              <span>Statistics</span>
             </button>
             <button
               onClick={() => setActiveTab('tasks')}
@@ -323,17 +323,6 @@ const Dashboard = () => {
             >
               <Shield className="w-4 h-4" />
               <span>Monitoring</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
-                activeTab === 'analytics' 
-                  ? 'bg-purple-600 text-white' 
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
-              }`}
-            >
-              <BarChart3 className="w-4 h-4" />
-              <span>Analytics</span>
             </button>
             <button
               onClick={() => setActiveTab('team')}
