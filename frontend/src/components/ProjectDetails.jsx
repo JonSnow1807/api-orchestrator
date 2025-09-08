@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getApiUrl, getWebSocketURL } from '../config';
 import axios from 'axios';
-import AIAnalysisDisplay from './AIAnalysisDisplay';
+import AIAnalysis from './AIAnalysis';
 import MockServerManager from './MockServerManager';
 import { 
   ArrowLeft,
@@ -590,7 +590,7 @@ const ProjectDetails = () => {
               <Brain className="w-6 h-6 mr-2 text-purple-400" />
               AI Analysis Results
             </h2>
-            <AIAnalysisDisplay taskId={currentTask} />
+            <AIAnalysis projectId={id} />
           </div>
         )}
 
