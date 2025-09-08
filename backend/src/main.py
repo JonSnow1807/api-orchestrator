@@ -185,6 +185,11 @@ from src.config import settings
 # Import structured logging
 from src.utils.logger import logger, log_request
 
+# Import webhook routes
+from src.routes.webhooks import router as webhooks_router
+# Import AI keys routes
+from src.routes.ai_keys import router as ai_keys_router
+
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
@@ -198,6 +203,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include webhook routes
+app.include_router(webhooks_router)
+# Include AI keys routes
+app.include_router(ai_keys_router)
 
 # Add request logging middleware
 @app.middleware("http")

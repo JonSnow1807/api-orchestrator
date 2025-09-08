@@ -44,6 +44,7 @@ import CodeGenerator from './CodeGenerator/CodeGenerator';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import TeamManagement from './TeamManagement';
 import AdvancedAnalytics from './AdvancedAnalytics';
+import WebhookManager from './WebhookManager';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -334,6 +335,17 @@ const Dashboard = () => {
               <Users className="w-4 h-4" />
               <span>Team</span>
             </button>
+            <button
+              onClick={() => setActiveTab('webhooks')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'webhooks' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Zap className="w-4 h-4" />
+              <span>Webhooks</span>
+            </button>
           </nav>
         </div>
 
@@ -518,6 +530,11 @@ const Dashboard = () => {
             <p className="text-gray-400 mb-4">Please select or create a workspace to manage your team.</p>
             <WorkspaceSwitcher onWorkspaceChange={setCurrentWorkspace} />
           </div>
+        )}
+
+        {/* Webhooks Tab */}
+        {activeTab === 'webhooks' && (
+          <WebhookManager workspaceId={currentWorkspace?.id} />
         )}
 
         {/* API Limits - Show on all tabs */}
