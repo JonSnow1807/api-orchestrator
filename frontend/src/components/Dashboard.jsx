@@ -194,16 +194,16 @@ const Dashboard = () => {
 
         {/* Tab Navigation */}
         <div className="mb-8">
-          <nav className="flex space-x-1 bg-gray-800/50 backdrop-blur rounded-lg p-1">
+          <nav className="flex flex-wrap gap-1 bg-gray-800/50 backdrop-blur rounded-lg p-1">
             <button
               onClick={() => setActiveTab('orchestration')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+              className={`flex items-center space-x-1 px-3 py-1.5 text-sm rounded-lg transition ${
                 activeTab === 'orchestration' 
                   ? 'bg-purple-600 text-white' 
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
-              <Zap className="w-5 h-5" />
+              <Zap className="w-4 h-4" />
               <span>Orchestration</span>
             </button>
             <button
@@ -214,7 +214,7 @@ const Dashboard = () => {
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
-              <FolderOpen className="w-5 h-5" />
+              <FolderOpen className="w-4 h-4" />
               <span>Projects</span>
             </button>
             <button
@@ -225,7 +225,7 @@ const Dashboard = () => {
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
-              <BarChart3 className="w-5 h-5" />
+              <BarChart3 className="w-4 h-4" />
               <span>Statistics</span>
             </button>
             <button
@@ -236,7 +236,7 @@ const Dashboard = () => {
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
-              <History className="w-5 h-5" />
+              <History className="w-4 h-4" />
               <span>Tasks</span>
             </button>
             <button
@@ -247,7 +247,7 @@ const Dashboard = () => {
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
-              <Upload className="w-5 h-5" />
+              <Upload className="w-4 h-4" />
               <span>Upload</span>
             </button>
             <button
@@ -258,7 +258,7 @@ const Dashboard = () => {
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
-              <FileArchive className="w-5 h-5" />
+              <FileArchive className="w-4 h-4" />
               <span>Export/Import</span>
             </button>
             <button
@@ -269,7 +269,7 @@ const Dashboard = () => {
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
-              <Zap className="w-5 h-5" />
+              <Zap className="w-4 h-4" />
               <span>API Tester</span>
             </button>
             <button
@@ -280,7 +280,7 @@ const Dashboard = () => {
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
-              <BookOpen className="w-5 h-5" />
+              <BookOpen className="w-4 h-4" />
               <span>API Docs</span>
             </button>
             <button
@@ -291,7 +291,7 @@ const Dashboard = () => {
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
-              <Clock className="w-5 h-5" />
+              <Clock className="w-4 h-4" />
               <span>History</span>
             </button>
             <button
@@ -302,7 +302,7 @@ const Dashboard = () => {
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
-              <Shield className="w-5 h-5" />
+              <Shield className="w-4 h-4" />
               <span>Monitoring</span>
             </button>
           </nav>
