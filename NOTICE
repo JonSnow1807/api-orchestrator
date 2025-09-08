@@ -1,0 +1,38 @@
+StreamAPI (API Orchestrator)
+Copyright 2024 Chinmay Shrivastava
+
+This product includes software developed by Chinmay Shrivastava
+(https://streamapi.dev).
+
+================================================================================
+IMPORTANT NOTICE REGARDING COPYRIGHT AND USAGE:
+================================================================================
+
+This software is protected by copyright law. The copyright holder reserves all
+rights not explicitly granted by the Apache License 2.0.
+
+While this software is open source under the Apache License 2.0, please note:
+
+1. You must retain all copyright notices in any copies or substantial portions
+2. You must provide attribution when using this software
+3. Any modifications must be clearly marked as such
+4. You cannot use the StreamAPI name, logo, or trademarks without permission
+5. Commercial use is permitted, but competing SaaS services require permission
+
+For commercial licensing inquiries or questions about usage rights, contact:
+support@streamapi.dev
+
+================================================================================
+Third-Party Software
+================================================================================
+
+This software incorporates or depends on third-party software subject to the
+following licenses:
+
+- FastAPI: MIT License
+- React: MIT License
+- SQLAlchemy: MIT License
+- Stripe SDK: MIT License
+- Various Python and JavaScript packages: See requirements.txt and package.json
+
+All third-party software retains its original license and copyright.

@@ -24,7 +24,7 @@ https://streamapi.dev
 ![Version](https://img.shields.io/badge/version-3.0.0-blue)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Node](https://img.shields.io/badge/node-20%2B-green)
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/license-Apache%202.0-green)
 ![YC Ready](https://img.shields.io/badge/YC-Ready-orange)
 
 ## 🆕 What's New in v3.0.0 - Enterprise Edition
@@ -282,7 +282,7 @@ streamapi scan ./my-api
 | **Self-host on my infrastructure** | ✅ Docker, K8s ready | ❌ Cloud only |
 | **Git-friendly format** | ✅ YAML, JSON, Markdown | 🟨 JSON export only |
 | **CI/CD integration** | ✅ GitHub Actions, Jenkins | 🟨 Limited |
-| **Actually open source** | ✅ MIT License, fork it! | ❌ Proprietary |
+| **Actually open source** | ✅ Apache 2.0, fork it! | ❌ Proprietary |
 | **Price for small team** | 💰 $49/mo | 💰 $12/mo |
 
 **Verdict**: If you want to manually click through UIs, use Postman. If you want to automate everything and get back to coding, use StreamAPI.
@@ -452,7 +452,22 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Copyright 2024 Chinmay Shrivastava / StreamAPI
+
+This project is licensed under the **Apache License 2.0** - see the [LICENSE](LICENSE) file for details.
+
+### What this means:
+- ✅ **You can** use this commercially
+- ✅ **You can** modify and distribute
+- ✅ **You can** use privately
+- ✅ **You can** use patents
+- ⚠️ **You must** include copyright notice
+- ⚠️ **You must** include license
+- ⚠️ **You must** state changes
+- ❌ **You cannot** use trademark
+- ❌ **You cannot** hold liable
+
+For commercial SaaS deployment or enterprise licensing, contact: support@streamapi.dev
 
 ## 🙏 Acknowledgments
 
