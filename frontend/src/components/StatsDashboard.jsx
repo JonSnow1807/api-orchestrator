@@ -69,7 +69,7 @@ const StatsDashboard = () => {
   };
 
   const StatCard = ({ icon: Icon, label, value, color, trend }) => (
-    <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+    <div className="bg-gray-800/50 backdrop-blur p-6 rounded-lg border border-gray-700 hover:border-purple-500 transition">
       <div className="flex items-center justify-between mb-4">
         <div className={`p-3 rounded-full ${color}`}>
           <Icon className="w-6 h-6 text-white" />
@@ -83,7 +83,7 @@ const StatsDashboard = () => {
           </div>
         )}
       </div>
-      <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
+      <h3 className="text-2xl font-bold text-white">{value}</h3>
       <p className="text-sm text-gray-600 mt-1">{label}</p>
     </div>
   );
@@ -102,10 +102,10 @@ const StatsDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">Statistics Overview</h2>
+            <h2 className="text-2xl font-bold text-white">Statistics Overview</h2>
             <p className="text-gray-600 mt-1">Track your API orchestration metrics</p>
           </div>
           <div className="flex items-center gap-3">
@@ -165,7 +165,7 @@ const StatsDashboard = () => {
       {/* Detailed Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Task Status Breakdown */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-6">
           <h3 className="text-lg font-semibold mb-4">Task Status Distribution</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -231,7 +231,7 @@ const StatsDashboard = () => {
         </div>
 
         {/* Generation Metrics */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-6">
           <h3 className="text-lg font-semibold mb-4">Generation Metrics</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -263,7 +263,7 @@ const StatsDashboard = () => {
 
       {/* Recent Activity */}
       {stats?.recent_activity && stats.recent_activity.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-6">
           <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
           <div className="space-y-3">
             {stats.recent_activity.map((activity, index) => (

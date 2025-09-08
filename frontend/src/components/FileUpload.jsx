@@ -158,7 +158,7 @@ const FileUpload = ({ onUploadSuccess }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-6">
       <h3 className="text-lg font-semibold mb-4">File Upload</h3>
 
       {/* Message Display */}
@@ -235,7 +235,7 @@ const FileUpload = ({ onUploadSuccess }) => {
                 <div className="flex items-center gap-3 flex-1">
                   {getFileIcon(fileObj.file.name)}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-white truncate">
                       {fileObj.file.name}
                     </p>
                     <p className="text-xs text-gray-500">

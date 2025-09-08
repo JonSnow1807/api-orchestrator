@@ -135,7 +135,7 @@ const TaskManager = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700">
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
@@ -200,7 +200,7 @@ const TaskManager = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     {getStatusIcon(task.status)}
-                    <h3 className="font-medium text-gray-900">
+                    <h3 className="font-medium text-white">
                       {task.project_name || `Task ${task.id}`}
                     </h3>
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(task.status)}`}>
@@ -287,7 +287,7 @@ const TaskManager = () => {
       {/* Task Details Modal */}
       {selectedTask && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+          <div className="bg-gray-800 rounded-lg border border-gray-700 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Task Details</h3>

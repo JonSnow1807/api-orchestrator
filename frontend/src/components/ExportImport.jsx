@@ -152,7 +152,7 @@ const ExportImport = ({ projectId, taskId }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-6">
       <h3 className="text-lg font-semibold mb-4">Export & Import</h3>
 
       {/* Message Display */}
@@ -182,7 +182,7 @@ const ExportImport = ({ projectId, taskId }) => {
                 className={`w-full flex items-center justify-between px-4 py-2 border rounded-lg transition-colors ${
                   loading || !taskId
                     ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                    : 'bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-300 hover:border-blue-300'
+                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-purple-400 border-gray-600 hover:border-purple-500'
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ const ExportImport = ({ projectId, taskId }) => {
               className={`w-full flex items-center justify-center gap-2 px-4 py-6 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
                 loading
                   ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                  : 'bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-600 border-gray-300 hover:border-blue-300'
+                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-purple-400 border-gray-600 hover:border-purple-500'
               }`}
             >
               {loading ? (
