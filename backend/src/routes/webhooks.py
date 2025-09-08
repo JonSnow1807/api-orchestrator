@@ -11,10 +11,9 @@ import httpx
 import asyncio
 from pydantic import BaseModel, HttpUrl, Field
 
-from src.database import get_db
+from src.database import get_db, User
 from src.auth import get_current_user
 from src.models.workspace import WorkspaceWebhook, Workspace, WorkspaceActivity
-from src.models.user import User
 
 router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
 

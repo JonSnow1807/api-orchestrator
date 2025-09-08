@@ -11,9 +11,8 @@ from cryptography.fernet import Fernet
 import base64
 import os
 
-from src.database import get_db
+from src.database import get_db, User, Base
 from src.auth import get_current_user
-from src.models.user import User
 from src.models.workspace import Workspace, WorkspaceActivity
 
 router = APIRouter(prefix="/api/ai-keys", tags=["ai-keys"])
@@ -141,7 +140,6 @@ class AIKeyUsageResponse(BaseModel):
 
 # Database models (add to src/models/ai_keys.py)
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, JSON, ForeignKey, Text
-from src.database import Base
 
 class AIKey(Base):
     """Custom AI model keys for workspaces"""
