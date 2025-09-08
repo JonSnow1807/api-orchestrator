@@ -273,8 +273,8 @@ const Billing = () => {
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">
-            Choose Your Plan
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 mb-4">
+            Manage Your Subscription
           </h1>
           <p className="text-xl text-gray-400">
             Scale your API operations with flexible pricing
@@ -291,16 +291,16 @@ const Billing = () => {
 
         {/* Alerts */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
-            <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-            <span className="text-red-700">{error}</span>
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg flex items-center">
+            <AlertCircle className="w-5 h-5 text-red-400 mr-2" />
+            <span className="text-red-400">{error}</span>
           </div>
         )}
         
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center">
-            <Check className="w-5 h-5 text-green-500 mr-2" />
-            <span className="text-green-700">{success}</span>
+          <div className="mb-6 p-4 bg-green-500/10 border border-green-500/50 rounded-lg flex items-center">
+            <Check className="w-5 h-5 text-green-400 mr-2" />
+            <span className="text-green-400">{success}</span>
           </div>
         )}
 
@@ -310,12 +310,12 @@ const Billing = () => {
             <h2 className="text-2xl font-semibold text-white mb-4">Current Usage</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div>
-                <p className="text-sm text-gray-500">Current Plan</p>
-                <p className="text-2xl font-bold capitalize">{billingInfo.subscription.tier}</p>
+                <p className="text-sm text-gray-400">Current Plan</p>
+                <p className="text-2xl font-bold text-white capitalize">{billingInfo.subscription.tier}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">API Calls This Month</p>
-                <p className="text-2xl font-bold">
+                <p className="text-sm text-gray-400">API Calls This Month</p>
+                <p className="text-2xl font-bold text-white">
                   {billingInfo.usage.api_calls.toLocaleString()}
                   {billingInfo.limits.api_calls !== -1 && (
                     <span className="text-sm text-gray-500">
@@ -325,25 +325,25 @@ const Billing = () => {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">AI Analyses</p>
-                <p className="text-2xl font-bold">{billingInfo.usage.ai_analyses}</p>
+                <p className="text-sm text-gray-400">AI Analyses</p>
+                <p className="text-2xl font-bold text-white">{billingInfo.usage.ai_analyses}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Total Cost</p>
-                <p className="text-2xl font-bold">${billingInfo.usage.total_cost.toFixed(2)}</p>
+                <p className="text-sm text-gray-400">Total Cost</p>
+                <p className="text-2xl font-bold text-white">${billingInfo.usage.total_cost.toFixed(2)}</p>
               </div>
             </div>
             
             {/* Usage Progress Bar */}
             {billingInfo.limits.api_calls !== -1 && (
               <div className="mt-4">
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                <div className="flex justify-between text-sm text-gray-400 mb-1">
                   <span>API Usage</span>
                   <span>{Math.round((billingInfo.usage.api_calls / billingInfo.limits.api_calls) * 100)}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-700 rounded-full h-2">
                   <div 
-                    className="bg-blue-500 h-2 rounded-full"
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 h-2 rounded-full"
                     style={{ width: `${Math.min(100, (billingInfo.usage.api_calls / billingInfo.limits.api_calls) * 100)}%` }}
                   />
                 </div>
@@ -364,33 +364,35 @@ const Billing = () => {
             return (
               <div
                 key={tierName}
-                className={`bg-white rounded-lg shadow-lg p-6 ${
-                  isCurrentTier ? 'ring-2 ring-blue-500' : ''
-                } ${tierName === 'professional' ? 'transform scale-105' : ''}`}
+                className={`bg-gray-800/50 backdrop-blur-lg rounded-2xl border ${
+                  isCurrentTier ? 'border-purple-500 shadow-2xl shadow-purple-500/20' : 'border-gray-700'
+                } ${tierName === 'professional' ? 'transform scale-105 border-purple-500' : ''} p-6 transition-all hover:border-gray-600`}
               >
                 {tierName === 'professional' && (
-                  <div className="bg-blue-500 text-white text-center py-1 px-3 rounded-full text-sm font-semibold mb-4">
-                    Most Popular
+                  <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-center py-1 px-3 rounded-full text-sm font-semibold mb-4">
+                    MOST POPULAR
                   </div>
                 )}
                 
-                <h3 className="text-2xl font-bold capitalize mb-2">{tierConfig.name}</h3>
-                <div className="text-3xl font-bold mb-4">
+                <h3 className="text-2xl font-bold text-white capitalize mb-2">{tierConfig.name}</h3>
+                <div className="text-3xl font-bold text-white mb-4">
                   {formatPrice(tierConfig.price)}
                 </div>
                 
                 <ul className="space-y-3 mb-6">
                   {features.map((feature, index) => (
                     <li key={index} className="flex items-start">
-                      <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700">{feature}</span>
+                      <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-green-400" />
+                      </div>
+                      <span className="text-gray-300 ml-2">{feature}</span>
                     </li>
                   ))}
                 </ul>
                 
                 {isCurrentTier ? (
                   <button
-                    className="w-full py-2 px-4 bg-gray-100 text-gray-600 rounded-lg font-semibold"
+                    className="w-full py-2 px-4 bg-purple-600/20 text-purple-400 border border-purple-500/30 rounded-lg font-semibold"
                     disabled
                   >
                     Current Plan
@@ -404,10 +406,12 @@ const Billing = () => {
                       handleSubscribe(tierName);
                     }}
                     disabled={processing}
-                    className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
+                    className={`w-full py-2 px-4 rounded-lg font-semibold transition-all ${
                       tierName === 'enterprise'
-                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                        ? 'bg-gray-700/50 text-purple-400 border border-purple-500/30 hover:bg-purple-600/20'
+                        : tierName === 'professional'
+                        ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:opacity-90'
+                        : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 hover:text-white'
                     } disabled:opacity-50`}
                   >
                     {processing ? (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { UserPlus, Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react';
 
@@ -14,6 +14,9 @@ const Register = () => {
   
   const { register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const selectedPlan = location.state?.selectedPlan;
+  const redirectToBilling = location.state?.redirectToBilling;
 
   const validateForm = () => {
     if (password !== confirmPassword) {
@@ -40,7 +43,12 @@ const Register = () => {
     if (result.success) {
       setSuccess(true);
       setTimeout(() => {
-        navigate('/dashboard');
+        // If user came from pricing page with a selected plan, go to billing
+        if (redirectToBilling || selectedPlan) {
+          navigate('/billing');
+        } else {
+          navigate('/dashboard');
+        }
       }, 1500);
     } else {
       setError(result.error);

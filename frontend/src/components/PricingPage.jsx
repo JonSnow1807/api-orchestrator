@@ -68,7 +68,7 @@ const PricingPage = () => {
         'Custom Branding',
       ],
       limitations: [],
-      cta: 'Start Free Trial',
+      cta: 'Get Started',
       popular: false,
     },
     {
@@ -100,7 +100,8 @@ const PricingPage = () => {
       } else if (plan.name === 'Enterprise') {
         window.location.href = 'mailto:sales@streamapi.dev?subject=Enterprise Plan Inquiry';
       } else {
-        navigate('/register', { state: { selectedPlan: plan.name } });
+        // For paid plans, save the plan and redirect to register
+        navigate('/register', { state: { selectedPlan: plan.name, redirectToBilling: true } });
       }
     } else {
       navigate('/billing');
@@ -175,11 +176,11 @@ const PricingPage = () => {
           {plans.map((plan, index) => (
             <div
               key={plan.name}
-              className={`relative group ${plan.popular ? 'lg:-mt-4' : ''}`}
+              className={`relative ${plan.popular ? 'lg:-mt-4' : ''}`}
             >
-              {/* Popular badge */}
+              {/* Popular badge - with higher z-index */}
               {plan.popular && (
-                <div className="absolute -top-5 left-0 right-0 flex justify-center">
+                <div className="absolute -top-5 left-0 right-0 flex justify-center z-10">
                   <div className="px-4 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs font-bold rounded-full shadow-lg">
                     MOST POPULAR
                   </div>
@@ -194,7 +195,7 @@ const PricingPage = () => {
                   : 'bg-gray-800/50 border border-gray-700 hover:border-gray-600'
                 }
                 backdrop-blur-lg transition-all duration-300
-                group-hover:transform group-hover:scale-105
+                hover:transform hover:scale-[1.02]
               `}>
                 {/* Plan header */}
                 <div className="mb-6">
