@@ -11,6 +11,7 @@ import ProjectCreate from './components/ProjectCreate';
 import ProjectDetails from './components/ProjectDetails';
 import UserProfile from './components/UserProfile';
 import Billing from './components/Billing';
+import PricingPage from './components/PricingPage';
 import PrivateRoute from './components/PrivateRoute';
 
 function App() {
@@ -55,8 +56,8 @@ function App() {
             </PrivateRoute>
           } />
           
-          {/* Pricing route - shows billing page */}
-          <Route path="/pricing" element={<Billing />} />
+          {/* Pricing route - shows public pricing page */}
+          <Route path="/pricing" element={<PricingPage />} />
           
           {/* Landing Page */}
           <Route path="/" element={<LandingPage />} />

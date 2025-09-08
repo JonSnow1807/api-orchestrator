@@ -112,8 +112,8 @@ const Dashboard = () => {
                 <h1 className="text-2xl font-bold text-white">API Orchestrator</h1>
               </Link>
               <WorkspaceSwitcher onWorkspaceChange={setCurrentWorkspace} />
-              <span className="px-3 py-1 bg-purple-600/20 text-purple-400 text-sm rounded-full border border-purple-500/30">
-                {user?.subscription_tier || 'Free'} Tier
+              <span className="px-3 py-1 bg-purple-600/20 text-purple-400 text-sm rounded-full border border-purple-500/30 whitespace-nowrap">
+                {(user?.subscription_tier || 'Free').charAt(0).toUpperCase() + (user?.subscription_tier || 'free').slice(1)}
               </span>
             </div>
             
