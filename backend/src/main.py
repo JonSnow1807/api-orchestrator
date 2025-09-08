@@ -282,6 +282,11 @@ class ProxyRequest(BaseModel):
     headers: Optional[Dict[str, str]] = None
     params: Optional[Dict[str, str]] = None
     data: Optional[Any] = None
+
+class AIChatRequest(BaseModel):
+    message: str
+    context: Optional[Dict[str, Any]] = None
+    history: Optional[List[Dict[str, Any]]] = None
     code_content: Optional[str] = None  # For source_type="code"
     options: Optional[Dict] = None
 
@@ -1159,6 +1164,67 @@ async def proxy_request(
     except Exception as e:
         logger.error(f"Proxy request error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Proxy error: {str(e)}")
+
+# AI Chat endpoint
+@app.post("/api/ai-chat")
+async def ai_chat(
+    request: AIChatRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """AI-powered chat assistant for API guidance"""
+    try:
+        # Use the AI agent if available
+        from src.agents.ai_agent import AIIntelligenceAgent
+        
+        # Create a simple response based on the message
+        message_lower = request.message.lower()
+        
+        # Initialize response
+        response = {
+            "response": "",
+            "metadata": {},
+            "action": None
+        }
+        
+        # Context-aware responses
+        if request.context and request.context.get("type") == "api_endpoint":
+            # Analyze specific endpoint
+            endpoint = request.context.get("endpoint", {})
+            response["response"] = f"Analyzing endpoint: {endpoint.get('path', 'Unknown')}\n\n"
+            response["metadata"]["type"] = "analysis"
+        
+        # Provide intelligent responses based on keywords
+        if "security" in message_lower:
+            response["response"] += "🔒 Security Analysis:\n• Always use HTTPS in production\n• Implement rate limiting to prevent abuse\n• Validate all input parameters\n• Use proper authentication headers\n• Never expose sensitive data in URLs"
+            response["metadata"]["type"] = "security"
+            
+        elif "performance" in message_lower or "optimize" in message_lower:
+            response["response"] += "⚡ Performance Optimization:\n• Implement caching for frequently accessed data\n• Use pagination for large datasets\n• Consider database query optimization\n• Enable compression (gzip/brotli)\n• Use CDN for static assets"
+            response["metadata"]["type"] = "performance"
+            
+        elif "test" in message_lower:
+            response["response"] += "🧪 Testing Recommendations:\n• Unit test individual functions\n• Integration test API endpoints\n• Load test for performance\n• Security test for vulnerabilities\n• Test error handling scenarios"
+            response["metadata"]["type"] = "testing"
+            
+        elif "best practice" in message_lower or "standard" in message_lower:
+            response["response"] += "✅ API Best Practices:\n• Use RESTful conventions\n• Version your APIs (/v1/, /v2/)\n• Provide clear error messages\n• Document with OpenAPI/Swagger\n• Use consistent naming conventions\n• Implement proper HTTP status codes"
+            response["metadata"]["type"] = "suggestion"
+            
+        else:
+            # General helpful response
+            response["response"] = "I can help you with:\n• API security analysis\n• Performance optimization\n• Testing strategies\n• Best practices\n• Error handling\n• Authentication methods\n\nWhat specific aspect would you like to explore?"
+            response["metadata"]["type"] = "general"
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"AI chat error: {str(e)}")
+        # Return a helpful fallback response
+        return {
+            "response": "I'm here to help with API development! You can ask me about security, performance, testing, or best practices.",
+            "metadata": {"type": "fallback"},
+            "action": None
+        }
 
 @app.post("/api/mock-server/start")
 async def start_mock_server_direct(

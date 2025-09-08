@@ -34,6 +34,7 @@ import RealtimeMonitor from './RealtimeMonitor';
 import AIAnalysis from './AIAnalysis';
 import MockServerManager from './MockServerManager';
 import APIRequestBuilder from './APIRequestBuilder';
+import AIAssistant from './AIAssistant';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -440,6 +441,9 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      
+      {/* AI Assistant - Floating, non-intrusive */}
+      <AIAssistant />
     </div>
   );
 };
