@@ -70,7 +70,11 @@ class Workspace(Base):
     
     # Relationships
     creator = relationship("User", foreign_keys=[created_by], backref="owned_workspaces")
-    members = relationship("User", secondary=workspace_members, backref="workspaces")
+    members = relationship("User", 
+                          secondary=workspace_members, 
+                          primaryjoin="Workspace.id == workspace_members.c.workspace_id",
+                          secondaryjoin="User.id == workspace_members.c.user_id",
+                          backref="workspaces")
     invitations = relationship("WorkspaceInvitation", back_populates="workspace", cascade="all, delete-orphan")
     projects = relationship("Project", back_populates="workspace", cascade="all, delete-orphan")
     # collections = relationship("Collection", back_populates="workspace", cascade="all, delete-orphan")  # Will add when Collection model is created

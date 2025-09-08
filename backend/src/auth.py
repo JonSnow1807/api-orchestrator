@@ -152,7 +152,8 @@ class AuthManager:
             full_name=user_data.full_name or user_data.username,
             is_active=True,
             subscription_tier="free",
-            api_calls_limit=100  # Free tier limit
+            api_calls_limit=100,  # Free tier limit
+            api_calls_this_month=0  # Initialize to 0
         )
         
         db.add(new_user)
