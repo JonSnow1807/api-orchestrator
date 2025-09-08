@@ -46,14 +46,14 @@ const OrchestrationHub = () => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="bg-white rounded-lg shadow-lg">
-        <div className="border-b border-gray-200">
+      <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700">
+        <div className="border-b border-gray-700">
           <nav className="flex space-x-8 px-6" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('code')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'code'
-                  ? 'border-indigo-500 text-indigo-600'
+                  ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
               }`}
             >
@@ -63,7 +63,7 @@ const OrchestrationHub = () => {
               onClick={() => setActiveTab('upload')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'upload'
-                  ? 'border-indigo-500 text-indigo-600'
+                  ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
               }`}
             >
@@ -73,14 +73,14 @@ const OrchestrationHub = () => {
               onClick={() => setActiveTab('monitor')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'monitor'
-                  ? 'border-indigo-500 text-indigo-600'
+                  ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
               }`}
               disabled={!currentTaskId}
             >
               Real-time Monitor
               {currentTaskId && (
-                <span className="ml-2 px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full">
+                <span className="ml-2 px-2 py-0.5 text-xs bg-purple-600/20 text-purple-400 rounded-full">
                   Active
                 </span>
               )}
@@ -89,14 +89,14 @@ const OrchestrationHub = () => {
               onClick={() => setActiveTab('analysis')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'analysis'
-                  ? 'border-indigo-500 text-indigo-600'
+                  ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
               }`}
               disabled={!currentTaskId && !orchestrationResults}
             >
               AI Analysis
               {user?.subscription_tier === 'free' && (
-                <span className="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-700 rounded-full">
+                <span className="ml-2 px-2 py-0.5 text-xs bg-yellow-600/20 text-yellow-400 rounded-full">
                   Pro
                 </span>
               )}
@@ -105,7 +105,7 @@ const OrchestrationHub = () => {
               onClick={() => setActiveTab('mock')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'mock'
-                  ? 'border-indigo-500 text-indigo-600'
+                  ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
               }`}
             >
@@ -150,25 +150,25 @@ const OrchestrationHub = () => {
       {/* Quick Stats */}
       {orchestrationResults && (
         <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-4">
             <div className="text-2xl font-bold text-indigo-600">
               {orchestrationResults.endpoints_count || 0}
             </div>
             <div className="text-sm text-gray-600">Endpoints Discovered</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-4">
             <div className="text-2xl font-bold text-green-600">
               {orchestrationResults.tests_generated || 0}
             </div>
             <div className="text-sm text-gray-600">Tests Generated</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-4">
             <div className="text-2xl font-bold text-purple-600">
               {orchestrationResults.security_score || 'N/A'}%
             </div>
             <div className="text-sm text-gray-600">Security Score</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-gray-800/50 backdrop-blur rounded-lg border border-gray-700 p-4">
             <div className="text-2xl font-bold text-yellow-600">
               {orchestrationResults.mock_servers || 0}
             </div>
