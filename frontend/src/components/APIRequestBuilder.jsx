@@ -170,7 +170,10 @@ const APIRequestBuilder = () => {
         url: processedUrl,
         headers: headersObj,
         params,
-        data
+        data,
+        environment_id: currentEnvironment?.id || null,
+        collection_id: currentRequestData?.collectionId || null,
+        project_id: null  // Can be added if we have project context
       };
 
       const proxyResponse = await axios.post(

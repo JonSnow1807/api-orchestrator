@@ -413,6 +413,188 @@ class AIAnalysis(Base):
         }
 
 # Database initialization
+class APIMonitor(Base):
+    """API Monitor model - tracks scheduled API health checks"""
+    __tablename__ = "api_monitors"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"))
+    
+    # Monitor details
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    url = Column(String(2000), nullable=False)
+    method = Column(String(10), default="GET")
+    headers = Column(JSON)
+    body = Column(Text)
+    
+    # Test assertions
+    assertions = Column(JSON)  # List of test conditions
+    expected_status = Column(Integer, default=200)
+    expected_response_time_ms = Column(Integer, default=1000)
+    
+    # Schedule
+    interval_minutes = Column(Integer, default=60)  # How often to check
+    is_active = Column(Boolean, default=True)
+    
+    # Status
+    last_check_at = Column(DateTime)
+    last_status = Column(String(20))  # success, failure, error
+    last_response_time_ms = Column(Integer)
+    consecutive_failures = Column(Integer, default=0)
+    uptime_percentage = Column(Float, default=100.0)
+    
+    # Notifications
+    notify_on_failure = Column(Boolean, default=True)
+    notification_email = Column(String(255))
+    
+    # Timestamps
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("User", backref="monitors")
+    project = relationship("Project", backref="monitors")
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "project_id": self.project_id,
+            "name": self.name,
+            "description": self.description,
+            "url": self.url,
+            "method": self.method,
+            "headers": self.headers,
+            "body": self.body,
+            "assertions": self.assertions,
+            "expected_status": self.expected_status,
+            "expected_response_time_ms": self.expected_response_time_ms,
+            "interval_minutes": self.interval_minutes,
+            "is_active": self.is_active,
+            "last_check_at": self.last_check_at.isoformat() if self.last_check_at else None,
+            "last_status": self.last_status,
+            "last_response_time_ms": self.last_response_time_ms,
+            "consecutive_failures": self.consecutive_failures,
+            "uptime_percentage": self.uptime_percentage,
+            "notify_on_failure": self.notify_on_failure,
+            "notification_email": self.notification_email,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
+
+class MonitorResult(Base):
+    """Monitor result model - stores individual check results"""
+    __tablename__ = "monitor_results"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    monitor_id = Column(Integer, ForeignKey("api_monitors.id"), nullable=False)
+    
+    # Result details
+    status_code = Column(Integer)
+    response_time_ms = Column(Integer)
+    success = Column(Boolean)
+    error_message = Column(Text)
+    
+    # Assertion results
+    assertions_passed = Column(JSON)  # List of passed/failed assertions
+    
+    # Response snapshot
+    response_headers = Column(JSON)
+    response_body_sample = Column(Text)  # First 1000 chars
+    
+    # Timestamp
+    checked_at = Column(DateTime, default=func.now())
+    
+    # Relationships
+    monitor = relationship("APIMonitor", backref="results")
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "monitor_id": self.monitor_id,
+            "status_code": self.status_code,
+            "response_time_ms": self.response_time_ms,
+            "success": self.success,
+            "error_message": self.error_message,
+            "assertions_passed": self.assertions_passed,
+            "response_headers": self.response_headers,
+            "response_body_sample": self.response_body_sample,
+            "checked_at": self.checked_at.isoformat() if self.checked_at else None
+        }
+
+class RequestHistory(Base):
+    """Request history model - tracks all API requests made through the platform"""
+    __tablename__ = "request_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"))
+    collection_id = Column(String(36))  # Reference to collection if saved
+    
+    # Request details
+    method = Column(String(10), nullable=False)  # GET, POST, PUT, DELETE, etc.
+    url = Column(String(2000), nullable=False)
+    headers = Column(JSON)
+    query_params = Column(JSON)
+    body = Column(Text)
+    body_type = Column(String(50))  # json, form-data, raw, etc.
+    
+    # Response details
+    status_code = Column(Integer)
+    response_headers = Column(JSON)
+    response_body = Column(Text)
+    response_time_ms = Column(Integer)  # Response time in milliseconds
+    response_size_bytes = Column(Integer)
+    
+    # Metadata
+    environment_id = Column(String(36))  # Environment used
+    environment_variables = Column(JSON)  # Snapshot of variables used
+    name = Column(String(255))  # Optional name for the request
+    tags = Column(JSON)  # Tags for organization
+    notes = Column(Text)  # User notes
+    
+    # Timestamps
+    created_at = Column(DateTime, default=func.now())
+    executed_at = Column(DateTime, default=func.now())
+    
+    # Status
+    success = Column(Boolean, default=True)
+    error_message = Column(Text)
+    
+    # Relationships
+    user = relationship("User", backref="request_history")
+    project = relationship("Project", backref="request_history")
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "project_id": self.project_id,
+            "collection_id": self.collection_id,
+            "method": self.method,
+            "url": self.url,
+            "headers": self.headers,
+            "query_params": self.query_params,
+            "body": self.body,
+            "body_type": self.body_type,
+            "status_code": self.status_code,
+            "response_headers": self.response_headers,
+            "response_body": self.response_body,
+            "response_time_ms": self.response_time_ms,
+            "response_size_bytes": self.response_size_bytes,
+            "environment_id": self.environment_id,
+            "environment_variables": self.environment_variables,
+            "name": self.name,
+            "tags": self.tags,
+            "notes": self.notes,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "executed_at": self.executed_at.isoformat() if self.executed_at else None,
+            "success": self.success,
+            "error_message": self.error_message
+        }
+
 def init_db():
     """Initialize database - create all tables"""
     Base.metadata.create_all(bind=engine)
