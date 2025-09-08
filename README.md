@@ -1,10 +1,22 @@
 # StreamAPI (API Orchestrator) 🚀
 
-> Enterprise-grade API orchestration platform with AI-powered automation, team collaboration, and advanced analytics
+> Auto-discover APIs in your codebase and generate tests, docs, and SDKs with AI
 
 **Live at: [https://streamapi.dev](https://streamapi.dev)**
 
-**Y Combinator Ready** - An intelligent enterprise SaaS platform that automatically discovers, documents, tests, and manages APIs with team collaboration, webhooks, and custom AI model support. Transform your codebase into production-ready APIs with comprehensive documentation, test suites, and enterprise features in minutes.
+Stop manually writing API tests and documentation. StreamAPI scans your codebase, discovers all endpoints, generates OpenAPI specs, creates test suites, and builds SDKs in 30+ languages - all powered by AI. Built by developers who were tired of Postman's limitations.
+
+## 🏃 Quick Start for Developers
+
+```bash
+# Clone and run locally in 2 minutes
+git clone https://github.com/JonSnow1807/api-orchestrator.git
+cd api-orchestrator
+docker-compose up
+
+# Or try the hosted version
+https://streamapi.dev
+```
 
 ![CI/CD Pipeline](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/ci-cd.yml/badge.svg)
 ![Auto Deploy](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/auto-deploy.yml/badge.svg)
@@ -72,16 +84,16 @@
 - **🌍 Environment Variables** - Manage multiple environments (dev/staging/prod)
 - **📄 API Documentation** - Auto-generated interactive docs from OpenAPI specs
 
-## 🌟 Enterprise Features - Beyond Postman!
+## 🛠️ Features That Actually Matter to Developers
 
-### Core Capabilities
-- **🔍 Automatic API Discovery** - Scans codebases to identify API endpoints across FastAPI, Flask, Express, Django, and more
-- **📄 OpenAPI Specification Generation** - Creates comprehensive OpenAPI 3.0 specifications
-- **🧪 Multi-Framework Test Generation** - Generates tests for pytest, Jest, Mocha, and Postman
-- **🎭 Instant Mock Servers** - Creates deployable mock servers with realistic data
-- **🤖 AI-Powered Analysis** - Security scanning, performance optimization, and compliance checking using Claude AI
-- **⚡ Real-Time Processing** - WebSocket-based live updates during orchestration
-- **💼 Business Value Analytics** - Calculates time saved, cost reduction, and ROI metrics
+### Core Magic ✨
+- **🔍 Auto-discover APIs** - Point at your repo, finds all endpoints automatically (FastAPI, Express, Django, Flask, Spring Boot)
+- **📝 Generate Everything** - OpenAPI specs, Pytest/Jest tests, 30+ language SDKs - all from your existing code
+- **🎭 Instant Mock Servers** - One click, your frontend team has a working mock API with realistic responses
+- **🤖 AI Code Review** - Finds security issues, suggests optimizations, checks OWASP compliance
+- **🔄 Real-time Sync** - Change your code, tests update automatically via webhooks
+- **📦 Full SDK Generation** - Not just snippets - complete packages with error handling, retries, types
+- **🧪 Smart Test Generation** - Creates edge cases, validates schemas, tests auth flows
 
 ### 🆕 API Testing Features (Postman Killer!)
 - **🤖 AI Code Generation** - Generate production SDKs in 30+ languages (much better than Postman's snippets!)
@@ -225,47 +237,55 @@ docker run -p 8000:8000 \
   ghcr.io/jonsnow1807/api-orchestrator:latest
 ```
 
-## 🏢 Enterprise Ready - Y Combinator Prepared
+## 🔥 Why Developers Love StreamAPI
 
-### Why StreamAPI is Perfect for YC:
+### The Problem We Solve
+Every developer has wasted hours:
+- Writing the same API tests over and over
+- Manually creating API documentation that gets outdated
+- Building client SDKs from scratch for each language
+- Setting up mock servers for frontend teams
+- Trying to keep Postman collections in sync with code
 
-1. **🚀 Massive Market** - $50B+ API management market growing 25% annually
-2. **💡 Unique Innovation** - First to combine AI discovery + testing + team collaboration
-3. **📈 Proven Traction** - Live production deployment with paying customers
-4. **🌍 Global Scalability** - Multi-tenant architecture ready for millions of users
-5. **💰 Clear Monetization** - 4-tier SaaS model with enterprise features
-6. **🛡️ Technical Moat** - AI-powered analysis that competitors can't easily replicate
+### Our Solution
+```bash
+# Point StreamAPI at your codebase
+streamapi scan ./my-api
 
-### Enterprise Security & Compliance
-- **🔐 SOC 2 Ready** - Audit logs, encryption, access controls
-- **🛡️ GDPR Compliant** - Data privacy and user consent management
-- **🔒 Enterprise SSO** - SAML, OAuth 2.0, Active Directory integration
-- **📊 99.99% SLA** - High availability with automatic failover
-- **🔑 API Key Management** - Rotate, revoke, and monitor API keys
-- **📝 Audit Trail** - Complete activity logging for compliance
+# Get everything automatically:
+✅ OpenAPI 3.0 specification
+✅ Test suites (Pytest, Jest, Mocha)
+✅ SDKs in 30+ languages
+✅ Mock servers with realistic data
+✅ Security vulnerability report
+✅ Performance optimization tips
+```
 
-## 🆚 StreamAPI vs Postman - Complete Comparison
+### Built for Real Development Teams
+- **🔧 Works with your stack** - FastAPI, Express, Django, Flask, Spring Boot, Rails
+- **🤖 AI that understands code** - Not just pattern matching, actual code comprehension
+- **⚡ Saves 10+ hours per week** - Stop writing boilerplate, focus on features
+- **🔄 Always in sync** - Webhooks notify you when APIs change
+- **👥 Team collaboration** - Share workspaces, not JSON files
+- **🔒 Your keys, your models** - BYOK support for OpenAI, Anthropic, etc.
 
-| Feature | StreamAPI | Postman | Winner |
-|---------|-----------|---------|--------|
-| **API Discovery** | ✅ Automatic from code | ❌ Manual entry | StreamAPI 🏆 |
-| **AI Analysis** | ✅ Built-in Claude AI | ❌ Not available | StreamAPI 🏆 |
-| **Team Workspaces** | ✅ Multi-tenant RBAC | ✅ Available | Tie 🤝 |
-| **Webhooks** | ✅ 18+ events with retry | ❌ Limited | StreamAPI 🏆 |
-| **Custom AI Keys** | ✅ BYOK for 8+ providers | ❌ Not available | StreamAPI 🏆 |
-| **API Versioning** | ✅ Automatic tracking | ❌ Manual | StreamAPI 🏆 |
-| **Analytics Dashboard** | ✅ Advanced insights | ✅ Basic | StreamAPI 🏆 |
-| **Mock Servers** | ✅ Instant generation | ✨ Paid feature | StreamAPI 🏆 |
-| **Code Generation** | ✅ 30+ languages, full SDKs | ✅ 20 languages, snippets | StreamAPI 🏆 |
-| **Test Generation** | ✅ Automatic multi-framework | ❌ Manual creation | StreamAPI 🏆 |
-| **OpenAPI Specs** | ✅ Auto-generated | ✨ Import only | StreamAPI 🏆 |
-| **Real-time Updates** | ✅ WebSocket live sync | ❌ Not available | StreamAPI 🏆 |
-| **Self-Hosting** | ✅ Docker/Railway/AWS | ❌ Cloud only | StreamAPI 🏆 |
-| **Open Source** | ✅ MIT License | ❌ Proprietary | StreamAPI 🏆 |
-| **Enterprise Features** | ✅ SSO, RBAC, Audit logs | ✅ Available | Tie 🤝 |
-| **Pricing** | 💰 $49-499/mo | 💰 $12-119/mo | Postman 🏆 |
+## 🆚 Real Developer Comparison: StreamAPI vs Postman
 
-**Overall Winner: StreamAPI** - 13 wins vs 1 win for Postman!
+| What Developers Need | StreamAPI | Postman |
+|---------------------|-----------|---------|
+| **Find APIs in my code automatically** | ✅ Scans your repo | ❌ Type everything manually |
+| **Generate test code I can commit** | ✅ Pytest, Jest, Mocha files | ❌ Proprietary format only |
+| **Build SDKs for my API** | ✅ 30+ languages, full packages | 🟨 Basic code snippets |
+| **Mock server from my code** | ✅ One-click from your routes | 🟨 Build manually |
+| **Keep docs synced with code** | ✅ Webhooks + auto-update | ❌ Manual sync |
+| **Use my own AI models** | ✅ BYOK (OpenAI, Claude, etc) | ❌ No AI support |
+| **Self-host on my infrastructure** | ✅ Docker, K8s ready | ❌ Cloud only |
+| **Git-friendly format** | ✅ YAML, JSON, Markdown | 🟨 JSON export only |
+| **CI/CD integration** | ✅ GitHub Actions, Jenkins | 🟨 Limited |
+| **Actually open source** | ✅ MIT License, fork it! | ❌ Proprietary |
+| **Price for small team** | 💰 $49/mo | 💰 $12/mo |
+
+**Verdict**: If you want to manually click through UIs, use Postman. If you want to automate everything and get back to coding, use StreamAPI.
 
 ## 🌐 Production Deployment
 

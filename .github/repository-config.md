@@ -1,7 +1,7 @@
 # GitHub Repository Configuration
 
-## Description
-🚀 Enterprise API orchestration platform with AI-powered automation, team collaboration, webhooks, and advanced analytics. Transform codebases into production APIs instantly. YC-ready SaaS - Better than Postman!
+## Description (GitHub Repository)
+Auto-discover APIs in your codebase. Generate tests, docs, mock servers & SDKs with AI. No more manual API documentation. Open-source Postman alternative that actually writes code for you.
 
 ## Website
 https://streamapi.dev
