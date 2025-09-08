@@ -9,12 +9,23 @@ An intelligent SaaS platform that automatically discovers, documents, tests, and
 ![CI/CD Pipeline](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/ci-cd.yml/badge.svg)
 ![Auto Deploy](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/auto-deploy.yml/badge.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-blue)
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
+![Version](https://img.shields.io/badge/version-2.1.0-blue)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Node](https://img.shields.io/badge/node-20%2B-green)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-## 🌟 Features
+## 🆕 What's New in v2.1.0
+
+- **🔥 GraphQL Support** - Complete GraphQL query builder with templates, variables, and schema introspection
+- **🎨 Dark Theme Overhaul** - Beautiful, consistent dark theme across all components
+- **📦 Postman Import** - Import your existing Postman collections seamlessly
+- **📊 Monitoring Dashboard** - Real-time API health metrics and response times
+- **📁 Collections Manager** - Organize your APIs into folders and collections
+- **🕒 Request History** - Track all your API calls with detailed analytics
+- **🌍 Environment Variables** - Manage multiple environments (dev/staging/prod)
+- **📄 API Documentation** - Auto-generated interactive docs from OpenAPI specs
+
+## 🌟 Features - Better Than Postman!
 
 ### Core Capabilities
 - **🔍 Automatic API Discovery** - Scans codebases to identify API endpoints across FastAPI, Flask, Express, Django, and more
@@ -25,7 +36,18 @@ An intelligent SaaS platform that automatically discovers, documents, tests, and
 - **⚡ Real-Time Processing** - WebSocket-based live updates during orchestration
 - **💼 Business Value Analytics** - Calculates time saved, cost reduction, and ROI metrics
 
-### Production Features (v2.0.0)
+### 🆕 API Testing Features (Postman Killer!)
+- **🔥 GraphQL Support** - Full GraphQL query builder with variables, templates, and schema introspection
+- **🌍 Environment Variables** - Manage multiple environments (dev/staging/prod) with variable interpolation
+- **📁 Collections Manager** - Organize APIs into collections and folders with import/export
+- **🕒 Request History** - Track all API calls with response times and statuses
+- **🔐 Advanced Authentication** - Bearer, Basic Auth, API Keys, OAuth 2.0 (coming soon)
+- **📊 API Documentation** - Auto-generated interactive docs from OpenAPI specs
+- **📈 Monitoring Dashboard** - Real-time API health, response times, and error rates
+- **📥 Postman Import** - Import existing Postman collections seamlessly
+- **🎨 Beautiful Dark Theme** - Consistent, modern UI that's easy on the eyes
+
+### Production Features (v2.1.0)
 - **💳 Stripe Billing Integration** - Production-ready payment processing with 4 subscription tiers
 - **📧 Email System** - Password reset and transactional emails via SMTP
 - **🔍 Error Tracking** - Sentry integration for real-time error monitoring
@@ -42,9 +64,13 @@ An intelligent SaaS platform that automatically discovers, documents, tests, and
 | API Calls | 1,000/month | 10,000/month | 100,000/month | Unlimited |
 | Projects | 3 | 10 | 50 | Unlimited |
 | Team Members | 1 | 3 | 10 | Unlimited |
+| GraphQL Testing | ✅ | ✅ | ✅ | ✅ |
+| Environment Variables | ✅ | ✅ | ✅ | ✅ |
+| Collections | 5 | Unlimited | Unlimited | Unlimited |
 | AI Analysis | ❌ | ✅ | ✅ | ✅ |
 | Mock Servers | ❌ | ✅ | ✅ | ✅ |
 | Export Formats | JSON only | JSON, YAML | All formats | All formats |
+| Request History | 100 | 1,000 | 10,000 | Unlimited |
 | Support | Community | Email | Priority | Dedicated |
 | Custom Models | ❌ | ❌ | ❌ | ✅ |
 | SSO/SAML | ❌ | ❌ | ❌ | ✅ |
@@ -115,6 +141,27 @@ docker run -p 8000:8000 \
   -e STRIPE_SECRET_KEY=your_stripe_key \
   ghcr.io/jonsnow1807/api-orchestrator:latest
 ```
+
+## 🆚 StreamAPI vs Postman Comparison
+
+| Feature | StreamAPI | Postman | Winner |
+|---------|-----------|---------|--------|
+| **API Discovery** | ✅ Automatic from code | ❌ Manual entry | StreamAPI 🏆 |
+| **AI Analysis** | ✅ Built-in Claude AI | ❌ Not available | StreamAPI 🏆 |
+| **Mock Servers** | ✅ Instant generation | ✨ Paid feature | StreamAPI 🏆 |
+| **GraphQL Support** | ✅ Full builder with templates | ✅ Available | Tie 🤝 |
+| **Test Generation** | ✅ Automatic multi-framework | ❌ Manual creation | StreamAPI 🏆 |
+| **OpenAPI Specs** | ✅ Auto-generated | ✨ Import only | StreamAPI 🏆 |
+| **Environment Variables** | ✅ Full support | ✅ Full support | Tie 🤝 |
+| **Collections** | ✅ Organized folders | ✅ Organized folders | Tie 🤝 |
+| **Request History** | ✅ With analytics | ✅ Basic history | StreamAPI 🏆 |
+| **Real-time Monitoring** | ✅ WebSocket updates | ❌ Not available | StreamAPI 🏆 |
+| **Dark Theme** | ✅ Beautiful modern UI | ✅ Available | Tie 🤝 |
+| **Pricing** | 💰 $49-499/mo | 💰 $12-119/mo | Postman 🏆 |
+| **Self-Hosting** | ✅ Docker/Railway | ❌ Cloud only | StreamAPI 🏆 |
+| **Open Source** | ✅ MIT License | ❌ Proprietary | StreamAPI 🏆 |
+
+**Overall Winner: StreamAPI** - 9 wins vs 1 win for Postman!
 
 ## 🌐 Production Deployment
 
