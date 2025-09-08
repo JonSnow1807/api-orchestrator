@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { getApiUrl } from '../config';
+import EnvironmentManager from './EnvironmentManager';
+import CollectionsManager from './CollectionsManager';
 import {
   Send,
   Plus,
@@ -21,7 +23,9 @@ import {
   Key,
   Globe,
   Server,
-  Zap
+  Zap,
+  Folder,
+  Settings
 } from 'lucide-react';
 
 const APIRequestBuilder = () => {
@@ -56,6 +60,11 @@ const APIRequestBuilder = () => {
   const [savedRequests, setSavedRequests] = useState([]);
   const [requestName, setRequestName] = useState('');
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  
+  // Environment and Collections
+  const [currentEnvironment, setCurrentEnvironment] = useState(null);
+  const [showCollections, setShowCollections] = useState(false);
+  const [currentRequestData, setCurrentRequestData] = useState(null);
 
   const methods = [
     { value: 'GET', color: 'text-green-500' },
@@ -88,8 +97,23 @@ const APIRequestBuilder = () => {
     }
   }, []);
 
+  // Replace variables in a string with environment values
+  const replaceVariables = (str) => {
+    if (!str || !currentEnvironment) return str;
+    
+    let result = str;
+    Object.entries(currentEnvironment.variables).forEach(([key, value]) => {
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      result = result.replace(regex, value);
+    });
+    return result;
+  };
+
   const handleSendRequest = async () => {
-    if (!url) {
+    // Replace variables in URL
+    const processedUrl = replaceVariables(url);
+    
+    if (!processedUrl) {
       setError('Please enter a URL');
       return;
     }
@@ -100,49 +124,50 @@ const APIRequestBuilder = () => {
     const startTime = Date.now();
 
     try {
-      // Build headers object
+      // Build headers object with variable substitution
       const headersObj = {};
       headers.forEach(h => {
         if (h.enabled && h.key) {
-          headersObj[h.key] = h.value;
+          headersObj[replaceVariables(h.key)] = replaceVariables(h.value);
         }
       });
 
-      // Add authorization header
+      // Add authorization header with variable substitution
       if (authorization.type === 'bearer' && authorization.value) {
-        headersObj['Authorization'] = `Bearer ${authorization.value}`;
+        headersObj['Authorization'] = `Bearer ${replaceVariables(authorization.value)}`;
       } else if (authorization.type === 'api-key' && authorization.value) {
-        headersObj['X-API-Key'] = authorization.value;
+        headersObj['X-API-Key'] = replaceVariables(authorization.value);
       }
 
-      // Build query params
+      // Build query params with variable substitution
       const params = {};
       queryParams.forEach(p => {
         if (p.enabled && p.key) {
-          params[p.key] = p.value;
+          params[replaceVariables(p.key)] = replaceVariables(p.value);
         }
       });
 
-      // Parse body if needed
+      // Parse body if needed with variable substitution
       let data = null;
       if (['POST', 'PUT', 'PATCH'].includes(method)) {
-        if (bodyType === 'json' && bodyContent) {
+        const processedBody = replaceVariables(bodyContent);
+        if (bodyType === 'json' && processedBody) {
           try {
-            data = JSON.parse(bodyContent);
+            data = JSON.parse(processedBody);
           } catch (e) {
             setError('Invalid JSON in request body');
             setLoading(false);
             return;
           }
         } else if (bodyType === 'raw') {
-          data = bodyContent;
+          data = processedBody;
         }
       }
 
       // Make request through backend proxy to avoid CORS
       const requestData = {
         method,
-        url,
+        url: processedUrl,
         headers: headersObj,
         params,
         data
@@ -277,32 +302,91 @@ const APIRequestBuilder = () => {
     return 'text-gray-500';
   };
 
+  // Handle loading request from collections
+  const loadRequestFromCollection = (request) => {
+    setMethod(request.method || 'GET');
+    setUrl(request.url || '');
+    setHeaders(request.headers || [{ key: 'Content-Type', value: 'application/json', enabled: true }]);
+    setQueryParams(request.queryParams || [{ key: '', value: '', enabled: true }]);
+    setBodyType(request.bodyType || 'json');
+    setBodyContent(request.bodyContent || '');
+    setAuthorization(request.authorization || { type: 'none', value: '' });
+    setCurrentRequestData(request);
+  };
+
+  // Prepare current request for saving
+  const getCurrentRequestForSaving = () => {
+    return {
+      name: requestName || `${method} Request`,
+      method,
+      url,
+      headers,
+      queryParams,
+      bodyType,
+      bodyContent,
+      authorization
+    };
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Request Builder */}
-      <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-            <Zap className="w-6 h-6 text-purple-500" />
-            API Request Builder
-          </h3>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition flex items-center gap-2"
-            >
-              <History className="w-4 h-4" />
-              History
-            </button>
-            <button
-              onClick={() => setShowSaveDialog(true)}
-              className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition flex items-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              Save
-            </button>
-          </div>
+    <div className="flex gap-6">
+      {/* Left Sidebar - Collections */}
+      {showCollections && (
+        <div className="w-80 bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 h-[calc(100vh-200px)]">
+          <CollectionsManager
+            onRequestSelect={loadRequestFromCollection}
+            onRequestSave={(saved) => {
+              setCurrentRequestData(saved);
+              setShowSaveDialog(false);
+            }}
+            currentRequest={getCurrentRequestForSaving()}
+          />
         </div>
+      )}
+      
+      {/* Main Content */}
+      <div className="flex-1 space-y-6">
+        {/* Environment Manager */}
+        <EnvironmentManager 
+          onEnvironmentChange={setCurrentEnvironment}
+          currentEnvironment={currentEnvironment}
+        />
+        
+        {/* Request Builder */}
+        <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+              <Zap className="w-6 h-6 text-purple-500" />
+              API Request Builder
+            </h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowCollections(!showCollections)}
+                className={`px-3 py-1 rounded-lg transition flex items-center gap-2 ${
+                  showCollections 
+                    ? 'bg-purple-600 text-white' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                <Folder className="w-4 h-4" />
+                Collections
+              </button>
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition flex items-center gap-2"
+              >
+                <History className="w-4 h-4" />
+                History
+              </button>
+              <button
+                onClick={() => setShowSaveDialog(true)}
+                className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Save
+              </button>
+            </div>
+          </div>
 
         {/* URL Bar */}
         <div className="flex gap-2 mb-4">
@@ -722,6 +806,7 @@ const APIRequestBuilder = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
