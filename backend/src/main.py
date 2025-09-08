@@ -282,6 +282,9 @@ class ProxyRequest(BaseModel):
     headers: Optional[Dict[str, str]] = None
     params: Optional[Dict[str, str]] = None
     data: Optional[Any] = None
+    environment_id: Optional[str] = None
+    collection_id: Optional[str] = None
+    project_id: Optional[int] = None
 
 class AIChatRequest(BaseModel):
     message: str
@@ -825,6 +828,7 @@ async def run_orchestration(task_id: str, source_path: str, temp_file_path: str 
         # Update task status
         active_tasks[task_id]["status"] = "completed"
         active_tasks[task_id]["completed_at"] = datetime.now().isoformat()
+        active_tasks[task_id]["openapi_spec"] = specs  # Store the OpenAPI spec for documentation viewer
         active_tasks[task_id]["results"] = {
             "apis": len(apis) if apis else 0,
             "specs": len(specs.get('paths', {})) if specs else 0,
@@ -1128,9 +1132,16 @@ async def stop_mock_server(
 @app.post("/api/proxy-request")
 async def proxy_request(
     request: ProxyRequest,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    """Proxy API requests to avoid CORS issues"""
+    """Proxy API requests to avoid CORS issues and save to history"""
+    import time
+    from database import RequestHistory
+    
+    start_time = time.time()
+    history_entry = None
+    
     try:
         # Create httpx client with timeout
         async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
@@ -1144,26 +1155,481 @@ async def proxy_request(
                 content=request.data if isinstance(request.data, str) else None
             )
             
+            # Calculate response time
+            response_time_ms = int((time.time() - start_time) * 1000)
+            
             # Return response data
             try:
                 response_data = response.json()
             except:
                 response_data = response.text
             
+            # Save to history
+            history_entry = RequestHistory(
+                user_id=current_user.id,
+                method=request.method.upper(),
+                url=request.url,
+                headers=dict(request.headers) if request.headers else {},
+                query_params=dict(request.params) if request.params else {},
+                body=json.dumps(request.data) if request.data else None,
+                body_type="json" if isinstance(request.data, dict) else "raw",
+                status_code=response.status_code,
+                response_headers=dict(response.headers),
+                response_body=json.dumps(response_data) if isinstance(response_data, dict) else str(response_data),
+                response_time_ms=response_time_ms,
+                response_size_bytes=len(response.content),
+                success=response.status_code < 400,
+                environment_id=request.environment_id,
+                collection_id=request.collection_id,
+                project_id=request.project_id
+            )
+            db.add(history_entry)
+            db.commit()
+            
             return {
                 "status": response.status_code,
                 "statusText": response.reason_phrase,
                 "headers": dict(response.headers),
                 "data": response_data,
-                "cookies": dict(response.cookies) if response.cookies else {}
+                "cookies": dict(response.cookies) if response.cookies else {},
+                "history_id": history_entry.id  # Include history ID for reference
             }
     except httpx.TimeoutException:
+        # Save failed request to history
+        if not history_entry:
+            history_entry = RequestHistory(
+                user_id=current_user.id,
+                method=request.method.upper(),
+                url=request.url,
+                headers=dict(request.headers) if request.headers else {},
+                success=False,
+                error_message="Request timeout"
+            )
+            db.add(history_entry)
+            db.commit()
         raise HTTPException(status_code=504, detail="Request timeout")
     except httpx.RequestError as e:
+        # Save failed request to history
+        if not history_entry:
+            history_entry = RequestHistory(
+                user_id=current_user.id,
+                method=request.method.upper(),
+                url=request.url,
+                headers=dict(request.headers) if request.headers else {},
+                success=False,
+                error_message=f"Request failed: {str(e)}"
+            )
+            db.add(history_entry)
+            db.commit()
         raise HTTPException(status_code=500, detail=f"Request failed: {str(e)}")
     except Exception as e:
         logger.error(f"Proxy request error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Proxy error: {str(e)}")
+
+# Request History endpoints
+@app.get("/api/request-history")
+async def get_request_history(
+    skip: int = 0,
+    limit: int = 50,
+    search: Optional[str] = None,
+    method: Optional[str] = None,
+    status_code: Optional[int] = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get request history for the current user with filtering"""
+    from database import RequestHistory
+    
+    query = db.query(RequestHistory).filter(RequestHistory.user_id == current_user.id)
+    
+    # Apply filters
+    if search:
+        query = query.filter(
+            (RequestHistory.url.contains(search)) |
+            (RequestHistory.name.contains(search)) if RequestHistory.name else False
+        )
+    
+    if method:
+        query = query.filter(RequestHistory.method == method.upper())
+    
+    if status_code:
+        query = query.filter(RequestHistory.status_code == status_code)
+    
+    # Get total count
+    total = query.count()
+    
+    # Get paginated results
+    history = query.order_by(RequestHistory.created_at.desc()).offset(skip).limit(limit).all()
+    
+    return {
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+        "history": [h.to_dict() for h in history]
+    }
+
+@app.get("/api/request-history/{history_id}")
+async def get_request_history_item(
+    history_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get a specific request from history"""
+    from database import RequestHistory
+    
+    history_item = db.query(RequestHistory).filter(
+        RequestHistory.id == history_id,
+        RequestHistory.user_id == current_user.id
+    ).first()
+    
+    if not history_item:
+        raise HTTPException(status_code=404, detail="Request not found in history")
+    
+    return history_item.to_dict()
+
+@app.post("/api/request-history/{history_id}/replay")
+async def replay_request(
+    history_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Replay a request from history"""
+    from database import RequestHistory
+    
+    history_item = db.query(RequestHistory).filter(
+        RequestHistory.id == history_id,
+        RequestHistory.user_id == current_user.id
+    ).first()
+    
+    if not history_item:
+        raise HTTPException(status_code=404, detail="Request not found in history")
+    
+    # Create proxy request from history
+    proxy_req = ProxyRequest(
+        method=history_item.method,
+        url=history_item.url,
+        headers=history_item.headers,
+        params=history_item.query_params,
+        data=json.loads(history_item.body) if history_item.body else None
+    )
+    
+    # Replay the request
+    return await proxy_request(proxy_req, current_user, db)
+
+@app.delete("/api/request-history/{history_id}")
+async def delete_request_history(
+    history_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a request from history"""
+    from database import RequestHistory
+    
+    history_item = db.query(RequestHistory).filter(
+        RequestHistory.id == history_id,
+        RequestHistory.user_id == current_user.id
+    ).first()
+    
+    if not history_item:
+        raise HTTPException(status_code=404, detail="Request not found in history")
+    
+    db.delete(history_item)
+    db.commit()
+    
+    return {"success": True, "message": "Request deleted from history"}
+
+@app.delete("/api/request-history")
+async def clear_request_history(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Clear all request history for the current user"""
+    from database import RequestHistory
+    
+    db.query(RequestHistory).filter(RequestHistory.user_id == current_user.id).delete()
+    db.commit()
+    
+    return {"success": True, "message": "Request history cleared"}
+
+# API Monitoring endpoints
+@app.get("/api/monitors")
+async def get_monitors(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all monitors for the current user"""
+    from database import APIMonitor
+    
+    monitors = db.query(APIMonitor).filter(APIMonitor.user_id == current_user.id).all()
+    return {"monitors": [m.to_dict() for m in monitors]}
+
+@app.post("/api/monitors")
+async def create_monitor(
+    monitor_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create a new API monitor"""
+    from database import APIMonitor
+    
+    monitor = APIMonitor(
+        user_id=current_user.id,
+        name=monitor_data.get("name"),
+        description=monitor_data.get("description"),
+        url=monitor_data.get("url"),
+        method=monitor_data.get("method", "GET"),
+        headers=monitor_data.get("headers", {}),
+        body=monitor_data.get("body"),
+        assertions=monitor_data.get("assertions", []),
+        expected_status=monitor_data.get("expected_status", 200),
+        expected_response_time_ms=monitor_data.get("expected_response_time_ms", 1000),
+        interval_minutes=monitor_data.get("interval_minutes", 60),
+        notify_on_failure=monitor_data.get("notify_on_failure", True),
+        notification_email=monitor_data.get("notification_email", current_user.email),
+        project_id=monitor_data.get("project_id")
+    )
+    
+    db.add(monitor)
+    db.commit()
+    db.refresh(monitor)
+    
+    # Schedule the monitor (in production, use celery or similar)
+    asyncio.create_task(run_monitor_check(monitor.id, db))
+    
+    return monitor.to_dict()
+
+@app.put("/api/monitors/{monitor_id}")
+async def update_monitor(
+    monitor_id: int,
+    monitor_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update a monitor"""
+    from database import APIMonitor
+    
+    monitor = db.query(APIMonitor).filter(
+        APIMonitor.id == monitor_id,
+        APIMonitor.user_id == current_user.id
+    ).first()
+    
+    if not monitor:
+        raise HTTPException(status_code=404, detail="Monitor not found")
+    
+    for key, value in monitor_data.items():
+        if hasattr(monitor, key):
+            setattr(monitor, key, value)
+    
+    db.commit()
+    return monitor.to_dict()
+
+@app.delete("/api/monitors/{monitor_id}")
+async def delete_monitor(
+    monitor_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a monitor"""
+    from database import APIMonitor
+    
+    monitor = db.query(APIMonitor).filter(
+        APIMonitor.id == monitor_id,
+        APIMonitor.user_id == current_user.id
+    ).first()
+    
+    if not monitor:
+        raise HTTPException(status_code=404, detail="Monitor not found")
+    
+    db.delete(monitor)
+    db.commit()
+    
+    return {"success": True, "message": "Monitor deleted"}
+
+@app.post("/api/monitors/{monitor_id}/run")
+async def run_monitor_now(
+    monitor_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Run a monitor check immediately"""
+    from database import APIMonitor, MonitorResult
+    import time
+    
+    monitor = db.query(APIMonitor).filter(
+        APIMonitor.id == monitor_id,
+        APIMonitor.user_id == current_user.id
+    ).first()
+    
+    if not monitor:
+        raise HTTPException(status_code=404, detail="Monitor not found")
+    
+    # Run the check
+    start_time = time.time()
+    result = MonitorResult(monitor_id=monitor.id)
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
+            response = await client.request(
+                method=monitor.method,
+                url=monitor.url,
+                headers=monitor.headers or {},
+                content=monitor.body if monitor.body else None
+            )
+            
+            response_time_ms = int((time.time() - start_time) * 1000)
+            
+            # Check assertions
+            assertions_passed = []
+            all_passed = True
+            
+            # Status code assertion
+            if monitor.expected_status:
+                status_passed = response.status_code == monitor.expected_status
+                assertions_passed.append({
+                    "type": "status_code",
+                    "expected": monitor.expected_status,
+                    "actual": response.status_code,
+                    "passed": status_passed
+                })
+                if not status_passed:
+                    all_passed = False
+            
+            # Response time assertion
+            if monitor.expected_response_time_ms:
+                time_passed = response_time_ms <= monitor.expected_response_time_ms
+                assertions_passed.append({
+                    "type": "response_time",
+                    "expected": f"<= {monitor.expected_response_time_ms}ms",
+                    "actual": f"{response_time_ms}ms",
+                    "passed": time_passed
+                })
+                if not time_passed:
+                    all_passed = False
+            
+            # Custom assertions
+            if monitor.assertions:
+                for assertion in monitor.assertions:
+                    # Simple implementation - can be expanded
+                    assertion_result = evaluate_assertion(assertion, response)
+                    assertions_passed.append(assertion_result)
+                    if not assertion_result["passed"]:
+                        all_passed = False
+            
+            # Update result
+            result.status_code = response.status_code
+            result.response_time_ms = response_time_ms
+            result.success = all_passed
+            result.assertions_passed = assertions_passed
+            result.response_headers = dict(response.headers)
+            result.response_body_sample = response.text[:1000] if response.text else None
+            
+            # Update monitor status
+            monitor.last_check_at = datetime.now()
+            monitor.last_status = "success" if all_passed else "failure"
+            monitor.last_response_time_ms = response_time_ms
+            
+            if not all_passed:
+                monitor.consecutive_failures += 1
+            else:
+                monitor.consecutive_failures = 0
+            
+            # Update uptime percentage (simple calculation)
+            total_checks = db.query(MonitorResult).filter(MonitorResult.monitor_id == monitor.id).count()
+            if total_checks > 0:
+                successful_checks = db.query(MonitorResult).filter(
+                    MonitorResult.monitor_id == monitor.id,
+                    MonitorResult.success == True
+                ).count()
+                monitor.uptime_percentage = (successful_checks / total_checks) * 100
+            
+    except Exception as e:
+        result.success = False
+        result.error_message = str(e)
+        monitor.last_status = "error"
+        monitor.consecutive_failures += 1
+    
+    db.add(result)
+    db.commit()
+    
+    return result.to_dict()
+
+@app.get("/api/monitors/{monitor_id}/results")
+async def get_monitor_results(
+    monitor_id: int,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get results for a specific monitor"""
+    from database import APIMonitor, MonitorResult
+    
+    monitor = db.query(APIMonitor).filter(
+        APIMonitor.id == monitor_id,
+        APIMonitor.user_id == current_user.id
+    ).first()
+    
+    if not monitor:
+        raise HTTPException(status_code=404, detail="Monitor not found")
+    
+    results = db.query(MonitorResult).filter(
+        MonitorResult.monitor_id == monitor_id
+    ).order_by(MonitorResult.checked_at.desc()).limit(limit).all()
+    
+    return {
+        "monitor": monitor.to_dict(),
+        "results": [r.to_dict() for r in results]
+    }
+
+# Helper function for assertions
+def evaluate_assertion(assertion, response):
+    """Evaluate custom assertions"""
+    assertion_type = assertion.get("type")
+    
+    if assertion_type == "body_contains":
+        passed = assertion.get("value") in response.text
+        return {
+            "type": "body_contains",
+            "expected": f"Contains '{assertion.get('value')}'",
+            "passed": passed
+        }
+    elif assertion_type == "header_exists":
+        passed = assertion.get("key") in response.headers
+        return {
+            "type": "header_exists",
+            "expected": f"Header '{assertion.get('key')}' exists",
+            "passed": passed
+        }
+    elif assertion_type == "json_path":
+        # Simple JSON path check
+        try:
+            data = response.json()
+            path = assertion.get("path", "").split(".")
+            value = data
+            for p in path:
+                value = value.get(p)
+            passed = value == assertion.get("value")
+            return {
+                "type": "json_path",
+                "expected": f"{assertion.get('path')} = {assertion.get('value')}",
+                "actual": str(value),
+                "passed": passed
+            }
+        except:
+            return {
+                "type": "json_path",
+                "expected": f"{assertion.get('path')} = {assertion.get('value')}",
+                "passed": False,
+                "error": "Failed to parse JSON"
+            }
+    
+    return {"type": assertion_type, "passed": False, "error": "Unknown assertion type"}
+
+# Background task to run monitors (simplified - in production use Celery or similar)
+async def run_monitor_check(monitor_id: int, db: Session):
+    """Background task to check a monitor"""
+    await asyncio.sleep(60)  # Wait before first check
+    # This is a simplified implementation
+    # In production, use a proper task queue like Celery
 
 # AI Chat endpoint
 @app.post("/api/ai-chat")

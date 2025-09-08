@@ -22,7 +22,8 @@ import {
   FileArchive,
   Code2,
   Home,
-  CreditCard
+  CreditCard,
+  BookOpen
 } from 'lucide-react';
 import StatsDashboard from './StatsDashboard';
 import TaskManager from './TaskManager';
@@ -35,6 +36,9 @@ import AIAnalysis from './AIAnalysis';
 import MockServerManager from './MockServerManager';
 import APIRequestBuilder from './APIRequestBuilder';
 import AIAssistant from './AIAssistant';
+import APIDocumentation from './APIDocumentation';
+import RequestHistory from './RequestHistory';
+import MonitoringDashboard from './MonitoringDashboard';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -277,6 +281,39 @@ const Dashboard = () => {
               <Zap className="w-5 h-5" />
               <span>API Tester</span>
             </button>
+            <button
+              onClick={() => setActiveTab('documentation')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'documentation' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <BookOpen className="w-5 h-5" />
+              <span>API Docs</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'history' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Clock className="w-5 h-5" />
+              <span>History</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('monitoring')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'monitoring' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Shield className="w-5 h-5" />
+              <span>Monitoring</span>
+            </button>
           </nav>
         </div>
 
@@ -415,6 +452,30 @@ const Dashboard = () => {
         {/* API Tester Tab */}
         {activeTab === 'api-tester' && (
           <APIRequestBuilder />
+        )}
+
+        {/* API Documentation Tab */}
+        {activeTab === 'documentation' && (
+          <APIDocumentation 
+            projects={projects}
+            currentTaskId={currentTaskId}
+          />
+        )}
+
+        {/* Request History Tab */}
+        {activeTab === 'history' && (
+          <RequestHistory 
+            onReplay={(requestData) => {
+              // Switch to API Tester tab and populate with the replayed request
+              setActiveTab('api-tester');
+              // The APIRequestBuilder will need to accept initial data
+            }}
+          />
+        )}
+
+        {/* Monitoring Tab */}
+        {activeTab === 'monitoring' && (
+          <MonitoringDashboard />
         )}
 
         {/* API Limits - Show on all tabs */}
