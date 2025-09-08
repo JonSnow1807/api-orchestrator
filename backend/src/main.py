@@ -2438,6 +2438,36 @@ for frontend_path in frontend_paths:
 if not frontend_found:
     logger.warning("Frontend not found in any expected location")
 
+# Catch-all route for SPA - MUST be last
+@app.get("/{path:path}")
+async def serve_spa(path: str):
+    """Serve the React SPA for all non-API routes"""
+    # Check if this is an API route
+    if path.startswith("api/") or path.startswith("auth/") or path.startswith("ws"):
+        raise HTTPException(status_code=404, detail="Not Found")
+    
+    # For all other routes, serve the React app
+    # Use the same logic as the startup frontend finding
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    possible_paths = [
+        os.path.join(current_dir, "../../frontend/dist"),
+        os.path.join(current_dir, "../../../frontend/dist"),
+        "/Users/chinmayshrivastava/Api Orchestrator/api-orchestrator/frontend/dist",
+    ]
+    
+    index_path = None
+    for frontend_path in possible_paths:
+        index_file = os.path.join(frontend_path, "index.html")
+        if os.path.exists(index_file):
+            index_path = index_file
+            break
+    
+    if index_path:
+        return FileResponse(index_path, media_type="text/html")
+    else:
+        # Fallback to 404 if index.html not found
+        raise HTTPException(status_code=404, detail="Frontend not found")
+
 if __name__ == "__main__":
     import uvicorn
     import os

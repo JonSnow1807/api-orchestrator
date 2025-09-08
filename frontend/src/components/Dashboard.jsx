@@ -41,7 +41,7 @@ import APIDocumentation from './APIDocumentation';
 import RequestHistory from './RequestHistory';
 import MonitoringDashboard from './MonitoringDashboard';
 import CodeGenerator from './CodeGenerator/CodeGenerator';
-import WorkspaceSwitcher from './WorkspaceSwitcher';
+import WorkspaceSwitcher from './WorkspaceSwitcherFixed';
 import TeamManagement from './TeamManagement';
 import AdvancedAnalytics from './AdvancedAnalytics';
 import WebhookManager from './WebhookManager';
