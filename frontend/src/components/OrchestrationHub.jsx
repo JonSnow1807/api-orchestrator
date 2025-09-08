@@ -39,8 +39,8 @@ const OrchestrationHub = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">API Orchestration Hub</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-white mb-2">API Orchestration Hub</h1>
+        <p className="text-gray-400">
           Discover, test, and deploy your APIs with AI-powered insights
         </p>
       </div>
@@ -54,7 +54,7 @@ const OrchestrationHub = () => {
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'code'
                   ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
               }`}
             >
               Code Input
@@ -64,7 +64,7 @@ const OrchestrationHub = () => {
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'upload'
                   ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
               }`}
             >
               File Upload
@@ -74,7 +74,7 @@ const OrchestrationHub = () => {
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'monitor'
                   ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
               }`}
               disabled={!currentTaskId}
             >
@@ -90,7 +90,7 @@ const OrchestrationHub = () => {
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'analysis'
                   ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
               }`}
               disabled={!currentTaskId && !orchestrationResults}
             >
@@ -106,7 +106,7 @@ const OrchestrationHub = () => {
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'mock'
                   ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
               }`}
             >
               Mock Servers
