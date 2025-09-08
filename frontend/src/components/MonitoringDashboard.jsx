@@ -282,7 +282,8 @@ const MonitoringDashboard = ({ onCreateFromRequest = null }) => {
     : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="h-full max-h-[calc(100vh-300px)] overflow-y-auto">
+      <div className="space-y-6 p-2">
       {/* Header with Stats */}
       <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 p-6">
         <div className="flex items-center justify-between mb-6">
@@ -661,6 +662,7 @@ const MonitoringDashboard = ({ onCreateFromRequest = null }) => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

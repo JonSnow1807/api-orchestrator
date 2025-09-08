@@ -323,7 +323,8 @@ print(response.json())`,
   }
 
   return (
-    <div className="space-y-6">
+    <div className="h-full max-h-[calc(100vh-300px)] overflow-y-auto">
+      <div className="space-y-6 p-2">
       {/* Header */}
       <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 p-6">
         <div className="flex items-start justify-between">
@@ -574,6 +575,7 @@ print(response.json())`,
           <p className="text-gray-400">No endpoints found in this API</p>
         </div>
       )}
+      </div>
     </div>
   );
 };

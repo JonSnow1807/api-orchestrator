@@ -466,9 +466,7 @@ const Dashboard = () => {
 
         {/* Monitoring Tab */}
         {activeTab === 'monitoring' && (
-          <div className="h-full overflow-auto">
-            <MonitoringDashboard />
-          </div>
+          <MonitoringDashboard />
         )}
 
         {/* API Limits - Show on all tabs */}
