@@ -4,6 +4,7 @@ import axios from 'axios';
 import { getApiUrl } from '../config';
 import EnvironmentManager from './EnvironmentManager';
 import CollectionsManager from './CollectionsManager';
+import GraphQLBuilder from './GraphQLBuilder';
 import {
   Send,
   Plus,
@@ -34,6 +35,7 @@ const APIRequestBuilder = () => {
   // Request state
   const [method, setMethod] = useState('GET');
   const [url, setUrl] = useState('');
+  const [isGraphQL, setIsGraphQL] = useState(false);
   const [headers, setHeaders] = useState([
     { key: 'Content-Type', value: 'application/json', enabled: true }
   ]);
@@ -73,7 +75,8 @@ const APIRequestBuilder = () => {
     { value: 'PATCH', color: 'text-purple-500' },
     { value: 'DELETE', color: 'text-red-500' },
     { value: 'HEAD', color: 'text-gray-500' },
-    { value: 'OPTIONS', color: 'text-pink-500' }
+    { value: 'OPTIONS', color: 'text-pink-500' },
+    { value: 'GRAPHQL', color: 'text-indigo-500', label: 'GraphQL' }
   ];
 
   const authTypes = [
@@ -399,7 +402,7 @@ const APIRequestBuilder = () => {
             className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
           >
             {methods.map(m => (
-              <option key={m.value} value={m.value}>{m.value}</option>
+              <option key={m.value} value={m.value}>{m.label || m.value}</option>
             ))}
           </select>
           
@@ -413,8 +416,9 @@ const APIRequestBuilder = () => {
           
           <button
             onClick={handleSendRequest}
-            disabled={loading || !url}
+            disabled={loading || !url || method === 'GRAPHQL'}
             className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition flex items-center gap-2"
+            title={method === 'GRAPHQL' ? 'Use the GraphQL Execute button below' : ''}
           >
             {loading ? (
               <>
@@ -430,10 +434,21 @@ const APIRequestBuilder = () => {
           </button>
         </div>
 
-        {/* Request Configuration Tabs */}
-        <div className="border-b border-gray-700 mb-4">
-          <div className="flex gap-4">
-            {['params', 'authorization', 'headers', 'body'].map((tab) => (
+        {/* Show GraphQL Builder if GraphQL is selected */}
+        {method === 'GRAPHQL' ? (
+          <GraphQLBuilder
+            endpoint={url}
+            headers={headers}
+            onResponse={setResponse}
+            currentEnvironment={currentEnvironment}
+            replaceVariables={replaceVariables}
+          />
+        ) : (
+          <>
+            {/* Request Configuration Tabs */}
+            <div className="border-b border-gray-700 mb-4">
+              <div className="flex gap-4">
+                {['params', 'authorization', 'headers', 'body'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -587,8 +602,8 @@ const APIRequestBuilder = () => {
             </div>
           )}
 
-          {/* Body Tab */}
-          {activeTab === 'body' && ['POST', 'PUT', 'PATCH'].includes(method) && (
+            {/* Body Tab */}
+            {activeTab === 'body' && ['POST', 'PUT', 'PATCH'].includes(method) && (
             <div className="space-y-4">
               <div className="flex gap-4 mb-2">
                 <label className="flex items-center gap-2">
@@ -624,13 +639,15 @@ const APIRequestBuilder = () => {
                 placeholder={bodyType === 'json' ? '{\n  "key": "value"\n}' : 'Enter raw body content'}
                 className="w-full h-40 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
               />
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
+          </>
+        )}
       </div>
 
-      {/* Response */}
-      {(response || error) && (
+      {/* Response - Show for non-GraphQL methods */}
+      {method !== 'GRAPHQL' && (response || error) && (
         <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold text-white">Response</h3>
