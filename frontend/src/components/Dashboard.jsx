@@ -27,7 +27,6 @@ import {
   BookOpen,
   Building2
 } from 'lucide-react';
-import StatsDashboard from './StatsDashboard';
 import TaskManager from './TaskManager';
 import FileUpload from './FileUpload';
 import ExportImport from './ExportImport';
@@ -162,7 +161,7 @@ const Dashboard = () => {
       <div className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 relative z-10">
           <div className="bg-gray-800/50 backdrop-blur rounded-xl p-6 border border-gray-700">
             <div className="flex items-center justify-between mb-4">
               <FolderOpen className="w-8 h-8 text-purple-500" />
@@ -439,11 +438,6 @@ const Dashboard = () => {
             )}
           </div>
         </div>
-        )}
-
-        {/* Statistics Tab */}
-        {activeTab === 'statistics' && (
-          <StatsDashboard />
         )}
 
         {/* Tasks Tab */}

@@ -102,7 +102,7 @@ const WorkspaceSwitcher = ({ onWorkspaceChange }) => {
 
   return (
     <>
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative z-[99999]" ref={dropdownRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center gap-3 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
