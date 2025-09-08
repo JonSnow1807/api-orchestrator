@@ -284,3 +284,36 @@ class EmailService:
 
 # Export the service
 email_service = EmailService()
+
+# Additional functions for workspace invitations
+async def send_invitation_email(
+    email: str,
+    workspace_name: str,
+    inviter_name: str,
+    token: str,
+    message: Optional[str] = None
+) -> bool:
+    """Send workspace invitation email"""
+    invite_url = f"{settings.FRONTEND_URL}/invite/{token}"
+    
+    subject = f"You're invited to join {workspace_name} on StreamAPI"
+    
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>You're invited to join {workspace_name}!</h2>
+        <p>{inviter_name} has invited you to collaborate on StreamAPI.</p>
+        {f'<p>{message}</p>' if message else ''}
+        <a href="{invite_url}" style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 5px;">Accept Invitation</a>
+        <p>This invitation expires in 7 days.</p>
+    </div>
+    """
+    
+    return email_service.send_email(email, subject, html_content)
+
+async def send_notification_email(
+    email: str,
+    subject: str,
+    body: str
+) -> bool:
+    """Send general notification email"""
+    return email_service.send_email(email, subject, f"<div>{body}</div>", body)

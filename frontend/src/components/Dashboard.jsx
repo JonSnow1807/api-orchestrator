@@ -9,6 +9,7 @@ import {
   Download,
   LogOut,
   User,
+  Users,
   Zap,
   Shield,
   Clock,
@@ -23,7 +24,8 @@ import {
   Code2,
   Home,
   CreditCard,
-  BookOpen
+  BookOpen,
+  Building2
 } from 'lucide-react';
 import StatsDashboard from './StatsDashboard';
 import TaskManager from './TaskManager';
@@ -40,6 +42,8 @@ import APIDocumentation from './APIDocumentation';
 import RequestHistory from './RequestHistory';
 import MonitoringDashboard from './MonitoringDashboard';
 import CodeGenerator from './CodeGenerator/CodeGenerator';
+import WorkspaceSwitcher from './WorkspaceSwitcher';
+import TeamManagement from './TeamManagement';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -50,6 +54,7 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('orchestration');
   const [currentTaskId, setCurrentTaskId] = useState(null);
+  const [currentWorkspace, setCurrentWorkspace] = useState(null);
 
   useEffect(() => {
     fetchProjects();
@@ -105,6 +110,7 @@ const Dashboard = () => {
                 <Zap className="w-8 h-8 text-purple-500" />
                 <h1 className="text-2xl font-bold text-white">API Orchestrator</h1>
               </Link>
+              <WorkspaceSwitcher onWorkspaceChange={setCurrentWorkspace} />
               <span className="px-3 py-1 bg-purple-600/20 text-purple-400 text-sm rounded-full border border-purple-500/30">
                 {user?.subscription_tier || 'Free'} Tier
               </span>
@@ -317,6 +323,17 @@ const Dashboard = () => {
               <Shield className="w-4 h-4" />
               <span>Monitoring</span>
             </button>
+            <button
+              onClick={() => setActiveTab('team')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'team' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>Team</span>
+            </button>
           </nav>
         </div>
 
@@ -488,6 +505,19 @@ const Dashboard = () => {
         {/* Monitoring Tab */}
         {activeTab === 'monitoring' && (
           <MonitoringDashboard />
+        )}
+        
+        {/* Team Management Tab */}
+        {activeTab === 'team' && currentWorkspace && (
+          <TeamManagement workspaceId={currentWorkspace.id} />
+        )}
+        {activeTab === 'team' && !currentWorkspace && (
+          <div className="bg-gray-800 rounded-lg p-8 text-center">
+            <Building2 className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">No Workspace Selected</h3>
+            <p className="text-gray-400 mb-4">Please select or create a workspace to manage your team.</p>
+            <WorkspaceSwitcher onWorkspaceChange={setCurrentWorkspace} />
+          </div>
         )}
 
         {/* API Limits - Show on all tabs */}

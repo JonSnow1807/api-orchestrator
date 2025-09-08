@@ -73,7 +73,7 @@ class Workspace(Base):
     members = relationship("User", secondary=workspace_members, backref="workspaces")
     invitations = relationship("WorkspaceInvitation", back_populates="workspace", cascade="all, delete-orphan")
     projects = relationship("Project", back_populates="workspace", cascade="all, delete-orphan")
-    collections = relationship("Collection", back_populates="workspace", cascade="all, delete-orphan")
+    # collections = relationship("Collection", back_populates="workspace", cascade="all, delete-orphan")  # Will add when Collection model is created
     activity_logs = relationship("WorkspaceActivity", back_populates="workspace", cascade="all, delete-orphan")
     webhooks = relationship("WorkspaceWebhook", back_populates="workspace", cascade="all, delete-orphan")
     
@@ -246,7 +246,7 @@ def update_existing_models():
     This function should be called to update existing models
     to support workspace functionality
     """
-    from src.database import Project, Collection, User
+    from src.database import Project, User
     
     # Add workspace_id to Project model
     if not hasattr(Project, 'workspace_id'):
@@ -255,10 +255,7 @@ def update_existing_models():
         Project.visibility = Column(String(20), default="private")  # private, workspace, public
     
     # Add workspace_id to Collection model (if it exists)
-    if hasattr(Base.metadata, 'collections'):
-        Collection.workspace_id = Column(Integer, ForeignKey('workspaces.id'), nullable=True)
-        Collection.workspace = relationship("Workspace", back_populates="collections")
-        Collection.visibility = Column(String(20), default="private")
+    # Note: Collection model will be added later if needed
     
     # Add collaboration fields to User model
     if not hasattr(User, 'last_active_workspace_id'):
