@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { getApiUrl } from '../config';
 import {
   Code2,
   Play,
@@ -115,7 +116,7 @@ urlpatterns = [
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await axios.post('/api/orchestrate', {
+      const response = await axios.post(getApiUrl('/api/orchestrate'), {
         source_type: 'code',
         source_path: fileName,
         code_content: code,

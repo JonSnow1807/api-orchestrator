@@ -430,6 +430,15 @@ const Dashboard = () => {
           <TaskManager />
         )}
 
+        {/* Code Tab */}
+        {activeTab === 'code' && (
+          <CodeEditor 
+            onOrchestrationStart={(taskId) => {
+              console.log('Orchestration started with task ID:', taskId);
+              setActiveTab('tasks');
+            }}
+          />
+        )}
 
         {/* Upload Tab */}
         {activeTab === 'upload' && (
