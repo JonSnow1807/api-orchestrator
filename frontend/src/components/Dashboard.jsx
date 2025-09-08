@@ -193,11 +193,11 @@ const Dashboard = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="mb-8">
-          <nav className="flex flex-wrap gap-1 bg-gray-800/50 backdrop-blur rounded-lg p-1">
+        <div className="mb-8 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+          <nav className="flex gap-1 bg-gray-800/50 backdrop-blur rounded-lg p-1 min-w-fit">
             <button
               onClick={() => setActiveTab('orchestration')}
-              className={`flex items-center space-x-1 px-3 py-1.5 text-sm rounded-lg transition ${
+              className={`flex items-center space-x-1 px-2.5 py-1.5 text-sm rounded-lg transition whitespace-nowrap ${
                 activeTab === 'orchestration' 
                   ? 'bg-purple-600 text-white' 
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
