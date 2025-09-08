@@ -55,6 +55,9 @@ function App() {
             </PrivateRoute>
           } />
           
+          {/* Pricing route - shows billing page */}
+          <Route path="/pricing" element={<Billing />} />
+          
           {/* Landing Page */}
           <Route path="/" element={<LandingPage />} />
           
