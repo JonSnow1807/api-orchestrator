@@ -203,7 +203,7 @@ const FileUpload = ({ onUploadSuccess }) => {
           htmlFor="file-upload"
           className="cursor-pointer"
         >
-          <p className="text-gray-700 font-medium mb-2">
+          <p className="text-gray-300 font-medium mb-2">
             Drop files here or click to browse
           </p>
           <p className="text-sm text-gray-500">
@@ -216,7 +216,7 @@ const FileUpload = ({ onUploadSuccess }) => {
       {files.length > 0 && (
         <div className="mt-4">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-gray-700">
+            <h4 className="text-sm font-medium text-gray-300">
               Selected Files ({files.length})
             </h4>
             {uploadProgress.overall && (

@@ -208,7 +208,7 @@ const TaskManager = () => {
                     </span>
                   </div>
                   
-                  <div className="text-sm text-gray-600 space-y-1">
+                  <div className="text-sm text-gray-400 space-y-1">
                     <p>Started: {formatDate(task.created_at)}</p>
                     {task.completed_at && (
                       <p>Duration: {formatDuration(task.created_at, task.completed_at)}</p>
@@ -221,7 +221,7 @@ const TaskManager = () => {
                   {/* Progress Bar */}
                   {task.status === 'in_progress' && task.progress !== undefined && (
                     <div className="mt-3">
-                      <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                      <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
                         <span>Progress</span>
                         <span>{Math.round(task.progress)}%</span>
                       </div>
@@ -293,7 +293,7 @@ const TaskManager = () => {
                 <h3 className="text-lg font-semibold">Task Details</h3>
                 <button
                   onClick={() => setSelectedTask(null)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-300"
                 >
                   <XCircle className="w-5 h-5" />
                 </button>

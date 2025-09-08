@@ -172,7 +172,7 @@ const ExportImport = ({ projectId, taskId }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Export Section */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Export Data</h4>
+          <h4 className="text-sm font-medium text-gray-300 mb-3">Export Data</h4>
           <div className="space-y-2">
             {exportFormats.map((format) => (
               <button
@@ -206,7 +206,7 @@ const ExportImport = ({ projectId, taskId }) => {
 
         {/* Import Section */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Import Data</h4>
+          <h4 className="text-sm font-medium text-gray-300 mb-3">Import Data</h4>
           <div className="space-y-3">
             <input
               ref={fileInputRef}

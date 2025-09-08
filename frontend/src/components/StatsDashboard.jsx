@@ -84,7 +84,7 @@ const StatsDashboard = () => {
         )}
       </div>
       <h3 className="text-2xl font-bold text-white">{value}</h3>
-      <p className="text-sm text-gray-600 mt-1">{label}</p>
+      <p className="text-sm text-gray-400 mt-1">{label}</p>
     </div>
   );
 
@@ -93,7 +93,7 @@ const StatsDashboard = () => {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <Activity className="w-12 h-12 text-blue-500 animate-pulse mx-auto mb-3" />
-          <p className="text-gray-600">Loading statistics...</p>
+          <p className="text-gray-400">Loading statistics...</p>
         </div>
       </div>
     );
@@ -106,7 +106,7 @@ const StatsDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-white">Statistics Overview</h2>
-            <p className="text-gray-600 mt-1">Track your API orchestration metrics</p>
+            <p className="text-gray-400 mt-1">Track your API orchestration metrics</p>
           </div>
           <div className="flex items-center gap-3">
             {/* Time Range Selector */}
@@ -171,7 +171,7 @@ const StatsDashboard = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-500" />
-                <span className="text-gray-700">Successful</span>
+                <span className="text-gray-300">Successful</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{stats?.successful_tasks || 0}</span>
@@ -191,7 +191,7 @@ const StatsDashboard = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <XCircle className="w-5 h-5 text-red-500" />
-                <span className="text-gray-700">Failed</span>
+                <span className="text-gray-300">Failed</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{stats?.failed_tasks || 0}</span>
@@ -211,7 +211,7 @@ const StatsDashboard = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-yellow-500" />
-                <span className="text-gray-700">Pending</span>
+                <span className="text-gray-300">Pending</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{stats?.pending_tasks || 0}</span>
@@ -237,7 +237,7 @@ const StatsDashboard = () => {
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <FileCode className="w-5 h-5 text-blue-500" />
-                <span className="text-gray-700">APIs Discovered</span>
+                <span className="text-gray-300">APIs Discovered</span>
               </div>
               <span className="font-semibold text-lg">{stats?.total_apis_discovered || 0}</span>
             </div>
@@ -245,7 +245,7 @@ const StatsDashboard = () => {
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <BarChart3 className="w-5 h-5 text-green-500" />
-                <span className="text-gray-700">Tests Generated</span>
+                <span className="text-gray-300">Tests Generated</span>
               </div>
               <span className="font-semibold text-lg">{stats?.total_tests_generated || 0}</span>
             </div>
@@ -253,7 +253,7 @@ const StatsDashboard = () => {
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <Package className="w-5 h-5 text-purple-500" />
-                <span className="text-gray-700">Mock Servers</span>
+                <span className="text-gray-300">Mock Servers</span>
               </div>
               <span className="font-semibold text-lg">{stats?.total_mock_servers || 0}</span>
             </div>
@@ -270,7 +270,7 @@ const StatsDashboard = () => {
               <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <Activity className="w-4 h-4 text-blue-500" />
                 <div className="flex-1">
-                  <p className="text-sm text-gray-700">{activity.description}</p>
+                  <p className="text-sm text-gray-300">{activity.description}</p>
                   <p className="text-xs text-gray-500">{activity.timestamp}</p>
                 </div>
               </div>
