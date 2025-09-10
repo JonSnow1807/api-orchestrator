@@ -202,6 +202,8 @@ from src.routes.test_runner import router as test_runner_router
 from src.routes.request_history import router as request_history_router
 # Import environment routes
 from src.routes.environments import router as environments_router
+# Import request chains routes
+from src.routes.request_chains import router as request_chains_router
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -227,6 +229,8 @@ app.include_router(test_runner_router)
 app.include_router(request_history_router)
 # Include environment routes
 app.include_router(environments_router)
+# Include request chains routes
+app.include_router(request_chains_router)
 
 # Add request logging middleware
 @app.middleware("http")
