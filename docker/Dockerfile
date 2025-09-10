@@ -27,6 +27,11 @@ COPY frontend/package*.json ./
 RUN npm ci
 
 COPY frontend/ ./
+
+# Remove reference to splitVendorChunkPlugin if it exists in vite.config.js
+RUN sed -i 's/, splitVendorChunkPlugin//g' vite.config.js || true
+RUN sed -i 's/splitVendorChunkPlugin()//g' vite.config.js || true
+
 RUN npm run build
 
 # Stage 3: Production Image
