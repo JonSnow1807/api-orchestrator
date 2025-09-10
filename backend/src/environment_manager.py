@@ -5,7 +5,6 @@ Supports global -> workspace -> collection -> request variable inheritance
 
 from typing import Dict, List, Optional, Any
 from datetime import datetime
-from pydantic import BaseModel
 import json
 import re
 from sqlalchemy.orm import Session
@@ -14,7 +13,7 @@ from sqlalchemy.orm import relationship
 
 from src.database import Base, get_db
 
-class VariableScope(BaseModel):
+class VariableScope:
     """Variable scope levels"""
     GLOBAL = "global"
     WORKSPACE = "workspace"
