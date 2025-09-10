@@ -12,14 +12,8 @@ export default defineConfig({
     sourcemap: true,
     // Reduce chunk size warnings threshold
     chunkSizeWarningLimit: 1000,
-    // Minification options
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
-      }
-    }
+    // Use esbuild for minification (default, doesn't require extra dependencies)
+    minify: 'esbuild'
   },
   server: {
     proxy: {
