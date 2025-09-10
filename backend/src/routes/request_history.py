@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel
 
 from src.database import get_db, RequestHistory, User
-from src.auth import AuthManager
+from src.auth import get_current_user
 
 router = APIRouter(prefix="/api/request-history", tags=["Request History"])
 
@@ -67,7 +67,7 @@ async def search_request_history(
     sort_by: str = Query("created_at", regex="^(created_at|response_time_ms|status_code|method)$"),
     sort_order: str = Query("desc", regex="^(asc|desc)$"),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """
     Advanced search for request history with multiple filters.
@@ -76,7 +76,7 @@ async def search_request_history(
     
     # Base query
     query_obj = db.query(RequestHistory).filter(
-        RequestHistory.user_id == current_user["id"]
+        RequestHistory.user_id == current_user.id
     )
     
     # Apply date filter
@@ -160,7 +160,7 @@ async def search_request_history(
 async def get_request_stats(
     days: int = Query(7, description="Number of days for statistics"),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Get statistics about request history"""
     
@@ -168,7 +168,7 @@ async def get_request_stats(
     
     # Get requests for the period
     requests = db.query(RequestHistory).filter(
-        RequestHistory.user_id == current_user["id"],
+        RequestHistory.user_id == current_user.id,
         RequestHistory.created_at >= start_date
     ).all()
     
@@ -235,13 +235,13 @@ async def get_request_stats(
 async def save_search(
     search: SavedSearch,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Save a search as a smart folder"""
     
     # Store in a simple JSON field in user preferences
     # In a real implementation, this would be a separate table
-    user = db.query(User).filter(User.id == current_user["id"]).first()
+    user = db.query(User).filter(User.id == current_user.id).first()
     
     if not user.preferences:
         user.preferences = {"saved_searches": []}
@@ -264,11 +264,11 @@ async def save_search(
 @router.get("/saved-searches")
 async def get_saved_searches(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Get all saved searches/smart folders"""
     
-    user = db.query(User).filter(User.id == current_user["id"]).first()
+    user = db.query(User).filter(User.id == current_user.id).first()
     
     if not user.preferences or "saved_searches" not in user.preferences:
         return {"searches": []}
@@ -279,13 +279,13 @@ async def get_saved_searches(
 async def delete_request_history(
     request_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Delete a specific request from history"""
     
     request = db.query(RequestHistory).filter(
         RequestHistory.id == request_id,
-        RequestHistory.user_id == current_user["id"]
+        RequestHistory.user_id == current_user.id
     ).first()
     
     if not request:
@@ -300,12 +300,12 @@ async def delete_request_history(
 async def clear_request_history(
     days: Optional[int] = Query(None, description="Clear requests older than N days"),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Clear request history (optionally older than N days)"""
     
     query = db.query(RequestHistory).filter(
-        RequestHistory.user_id == current_user["id"]
+        RequestHistory.user_id == current_user.id
     )
     
     if days:

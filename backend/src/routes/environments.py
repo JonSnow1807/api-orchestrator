@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 
 from src.database import get_db
-from src.auth import AuthManager
+from src.auth import get_current_user
 from src.environment_manager import EnvironmentManager, EnvironmentVariable
 
 router = APIRouter(prefix="/api/environments", tags=["Environments"])
@@ -41,14 +41,14 @@ class ResolveVariablesRequest(BaseModel):
 async def create_environment(
     request: CreateEnvironmentRequest,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Create a new environment with variables"""
     
     try:
         environment = EnvironmentManager.create_environment(
             db=db,
-            user_id=current_user["id"],
+            user_id=current_user.id,
             name=request.name,
             variables=request.variables,
             scope=request.scope,
@@ -67,13 +67,13 @@ async def create_environment(
 async def get_environment_tree(
     workspace_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Get the complete environment variable tree with inheritance hierarchy"""
     
     tree = EnvironmentManager.get_environment_tree(
         db=db,
-        user_id=current_user["id"],
+        user_id=current_user.id,
         workspace_id=workspace_id
     )
     
@@ -86,13 +86,13 @@ async def get_environment_tree(
 async def resolve_variables(
     request: ResolveVariablesRequest,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Resolve variables in text with inheritance"""
     
     resolved_text = EnvironmentManager.resolve_variables(
         db=db,
-        user_id=current_user["id"],
+        user_id=current_user.id,
         text=request.text,
         workspace_id=request.workspace_id,
         collection_id=request.collection_id,
@@ -111,12 +111,12 @@ async def list_variables(
     workspace_id: Optional[int] = Query(None),
     collection_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """List environment variables filtered by scope"""
     
     query = db.query(EnvironmentVariable).filter(
-        EnvironmentVariable.user_id == current_user["id"],
+        EnvironmentVariable.user_id == current_user.id,
         EnvironmentVariable.is_active == True
     )
     
@@ -144,14 +144,14 @@ async def update_variable(
     variable_id: int,
     request: UpdateVariableRequest,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Update an environment variable"""
     
     try:
         updated_var = EnvironmentManager.update_variable(
             db=db,
-            user_id=current_user["id"],
+            user_id=current_user.id,
             variable_id=variable_id,
             key=request.key,
             value=request.value,
@@ -169,13 +169,13 @@ async def update_variable(
 async def delete_variable(
     variable_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Delete an environment variable"""
     
     success = EnvironmentManager.delete_variable(
         db=db,
-        user_id=current_user["id"],
+        user_id=current_user.id,
         variable_id=variable_id
     )
     
@@ -191,7 +191,7 @@ async def delete_variable(
 async def bulk_update_variables(
     variables: List[Dict[str, Any]],
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Bulk update multiple variables"""
     
@@ -203,7 +203,7 @@ async def bulk_update_variables(
             if "id" in var_data:
                 updated_var = EnvironmentManager.update_variable(
                     db=db,
-                    user_id=current_user["id"],
+                    user_id=current_user.id,
                     variable_id=var_data["id"],
                     key=var_data.get("key"),
                     value=var_data.get("value"),
@@ -276,7 +276,7 @@ async def get_dynamic_variable_types():
 async def test_variable_resolution(
     text: str = Query(..., description="Text containing variables to resolve"),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(AuthManager.get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Test variable resolution with current environment"""
     
@@ -286,7 +286,7 @@ async def test_variable_resolution(
     # Global scope only
     global_resolved = EnvironmentManager.resolve_variables(
         db=db,
-        user_id=current_user["id"],
+        user_id=current_user.id,
         text=text,
         workspace_id=None,
         collection_id=None,
@@ -298,7 +298,7 @@ async def test_variable_resolution(
     # You'd get this from user's current workspace
     workspace_resolved = EnvironmentManager.resolve_variables(
         db=db,
-        user_id=current_user["id"],
+        user_id=current_user.id,
         text=text,
         workspace_id=1,  # Example workspace ID
         collection_id=None,
