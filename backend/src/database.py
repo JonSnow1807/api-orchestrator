@@ -601,7 +601,9 @@ class Collection(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey('projects.id', ondelete='CASCADE'))
-    workspace_id = Column(Integer, ForeignKey('workspaces.id', ondelete='CASCADE'), nullable=True)
+    # Note: workspace_id would reference workspaces table which is in models/workspace.py
+    # For now, we'll make it a simple Integer field without FK constraint
+    workspace_id = Column(Integer, nullable=True)
     
     # Collection details
     name = Column(String(255), nullable=False)
@@ -661,7 +663,9 @@ class Environment(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey('projects.id', ondelete='CASCADE'))
-    workspace_id = Column(Integer, ForeignKey('workspaces.id', ondelete='CASCADE'), nullable=True)
+    # Note: workspace_id would reference workspaces table which is in models/workspace.py
+    # For now, we'll make it a simple Integer field without FK constraint
+    workspace_id = Column(Integer, nullable=True)
     
     # Environment details
     name = Column(String(100), nullable=False)

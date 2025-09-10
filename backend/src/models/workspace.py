@@ -85,7 +85,7 @@ class Workspace(Base):
                           overlaps="creator,owned_workspaces")
     invitations = relationship("WorkspaceInvitation", back_populates="workspace", cascade="all, delete-orphan")
     # projects = relationship("Project", back_populates="workspace", cascade="all, delete-orphan")  # Project model doesn't have workspace_id yet
-    collections = relationship("Collection", backref="workspace", cascade="all, delete-orphan", foreign_keys="Collection.workspace_id")
+    # collections = relationship("Collection", backref="workspace")  # Collection is in database.py without proper FK
     activity_logs = relationship("WorkspaceActivity", back_populates="workspace", cascade="all, delete-orphan")
     webhooks = relationship("WorkspaceWebhook", back_populates="workspace", cascade="all, delete-orphan")
     ai_keys = relationship("AIKey", back_populates="workspace", cascade="all, delete-orphan")
