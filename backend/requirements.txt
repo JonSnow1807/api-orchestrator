@@ -40,3 +40,5 @@ datadog==0.47.0
 sentry-sdk[fastapi]==1.40.0
 cryptography==41.0.7
 jsonpath-ng==1.6.1
+jsonschema==4.20.0
+deepdiff==6.7.1
