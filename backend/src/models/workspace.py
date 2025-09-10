@@ -12,6 +12,10 @@ import secrets
 from typing import Optional
 
 from src.database import Base
+# Forward declaration to avoid circular import
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from src.models.ai_keys import AIKey
 
 # Association tables for many-to-many relationships
 workspace_members = Table(
@@ -68,18 +72,23 @@ class Workspace(Base):
     api_calls_this_month = Column(Integer, default=0)
     storage_used_mb = Column(Integer, default=0)
     
-    # Relationships
-    creator = relationship("User", foreign_keys=[created_by], backref="owned_workspaces")
+    # Relationships with explicit foreign keys to avoid ambiguity
+    creator = relationship("User", 
+                          foreign_keys=[created_by], 
+                          backref="owned_workspaces",
+                          overlaps="members,workspaces")
     members = relationship("User", 
                           secondary=workspace_members, 
                           primaryjoin="Workspace.id == workspace_members.c.workspace_id",
                           secondaryjoin="User.id == workspace_members.c.user_id",
-                          backref="workspaces")
+                          backref="workspaces",
+                          overlaps="creator,owned_workspaces")
     invitations = relationship("WorkspaceInvitation", back_populates="workspace", cascade="all, delete-orphan")
-    projects = relationship("Project", back_populates="workspace", cascade="all, delete-orphan")
-    # collections = relationship("Collection", back_populates="workspace", cascade="all, delete-orphan")  # Will add when Collection model is created
+    # projects = relationship("Project", back_populates="workspace", cascade="all, delete-orphan")  # Project model doesn't have workspace_id yet
+    collections = relationship("Collection", backref="workspace", cascade="all, delete-orphan", foreign_keys="Collection.workspace_id")
     activity_logs = relationship("WorkspaceActivity", back_populates="workspace", cascade="all, delete-orphan")
     webhooks = relationship("WorkspaceWebhook", back_populates="workspace", cascade="all, delete-orphan")
+    ai_keys = relationship("AIKey", back_populates="workspace", cascade="all, delete-orphan")
     
     def get_member_role(self, user_id: int) -> Optional[str]:
         """Get the role of a specific member in this workspace"""
@@ -138,7 +147,7 @@ class WorkspaceInvitation(Base):
     
     # Relationships
     workspace = relationship("Workspace", back_populates="invitations")
-    inviter = relationship("User", foreign_keys=[invited_by])
+    inviter = relationship("User", foreign_keys=[invited_by], backref="sent_invitations")
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -181,7 +190,7 @@ class WorkspaceActivity(Base):
     
     # Relationships
     workspace = relationship("Workspace", back_populates="activity_logs")
-    user = relationship("User", foreign_keys=[user_id])
+    user = relationship("User", foreign_keys=[user_id], backref="workspace_activities")
 
 class WorkspaceWebhook(Base):
     """Webhooks for workspace events"""
@@ -211,7 +220,7 @@ class WorkspaceWebhook(Base):
     
     # Relationships
     workspace = relationship("Workspace", back_populates="webhooks")
-    creator = relationship("User", foreign_keys=[created_by])
+    creator = relationship("User", foreign_keys=[created_by], backref="created_webhooks")
 
 class ResourcePermission(Base):
     """Granular permissions for resources within a workspace"""

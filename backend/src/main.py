@@ -56,6 +56,13 @@ from src.agents.mock_server_agent import MockServerAgent
 from src.database import init_db, SessionLocal, DatabaseManager, get_db, User
 from sqlalchemy.orm import Session
 
+# Import all models to ensure they're registered with SQLAlchemy
+from src.models.workspace import (
+    Workspace, WorkspaceInvitation, WorkspaceActivity, 
+    WorkspaceWebhook, ResourcePermission
+)
+from src.models.ai_keys import AIKey, AIKeyUsage
+
 # Import authentication
 from src.auth import (
     AuthManager, UserCreate, UserLogin, Token, UserResponse,
@@ -186,9 +193,11 @@ from src.config import settings
 from src.utils.logger import logger, log_request
 
 # Import webhook routes
-# from src.routes.webhooks import router as webhooks_router  # Temporarily disabled to fix auth
+from src.routes.webhooks import router as webhooks_router
 # Import AI keys routes
-# from src.routes.ai_keys import router as ai_keys_router  # Temporarily disabled to fix auth
+from src.routes.ai_keys import router as ai_keys_router
+# Import test runner routes
+from src.routes.test_runner import router as test_runner_router
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -204,10 +213,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include webhook routes - temporarily disabled to fix auth
-# app.include_router(webhooks_router)
-# Include AI keys routes - temporarily disabled to fix auth
-# app.include_router(ai_keys_router)
+# Include webhook routes
+app.include_router(webhooks_router)
+# Include AI keys routes
+app.include_router(ai_keys_router)
+# Include test runner routes
+app.include_router(test_runner_router)
 
 # Add request logging middleware
 @app.middleware("http")

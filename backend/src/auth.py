@@ -10,7 +10,7 @@ from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, validator
 import os
 
 from src.database import get_db, User, DatabaseManager
@@ -31,9 +31,15 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 # Pydantic models
 class UserCreate(BaseModel):
     email: EmailStr
-    username: str
-    password: str
-    full_name: Optional[str] = None
+    username: str = Field(..., min_length=1, max_length=100)
+    password: str = Field(..., min_length=6, max_length=100)
+    full_name: Optional[str] = Field(None, max_length=255)
+    
+    @validator('username')
+    def validate_username(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Username cannot be empty')
+        return v.strip()
     
 class UserLogin(BaseModel):
     email: EmailStr
@@ -67,6 +73,11 @@ class AuthManager:
     @staticmethod
     def get_password_hash(password: str) -> str:
         """Hash a plain password"""
+        # Security checks
+        if not password:
+            raise ValueError("Password cannot be empty")
+        if len(password) > 1000:  # Prevent DoS with very long passwords
+            raise ValueError("Password exceeds maximum allowed length")
         return pwd_context.hash(password)
     
     @staticmethod

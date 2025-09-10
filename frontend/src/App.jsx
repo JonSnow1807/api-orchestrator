@@ -1,18 +1,21 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import ErrorBoundary from './components/ErrorBoundary';
-import LandingPage from './components/LandingPage';
-import Login from './components/Login';
-import Register from './components/Register';
-import Dashboard from './components/Dashboard';
-import ProjectCreate from './components/ProjectCreate';
-import ProjectDetails from './components/ProjectDetails';
-import UserProfile from './components/UserProfile';
-import Billing from './components/Billing';
-import PricingPage from './components/PricingPage';
+import LoadingSkeleton from './components/LoadingSkeleton';
 import PrivateRoute from './components/PrivateRoute';
+
+// Lazy load heavy components
+const LandingPage = lazy(() => import('./components/LandingPage'));
+const Login = lazy(() => import('./components/Login'));
+const Register = lazy(() => import('./components/Register'));
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const ProjectCreate = lazy(() => import('./components/ProjectCreate'));
+const ProjectDetails = lazy(() => import('./components/ProjectDetails'));
+const UserProfile = lazy(() => import('./components/UserProfile'));
+const Billing = lazy(() => import('./components/Billing'));
+const PricingPage = lazy(() => import('./components/PricingPage'));
 
 function App() {
   return (
@@ -20,7 +23,8 @@ function App() {
       <Router>
         <AuthProvider>
           <ToastProvider>
-            <Routes>
+            <Suspense fallback={<LoadingSkeleton />}>
+              <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -65,6 +69,7 @@ function App() {
           {/* Catch all - redirect to landing */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+            </Suspense>
           </ToastProvider>
         </AuthProvider>
       </Router>

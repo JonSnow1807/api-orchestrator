@@ -595,6 +595,121 @@ class RequestHistory(Base):
             "error_message": self.error_message
         }
 
+class Collection(Base):
+    """API Collection model for organizing requests"""
+    __tablename__ = "collections"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(Integer, ForeignKey('projects.id', ondelete='CASCADE'))
+    workspace_id = Column(Integer, ForeignKey('workspaces.id', ondelete='CASCADE'), nullable=True)
+    
+    # Collection details
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    auth_type = Column(String(50))  # bearer, basic, api-key, oauth2
+    auth_config = Column(JSON)  # Authentication configuration
+    
+    # Collection structure (nested folders and requests)
+    structure = Column(JSON)  # Hierarchical structure of folders and requests
+    requests = Column(JSON)  # All requests in the collection
+    
+    # Pre-request and test scripts
+    pre_request_script = Column(Text)
+    test_script = Column(Text)
+    
+    # Variables
+    variables = Column(JSON)  # Collection-level variables
+    
+    # Metadata
+    created_by = Column(Integer, ForeignKey('users.id'))
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Import source
+    import_source = Column(String(50))  # postman, insomnia, openapi, etc.
+    original_format = Column(JSON)  # Original import data
+    
+    # Sharing
+    is_public = Column(Boolean, default=False)
+    share_token = Column(String(100), unique=True, nullable=True)
+    
+    # Relationships
+    project = relationship("Project", backref="collections")
+    creator = relationship("User", foreign_keys=[created_by], backref="created_collections")
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "project_id": self.project_id,
+            "workspace_id": self.workspace_id,
+            "name": self.name,
+            "description": self.description,
+            "auth_type": self.auth_type,
+            "auth_config": self.auth_config,
+            "structure": self.structure,
+            "requests": self.requests,
+            "variables": self.variables,
+            "created_by": self.created_by,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "is_public": self.is_public
+        }
+
+class Environment(Base):
+    """Environment variables for different deployment stages"""
+    __tablename__ = "environments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(Integer, ForeignKey('projects.id', ondelete='CASCADE'))
+    workspace_id = Column(Integer, ForeignKey('workspaces.id', ondelete='CASCADE'), nullable=True)
+    
+    # Environment details
+    name = Column(String(100), nullable=False)
+    description = Column(Text)
+    color = Column(String(7))  # Hex color for UI
+    
+    # Variables
+    variables = Column(JSON)  # Key-value pairs
+    initial_variables = Column(JSON)  # Initial values (can be reset)
+    current_variables = Column(JSON)  # Current runtime values
+    
+    # Security
+    secrets = Column(JSON)  # Encrypted sensitive variables
+    is_default = Column(Boolean, default=False)
+    
+    # Metadata
+    created_by = Column(Integer, ForeignKey('users.id'))
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    last_used_at = Column(DateTime)
+    
+    # Usage tracking
+    usage_count = Column(Integer, default=0)
+    
+    # Relationships
+    project = relationship("Project", backref="environments")
+    creator = relationship("User", foreign_keys=[created_by], backref="created_environments")
+    
+    def to_dict(self, include_secrets=False):
+        data = {
+            "id": self.id,
+            "project_id": self.project_id,
+            "workspace_id": self.workspace_id,
+            "name": self.name,
+            "description": self.description,
+            "color": self.color,
+            "variables": self.variables,
+            "is_default": self.is_default,
+            "created_by": self.created_by,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "last_used_at": self.last_used_at.isoformat() if self.last_used_at else None,
+            "usage_count": self.usage_count
+        }
+        if include_secrets:
+            data["secrets"] = self.secrets
+        return data
+
 def init_db():
     """Initialize database - create all tables"""
     Base.metadata.create_all(bind=engine)
