@@ -198,6 +198,10 @@ from src.routes.webhooks import router as webhooks_router
 from src.routes.ai_keys import router as ai_keys_router
 # Import test runner routes
 from src.routes.test_runner import router as test_runner_router
+# Import request history routes
+from src.routes.request_history import router as request_history_router
+# Import environment routes
+from src.routes.environments import router as environments_router
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -219,6 +223,10 @@ app.include_router(webhooks_router)
 app.include_router(ai_keys_router)
 # Include test runner routes
 app.include_router(test_runner_router)
+# Include request history routes
+app.include_router(request_history_router)
+# Include environment routes
+app.include_router(environments_router)
 
 # Add request logging middleware
 @app.middleware("http")
