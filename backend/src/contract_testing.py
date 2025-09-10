@@ -10,11 +10,17 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import Column, Integer, String, JSON, Boolean, DateTime, ForeignKey, Text
 import jsonschema
-from deepdiff import DeepDiff
+
+try:
+    from deepdiff import DeepDiff
+    HAS_DEEPDIFF = True
+except ImportError:
+    HAS_DEEPDIFF = False
+    print("Warning: deepdiff not installed. Contract comparison features will be limited.")
 
 from src.database import Base
 
-class ContractType(BaseModel):
+class ContractType:
     """Contract type enumeration"""
     CONSUMER_DRIVEN = "consumer_driven"
     PROVIDER_DRIVEN = "provider_driven"
@@ -298,27 +304,34 @@ class ContractComparator:
         breaking_changes = []
         non_breaking_changes = []
         
-        # Compare request schemas
-        if old_contract.request_schema and new_contract.request_schema:
-            request_diff = DeepDiff(
-                old_contract.request_schema,
-                new_contract.request_schema,
-                ignore_order=True
-            )
-            
-            if request_diff:
-                # Check for breaking changes in request
-                if "dictionary_item_removed" in request_diff:
-                    for item in request_diff["dictionary_item_removed"]:
-                        if "required" in str(item):
-                            breaking_changes.append(f"Required request field removed: {item}")
+        if not HAS_DEEPDIFF:
+            # Simple comparison without deepdiff
+            if old_contract.request_schema != new_contract.request_schema:
+                breaking_changes.append("Request schema changed")
+            if old_contract.response_schema != new_contract.response_schema:
+                breaking_changes.append("Response schema changed")
+        else:
+            # Compare request schemas
+            if old_contract.request_schema and new_contract.request_schema:
+                request_diff = DeepDiff(
+                    old_contract.request_schema,
+                    new_contract.request_schema,
+                    ignore_order=True
+                )
                 
-                if "type_changes" in request_diff:
-                    for path, change in request_diff["type_changes"].items():
-                        breaking_changes.append(f"Request field type changed: {path}")
+                if request_diff:
+                    # Check for breaking changes in request
+                    if "dictionary_item_removed" in request_diff:
+                        for item in request_diff["dictionary_item_removed"]:
+                            if "required" in str(item):
+                                breaking_changes.append(f"Required request field removed: {item}")
+                    
+                    if "type_changes" in request_diff:
+                        for path, change in request_diff["type_changes"].items():
+                            breaking_changes.append(f"Request field type changed: {path}")
         
-        # Compare response schemas
-        if old_contract.response_schema and new_contract.response_schema:
+        # Compare response schemas (only with DeepDiff)
+        if HAS_DEEPDIFF and old_contract.response_schema and new_contract.response_schema:
             response_diff = DeepDiff(
                 old_contract.response_schema,
                 new_contract.response_schema,
