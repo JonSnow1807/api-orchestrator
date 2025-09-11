@@ -247,7 +247,19 @@ from src.routes.status_pages import router as status_pages_router
 app.include_router(status_pages_router)
 # Include proxy configuration routes
 from src.routes.proxy import router as proxy_router
+
+# Include proxy configuration routes
 app.include_router(proxy_router)
+
+# Include AI suggestions routes (optional)
+try:
+    from src.routes.ai_suggestions import router as ai_suggestions_router
+    app.include_router(ai_suggestions_router)
+    AI_SUGGESTIONS_AVAILABLE = True
+    print("✅ AI Suggestions feature loaded successfully")
+except ImportError as e:
+    print(f"⚠️ AI Suggestions not available: {e}")
+    AI_SUGGESTIONS_AVAILABLE = False
 # Include AI Agent Builder routes - THE POSTMAN KILLER FEATURE
 try:
     from src.routes.ai_agents import router as ai_agents_router
