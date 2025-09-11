@@ -260,6 +260,11 @@ try:
 except ImportError as e:
     print(f"⚠️ AI Suggestions not available: {e}")
     AI_SUGGESTIONS_AVAILABLE = False
+
+# Include Traffic Monitor routes - Real-time observability
+from src.routes.traffic_monitor import router as traffic_monitor_router
+app.include_router(traffic_monitor_router)
+print("✅ Real-time Traffic Monitor loaded - Better than Postman!")
 # Include AI Agent Builder routes - THE POSTMAN KILLER FEATURE
 try:
     from src.routes.ai_agents import router as ai_agents_router
