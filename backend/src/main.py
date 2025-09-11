@@ -245,6 +245,9 @@ app.include_router(load_testing_router)
 # Include status pages routes
 from src.routes.status_pages import router as status_pages_router
 app.include_router(status_pages_router)
+# Include proxy configuration routes
+from src.routes.proxy import router as proxy_router
+app.include_router(proxy_router)
 
 # Add request logging middleware
 @app.middleware("http")
@@ -1218,8 +1221,24 @@ async def proxy_request(
     history_entry = None
     
     try:
-        # Create httpx client with timeout
-        async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
+        # Get proxy configuration if enabled
+        from src.proxy_config import proxy_manager
+        proxy_config = proxy_manager.get_proxy_for_request(
+            request.url,
+            workspace_id=getattr(current_user, 'workspace_id', None) if current_user else None,
+            env_id=request.headers.get('X-Environment-Id')
+        )
+        
+        client_kwargs = {'timeout': 30.0, 'verify': False}
+        if proxy_config:
+            proxies = proxy_config.to_httpx_proxies()
+            if proxies:
+                client_kwargs['proxies'] = proxies
+                client_kwargs['verify'] = proxy_config.verify_ssl
+                client_kwargs['timeout'] = proxy_config.timeout
+        
+        # Create httpx client with proxy settings if configured
+        async with httpx.AsyncClient(**client_kwargs) as client:
             # Prepare the request
             response = await client.request(
                 method=request.method.upper(),
