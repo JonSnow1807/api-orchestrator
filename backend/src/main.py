@@ -265,6 +265,14 @@ except ImportError as e:
 from src.routes.traffic_monitor import router as traffic_monitor_router
 app.include_router(traffic_monitor_router)
 print("✅ Real-time Traffic Monitor loaded - Better than Postman!")
+
+# Include Partner Workspaces routes - External collaboration
+try:
+    from src.routes.partner_workspaces import router as partner_workspaces_router
+    app.include_router(partner_workspaces_router)
+    print("✅ Partner Workspaces loaded - External collaboration enabled!")
+except ImportError as e:
+    print(f"⚠️ Partner Workspaces not available: {e}")
 # Include AI Agent Builder routes - THE POSTMAN KILLER FEATURE
 try:
     from src.routes.ai_agents import router as ai_agents_router
