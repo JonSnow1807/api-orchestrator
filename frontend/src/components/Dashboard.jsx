@@ -21,6 +21,8 @@ import {
   History,
   Upload,
   FileArchive,
+  FileCheck,
+  Globe,
   Code2,
   Home,
   CreditCard,
@@ -45,6 +47,9 @@ import WorkspaceSwitcher from './WorkspaceSwitcherFixed';
 import TeamManagement from './TeamManagement';
 import AdvancedAnalytics from './AdvancedAnalytics';
 import WebhookManager from './WebhookManager';
+import LoadTesting from './LoadTesting';
+import ContractTesting from './ContractTesting';
+import StatusPages from './StatusPages';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -325,6 +330,39 @@ const Dashboard = () => {
               <span>Monitoring</span>
             </button>
             <button
+              onClick={() => setActiveTab('load-testing')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'load-testing' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Zap className="w-4 h-4" />
+              <span>Load Testing</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('contract-testing')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'contract-testing' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <FileCheck className="w-4 h-4" />
+              <span>Contracts</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('status-pages')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                activeTab === 'status-pages' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Globe className="w-4 h-4" />
+              <span>Status</span>
+            </button>
+            <button
               onClick={() => setActiveTab('team')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
                 activeTab === 'team' 
@@ -512,6 +550,21 @@ const Dashboard = () => {
         {/* Monitoring Tab */}
         {activeTab === 'monitoring' && (
           <MonitoringDashboard />
+        )}
+        
+        {/* Load Testing Tab */}
+        {activeTab === 'load-testing' && (
+          <LoadTesting />
+        )}
+        
+        {/* Contract Testing Tab */}
+        {activeTab === 'contract-testing' && (
+          <ContractTesting />
+        )}
+        
+        {/* Status Pages Tab */}
+        {activeTab === 'status-pages' && (
+          <StatusPages />
         )}
         
         {/* Analytics Tab */}

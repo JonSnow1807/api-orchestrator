@@ -206,6 +206,8 @@ from src.routes.environments import router as environments_router
 from src.routes.request_chains import router as request_chains_router
 # Import GraphQL routes
 from src.routes.graphql import router as graphql_router
+# Import multi-protocol routes
+from src.routes.multi_protocol import router as multi_protocol_router
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -235,6 +237,14 @@ app.include_router(environments_router)
 app.include_router(request_chains_router)
 # Include GraphQL routes
 app.include_router(graphql_router)
+# Include multi-protocol routes
+app.include_router(multi_protocol_router)
+# Include load testing routes
+from src.routes.load_testing import router as load_testing_router
+app.include_router(load_testing_router)
+# Include status pages routes
+from src.routes.status_pages import router as status_pages_router
+app.include_router(status_pages_router)
 
 # Add request logging middleware
 @app.middleware("http")

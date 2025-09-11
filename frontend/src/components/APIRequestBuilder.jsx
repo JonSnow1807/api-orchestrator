@@ -5,6 +5,7 @@ import { getApiUrl } from '../config';
 import EnvironmentManager from './EnvironmentManager';
 import CollectionsManager from './CollectionsManager';
 import GraphQLBuilder from './GraphQLBuilder';
+import MultiProtocolTester from './MultiProtocolTester';
 import {
   Send,
   Plus,
@@ -26,7 +27,8 @@ import {
   Server,
   Zap,
   Folder,
-  Settings
+  Settings,
+  Wifi
 } from 'lucide-react';
 
 const APIRequestBuilder = () => {
@@ -36,6 +38,7 @@ const APIRequestBuilder = () => {
   const [method, setMethod] = useState('GET');
   const [url, setUrl] = useState('');
   const [isGraphQL, setIsGraphQL] = useState(false);
+  const [protocol, setProtocol] = useState('http'); // http, websocket, grpc, soap, sse
   const [headers, setHeaders] = useState([
     { key: 'Content-Type', value: 'application/json', enabled: true }
   ]);
@@ -76,7 +79,8 @@ const APIRequestBuilder = () => {
     { value: 'DELETE', color: 'text-red-500' },
     { value: 'HEAD', color: 'text-gray-500' },
     { value: 'OPTIONS', color: 'text-pink-500' },
-    { value: 'GRAPHQL', color: 'text-indigo-500', label: 'GraphQL' }
+    { value: 'GRAPHQL', color: 'text-indigo-500', label: 'GraphQL' },
+    { value: 'MULTI', color: 'text-cyan-500', label: 'Multi-Protocol' }
   ];
 
   const authTypes = [
@@ -416,9 +420,9 @@ const APIRequestBuilder = () => {
           
           <button
             onClick={handleSendRequest}
-            disabled={loading || !url || method === 'GRAPHQL'}
+            disabled={loading || !url || method === 'GRAPHQL' || method === 'MULTI'}
             className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition flex items-center gap-2"
-            title={method === 'GRAPHQL' ? 'Use the GraphQL Execute button below' : ''}
+            title={method === 'GRAPHQL' ? 'Use the GraphQL Execute button below' : method === 'MULTI' ? 'Use the Multi-Protocol interface below' : ''}
           >
             {loading ? (
               <>
@@ -442,6 +446,10 @@ const APIRequestBuilder = () => {
             onResponse={setResponse}
             currentEnvironment={currentEnvironment}
             replaceVariables={replaceVariables}
+          />
+        ) : method === 'MULTI' ? (
+          <MultiProtocolTester 
+            projectId={currentRequestData?.project_id}
           />
         ) : (
           <>
@@ -646,8 +654,8 @@ const APIRequestBuilder = () => {
         )}
       </div>
 
-      {/* Response - Show for non-GraphQL methods */}
-      {method !== 'GRAPHQL' && (response || error) && (
+      {/* Response - Show for standard HTTP methods */}
+      {method !== 'GRAPHQL' && method !== 'MULTI' && (response || error) && (
         <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold text-white">Response</h3>
