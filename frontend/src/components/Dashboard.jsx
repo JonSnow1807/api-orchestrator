@@ -27,7 +27,8 @@ import {
   Home,
   CreditCard,
   BookOpen,
-  Building2
+  Building2,
+  Brain
 } from 'lucide-react';
 import TaskManager from './TaskManager';
 import FileUpload from './FileUpload';
@@ -50,6 +51,7 @@ import WebhookManager from './WebhookManager';
 import LoadTesting from './LoadTesting';
 import ContractTesting from './ContractTesting';
 import StatusPages from './StatusPages';
+import AIAgentBuilder from './AIAgentBuilder';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -208,6 +210,18 @@ const Dashboard = () => {
         {/* Tab Navigation */}
         <div className="mb-8 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
           <nav className="flex gap-1 bg-gray-800/50 backdrop-blur rounded-lg p-1 min-w-fit">
+            <button
+              onClick={() => setActiveTab('ai-agents')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition relative ${
+                activeTab === 'ai-agents' 
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Brain className="w-4 h-4" />
+              <span>AI Agents</span>
+              <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-red-500 text-white text-xs rounded-full animate-pulse">NEW</span>
+            </button>
             <button
               onClick={() => setActiveTab('orchestration')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
@@ -388,6 +402,10 @@ const Dashboard = () => {
         </div>
 
         {/* Content based on active tab */}
+        {activeTab === 'ai-agents' && (
+          <AIAgentBuilder />
+        )}
+        
         {activeTab === 'orchestration' && (
           <OrchestrationHub />
         )}
