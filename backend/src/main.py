@@ -663,6 +663,28 @@ async def regenerate_api_key(
     return {"api_key": new_api_key}
 # ==================== END USER PROFILE ENDPOINTS ====================
 
+# Import new route modules with optional handling
+try:
+    from src.routes.api_insights import router as api_insights_router
+    app.include_router(api_insights_router)
+    print("✅ API Insights routes loaded!")
+except ImportError as e:
+    print(f"⚠️ API Insights routes not available: {e}")
+
+try:
+    from src.routes.comment_system import router as comment_system_router
+    app.include_router(comment_system_router)
+    print("✅ Comment System routes loaded!")
+except ImportError as e:
+    print(f"⚠️ Comment System routes not available: {e}")
+
+try:
+    from src.routes.native_integrations import router as native_integrations_router
+    app.include_router(native_integrations_router)
+    print("✅ Native Integrations routes loaded!")
+except ImportError as e:
+    print(f"⚠️ Native Integrations routes not available: {e}")
+
 # WebSocket endpoint for real-time updates
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
