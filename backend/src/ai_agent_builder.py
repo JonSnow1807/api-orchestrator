@@ -11,12 +11,17 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 import uuid
 import httpx
-from langchain.agents import AgentExecutor, create_openai_tools_agent
-from langchain.tools import Tool, StructuredTool
-from langchain.memory import ConversationBufferMemory
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_openai import ChatOpenAI
-from langchain_anthropic import ChatAnthropic
+try:
+    from langchain.agents import AgentExecutor, create_openai_tools_agent
+    from langchain.tools import Tool, StructuredTool
+    from langchain.memory import ConversationBufferMemory
+    from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+    from langchain_openai import ChatOpenAI
+    from langchain_anthropic import ChatAnthropic
+    LANGCHAIN_AVAILABLE = True
+except ImportError:
+    LANGCHAIN_AVAILABLE = False
+    print("Warning: LangChain packages not available. AI Agent Builder will have limited functionality.")
 
 class AgentType(Enum):
     """Types of AI agents that can be created"""

@@ -249,8 +249,12 @@ app.include_router(status_pages_router)
 from src.routes.proxy import router as proxy_router
 app.include_router(proxy_router)
 # Include AI Agent Builder routes - THE POSTMAN KILLER FEATURE
-from src.routes.ai_agents import router as ai_agents_router
-app.include_router(ai_agents_router)
+try:
+    from src.routes.ai_agents import router as ai_agents_router
+    app.include_router(ai_agents_router)
+    print("✅ AI Agent Builder loaded successfully")
+except ImportError as e:
+    print(f"⚠️ AI Agent Builder not available: {e}")
 
 # Add request logging middleware
 @app.middleware("http")
