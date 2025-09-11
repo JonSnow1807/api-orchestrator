@@ -21,13 +21,51 @@ https://streamapi.dev
 ![CI/CD Pipeline](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/ci-cd.yml/badge.svg)
 ![Auto Deploy](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/auto-deploy.yml/badge.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-blue)
-![Version](https://img.shields.io/badge/version-3.0.0-blue)
+![Version](https://img.shields.io/badge/version-4.0.0-blue)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Node](https://img.shields.io/badge/node-20%2B-green)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green)
 ![YC Ready](https://img.shields.io/badge/YC-Ready-orange)
 
-## 🆕 What's New in v3.0.0 - Enterprise Edition (Apache 2.0 Licensed)
+## 🆕 What's New in v4.0.0 - Complete Postman Killer Edition (Apache 2.0 Licensed)
+
+### 🧪 Advanced Testing Capabilities (NEW!)
+- **Test Runner with Assertions** - 12+ assertion types including status code, response time, JSON path, schema validation
+- **Pre/Post Request Scripts** - JavaScript execution for dynamic requests and test setup/teardown
+- **Data-driven Testing** - Iterate tests with CSV/JSON data sources for comprehensive coverage
+- **Contract Testing** - JSON Schema validation for request/response/headers contracts
+- **Response Validation** - Automatic schema validation and error detection
+- **Request Chaining** - Extract variables from responses and use in subsequent requests
+
+### 🚀 Performance & Load Testing Suite (NEW!)
+- **8 Load Test Types** - Load, Stress, Spike, Soak, Performance, Endurance, Scalability, Volume
+- **Real-time Metrics** - Live monitoring of response times, throughput, error rates
+- **Performance Reports** - Detailed analytics with p50/p95/p99 percentiles
+- **Concurrent Users Simulation** - Test with thousands of virtual users
+- **Resource Monitoring** - CPU, memory, and network usage tracking
+
+### 🌐 Multi-Protocol Support (NEW!)
+- **WebSocket Testing** - Full WebSocket client with message history and real-time updates
+- **gRPC Support** - Protocol buffer support with service discovery
+- **SOAP/XML Testing** - WSDL parsing and SOAP envelope generation
+- **Server-Sent Events (SSE)** - Stream testing with event monitoring
+- **GraphQL Subscriptions** - Real-time GraphQL subscription testing
+
+### 📊 API Health & Monitoring (NEW!)
+- **Status Pages** - Create public status pages for API health monitoring
+- **Uptime Tracking** - 90-day uptime history with incident timeline
+- **Health Checks** - Automated endpoint monitoring with alerts
+- **Response Time Charts** - Historical performance visualization
+- **Incident Management** - Track and resolve API incidents
+
+### 🖥️ Developer Tools (NEW!)
+- **CLI Tool** - Command-line interface for CI/CD integration (like Newman for Postman)
+- **VS Code Extension** - Test APIs directly from your code editor
+- **Keyboard Shortcuts** - Productivity hotkeys for common actions
+- **Request History Search** - Advanced filtering and search capabilities
+- **Bulk Operations** - Execute multiple requests in parallel
+
+## 🆕 What's New in v3.0.0 - Enterprise Edition
 
 ### 🏢 Enterprise Team Collaboration
 - **Multi-Tenant Workspaces** - Create isolated workspaces for different teams and projects
@@ -148,6 +186,15 @@ https://streamapi.dev
 
 | Feature | StreamAPI | Postman |
 |---------|-----------|---------|
+| **Test Runner** | ✅ 12+ assertion types | ✅ Available |
+| **Pre/Post Scripts** | ✅ JavaScript execution | ✅ Available |
+| **CLI Tool** | ✅ Full CI/CD integration | ✅ Newman |
+| **Data-driven Testing** | ✅ CSV/JSON iteration | ✅ Available |
+| **Contract Testing** | ✅ JSON Schema validation | ⚠️ Limited |
+| **Load Testing** | ✅ 8 test types built-in | ❌ Separate tool |
+| **Multi-Protocol** | ✅ REST/GraphQL/WebSocket/gRPC/SOAP/SSE | ⚠️ REST/GraphQL only |
+| **Status Pages** | ✅ Public health monitoring | ❌ No |
+| **Request Chaining** | ✅ Variable extraction | ✅ Available |
 | **Code Generation Languages** | 30+ languages | 20 languages |
 | **Code Type** | Full production SDKs | Basic snippets |
 | **AI-Powered** | ✅ Yes (Claude/GPT-4) | ❌ No |
@@ -160,14 +207,16 @@ https://streamapi.dev
 | **Retry Logic** | ✅ Exponential backoff | ❌ No |
 | **Rate Limiting** | ✅ Built-in | ❌ No |
 | **Type Definitions** | ✅ For typed languages | ⚠️ Limited |
-| **GraphQL Support** | ✅ Full query builder | ✅ Basic |
+| **GraphQL Support** | ✅ Full query builder + subscriptions | ✅ Basic |
 | **Mock Servers** | ✅ Instant deployment | ✅ Available |
 | **API Discovery** | ✅ Auto-scan codebase | ❌ No |
 | **Security Analysis** | ✅ AI-powered | ⚠️ Basic |
 | **Compliance Checks** | ✅ GDPR, HIPAA, SOC2 | ❌ No |
+| **VS Code Extension** | ✅ Yes | ✅ Yes |
+| **Keyboard Shortcuts** | ✅ Full hotkey support | ✅ Available |
 | **Self-Hosted Option** | ✅ Yes | ⚠️ Enterprise only |
 | **Price** | $0-499/month | $12-49/user/month |
-| **Overall Score** | **10/10** 🏆 | **6/10** |
+| **Overall Score** | **10/10** 🏆 | **7/10** |
 
 ## 🏗️ Technical Architecture
 
@@ -486,22 +535,33 @@ For issues, questions, or enterprise inquiries:
 
 ## 🛣️ Roadmap
 
+### Completed Features ✅
+- [x] ~~Test Runner with Assertions~~ ✅ Completed in v4.0.0
+- [x] ~~Pre/Post Request Scripts~~ ✅ Completed in v4.0.0
+- [x] ~~CLI Tool for CI/CD~~ ✅ Completed in v4.0.0
+- [x] ~~Contract Testing~~ ✅ Completed in v4.0.0
+- [x] ~~Load Testing Suite~~ ✅ Completed in v4.0.0
+- [x] ~~Multi-Protocol Support~~ ✅ Completed in v4.0.0
+- [x] ~~Status Pages~~ ✅ Completed in v4.0.0
+- [x] ~~WebSocket Testing~~ ✅ Completed in v4.0.0
+- [x] ~~Team Collaboration~~ ✅ Completed in v3.0.0
+- [x] ~~API Versioning~~ ✅ Completed in v3.0.0
+- [x] ~~Advanced Analytics~~ ✅ Completed in v3.0.0
+- [x] ~~GraphQL Support~~ ✅ Completed in v2.1.0
+- [x] ~~Enterprise Code Generation~~ ✅ Completed in v2.2.0
+- [x] ~~VS Code Extension~~ ✅ Completed in v4.0.0
+
 ### Coming Soon
-- [ ] Team collaboration features
-- [ ] GitHub/GitLab integration
+- [ ] GitHub/GitLab deep integration
 - [ ] Custom AI model training
 - [ ] Kubernetes deployment support
-- [x] ~~GraphQL support~~ ✅ Completed in v2.1.0
-- [x] ~~Enterprise Code Generation~~ ✅ Completed in v2.2.0
-- [ ] API versioning
-- [ ] Advanced analytics dashboard
 - [ ] Slack/Discord notifications
 - [ ] CI/CD pipeline templates
 - [ ] Multi-region deployment
-- [ ] OAuth 2.0 flow support
-- [ ] WebSocket testing interface
-- [ ] Load testing capabilities
+- [ ] OAuth 2.0 flow testing
 - [ ] API performance profiling
+- [ ] Terraform provider
+- [ ] Jenkins plugin
 
 ## 📊 Status
 
