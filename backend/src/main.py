@@ -273,6 +273,14 @@ try:
     print("✅ Partner Workspaces loaded - External collaboration enabled!")
 except ImportError as e:
     print(f"⚠️ Partner Workspaces not available: {e}")
+
+# Include Secret Scanner routes - Enterprise security
+try:
+    from src.routes.secret_scanner import router as secret_scanner_router
+    app.include_router(secret_scanner_router)
+    print("✅ Secret Scanner loaded - Enterprise security enabled!")
+except ImportError as e:
+    print(f"⚠️ Secret Scanner not available: {e}")
 # Include AI Agent Builder routes - THE POSTMAN KILLER FEATURE
 try:
     from src.routes.ai_agents import router as ai_agents_router
