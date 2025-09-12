@@ -1,13 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { 
   ChevronRightIcon, ChevronDownIcon, DocumentTextIcon, 
   PhotoIcon, TableCellsIcon, CodeBracketIcon,
-  MagnifyingGlassIcon, ClipboardDocumentIcon
+  MagnifyingGlassIcon, ClipboardDocumentIcon,
+  ChartBarIcon, BeakerIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 
-const ResponseViewer = ({ response, responseTime, statusCode }) => {
-  const [viewMode, setViewMode] = useState('pretty'); // pretty, raw, preview, table
+// Lazy load visualization components
+const DataVisualization = lazy(() => import('./DataVisualization'));
+const InlineResponseTesting = lazy(() => import('./InlineResponseTesting'));
+
+const ResponseViewer = ({ response, responseTime, statusCode, onTestGenerated }) => {
+  const [viewMode, setViewMode] = useState('pretty'); // pretty, raw, preview, table, visualize, test
   const [expandedNodes, setExpandedNodes] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedPath, setCopiedPath] = useState('');
@@ -345,6 +350,30 @@ const ResponseViewer = ({ response, responseTime, statusCode }) => {
                     Table
                   </button>
                 )}
+                <button
+                  onClick={() => setViewMode('visualize')}
+                  className={`px-3 py-1 text-sm rounded ${
+                    viewMode === 'visualize' 
+                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' 
+                      : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
+                  }`}
+                  title="Visualize data with charts and graphs"
+                >
+                  <ChartBarIcon className="w-4 h-4 inline mr-1" />
+                  Visualize
+                </button>
+                <button
+                  onClick={() => setViewMode('test')}
+                  className={`px-3 py-1 text-sm rounded ${
+                    viewMode === 'test' 
+                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' 
+                      : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
+                  }`}
+                  title="Generate tests from response"
+                >
+                  <BeakerIcon className="w-4 h-4 inline mr-1" />
+                  Test
+                </button>
               </>
             )}
             
@@ -444,6 +473,27 @@ const ResponseViewer = ({ response, responseTime, statusCode }) => {
                   className="max-w-full h-auto"
                 />
               </div>
+            )}
+            
+            {/* Data Visualization View */}
+            {viewMode === 'visualize' && responseType === 'json' && (
+              <Suspense fallback={<div className="text-center py-4">Loading visualization...</div>}>
+                <DataVisualization 
+                  responseData={parsedResponse}
+                  onVisualizationChange={(type) => console.log('Visualization changed to:', type)}
+                />
+              </Suspense>
+            )}
+            
+            {/* Inline Testing View */}
+            {viewMode === 'test' && responseType === 'json' && (
+              <Suspense fallback={<div className="text-center py-4">Loading test generator...</div>}>
+                <InlineResponseTesting 
+                  responseData={parsedResponse}
+                  onTestGenerated={onTestGenerated}
+                  onTestRun={(results) => console.log('Test results:', results)}
+                />
+              </Suspense>
             )}
           </>
         )}
