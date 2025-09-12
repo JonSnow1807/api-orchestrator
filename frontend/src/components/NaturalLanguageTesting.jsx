@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_CONFIG, API_ENDPOINTS } from '../config/api';
 import { BeakerIcon, SparklesIcon, CodeBracketIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 
 const NaturalLanguageTesting = ({ responseData, onTestGenerated, onTestRun }) => {
@@ -39,7 +40,7 @@ const NaturalLanguageTesting = ({ responseData, onTestGenerated, onTestRun }) =>
   const fetchSuggestions = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/v5/natural-language/suggestions', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.NATURAL_LANGUAGE}/suggestions`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -60,7 +61,7 @@ const NaturalLanguageTesting = ({ responseData, onTestGenerated, onTestRun }) =>
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/v5/natural-language/generate-test', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.NATURAL_LANGUAGE}/generate-test`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +93,7 @@ const NaturalLanguageTesting = ({ responseData, onTestGenerated, onTestRun }) =>
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/v5/natural-language/generate-from-response', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.NATURAL_LANGUAGE}/generate-from-response`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

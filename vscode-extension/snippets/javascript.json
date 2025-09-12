@@ -1,0 +1,75 @@
+{
+  "API Orchestrator Test": {
+    "prefix": "aotest",
+    "body": [
+      "// API Orchestrator Test",
+      "describe('${1:API Endpoint}', () => {",
+      "  it('${2:should return 200}', async () => {",
+      "    const response = await fetch('${3:/api/endpoint}');",
+      "    expect(response.status).toBe(${4:200});",
+      "    ${5:// Add more assertions}",
+      "  });",
+      "});"
+    ],
+    "description": "Create an API test"
+  },
+  "API Request": {
+    "prefix": "aorequest",
+    "body": [
+      "const response = await fetch('${1:http://localhost:8000/api}/${2:endpoint}', {",
+      "  method: '${3|GET,POST,PUT,DELETE|}',",
+      "  headers: {",
+      "    'Content-Type': 'application/json',",
+      "    'Authorization': `Bearer \\${${4:token}}`",
+      "  },",
+      "  body: JSON.stringify(${5:data})",
+      "});",
+      "",
+      "const result = await response.json();"
+    ],
+    "description": "Make an API request"
+  },
+  "Mock Response": {
+    "prefix": "aomock",
+    "body": [
+      "const mockResponse = {",
+      "  status: ${1:200},",
+      "  data: {",
+      "    ${2:id}: '${3:123}',",
+      "    ${4:name}: '${5:Test}'",
+      "  },",
+      "  message: '${6:Success}'",
+      "};"
+    ],
+    "description": "Create a mock response"
+  },
+  "Natural Language Test": {
+    "prefix": "aonltest",
+    "body": [
+      "import { NaturalLanguageTest } from 'api-orchestrator';",
+      "",
+      "const test = new NaturalLanguageTest();",
+      "const tests = await test.generate('${1:Check if status is 200 and response contains valid email}');",
+      "await test.run(tests);"
+    ],
+    "description": "Generate test from natural language"
+  },
+  "Service Virtualization": {
+    "prefix": "aovirtual",
+    "body": [
+      "import { ServiceVirtualizer } from 'api-orchestrator';",
+      "",
+      "const virtualizer = new ServiceVirtualizer();",
+      "const service = await virtualizer.create({",
+      "  name: '${1:Mock API}',",
+      "  behavior: '${2|STATIC,DYNAMIC,STATEFUL,CHAOS|}',",
+      "  endpoints: [",
+      "    { method: 'GET', path: '${3:/users}', response: ${4:[]} }",
+      "  ]",
+      "});",
+      "",
+      "await service.start();"
+    ],
+    "description": "Create a virtual service"
+  }
+}

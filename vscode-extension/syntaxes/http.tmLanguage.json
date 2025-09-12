@@ -1,0 +1,48 @@
+{
+  "name": "HTTP",
+  "scopeName": "source.http",
+  "fileTypes": ["http", "rest"],
+  "patterns": [
+    {
+      "name": "keyword.control.http",
+      "match": "^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE)\\b"
+    },
+    {
+      "name": "string.unquoted.http",
+      "match": "(?<=^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE)\\s+)\\S+"
+    },
+    {
+      "name": "entity.name.tag.http",
+      "match": "^[A-Za-z][A-Za-z0-9-]*(?=:)"
+    },
+    {
+      "name": "string.quoted.double.http",
+      "begin": "\"",
+      "end": "\""
+    },
+    {
+      "name": "comment.line.number-sign.http",
+      "match": "^#.*$"
+    },
+    {
+      "name": "comment.line.double-slash.http",
+      "match": "^//.*$"
+    },
+    {
+      "name": "variable.other.http",
+      "match": "\\{\\{[^}]+\\}\\}"
+    },
+    {
+      "name": "keyword.operator.http",
+      "match": "@"
+    },
+    {
+      "name": "constant.numeric.http",
+      "match": "\\b[0-9]+\\b"
+    },
+    {
+      "name": "support.constant.http",
+      "match": "\\b(true|false|null)\\b"
+    }
+  ]
+}

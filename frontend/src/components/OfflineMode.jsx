@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_CONFIG, API_ENDPOINTS } from '../config/api';
 import { 
   CloudArrowDownIcon, 
   CloudArrowUpIcon, 
@@ -73,7 +74,7 @@ const OfflineMode = ({ collections, onCollectionSave, onCollectionLoad, onSync }
   const saveCollectionOffline = async (collection) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/v5/offline/save-collection', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.OFFLINE}/save-collection`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +115,7 @@ const OfflineMode = ({ collections, onCollectionSave, onCollectionLoad, onSync }
   const loadCollectionFromFile = async (filePath) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/v5/offline/load-collection', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.OFFLINE}/load-collection`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -145,7 +146,7 @@ const OfflineMode = ({ collections, onCollectionSave, onCollectionLoad, onSync }
     setSyncStatus('syncing');
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/v5/offline/sync', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.OFFLINE}/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -181,7 +182,7 @@ const OfflineMode = ({ collections, onCollectionSave, onCollectionLoad, onSync }
   const startWatching = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/v5/offline/watch', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.OFFLINE}/watch`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

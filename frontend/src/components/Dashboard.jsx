@@ -56,6 +56,7 @@ import NaturalLanguageTesting from './NaturalLanguageTesting';
 import OfflineMode from './OfflineMode';
 import ServiceVirtualization from './ServiceVirtualization';
 import PrivacyAI from './PrivacyAI';
+import EnhancedVariableManager from './EnhancedVariableManager';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -78,7 +79,7 @@ const Dashboard = () => {
       const response = await axios.get('/api/projects');
       setProjects(response.data.projects);
     } catch (error) {
-      console.error('Failed to fetch projects:', error);
+      // Error fetching projects - handled silently
     } finally {
       setLoading(false);
     }
@@ -89,7 +90,7 @@ const Dashboard = () => {
       const response = await axios.get('/api/projects/stats/overview');
       setStats(response.data);
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
+      // Error fetching stats - handled silently
     }
   };
 
@@ -405,6 +406,18 @@ const Dashboard = () => {
             
             {/* V5.0 POSTMAN KILLER Features */}
             <button
+              onClick={() => setActiveTab('enhanced-variables')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition relative ${
+                activeTab === 'enhanced-variables' 
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Code2 className="w-4 h-4" />
+              <span>Enhanced Variables</span>
+              <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-green-500 text-white text-xs rounded-full animate-pulse">v5</span>
+            </button>
+            <button
               onClick={() => setActiveTab('natural-language')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition relative ${
                 activeTab === 'natural-language' 
@@ -572,7 +585,7 @@ const Dashboard = () => {
         {activeTab === 'upload' && (
           <FileUpload 
             onUploadSuccess={(data) => {
-              console.log('Upload success:', data);
+              // Upload successful
               // Optionally refresh projects or show success message
               fetchProjects();
             }}
@@ -664,6 +677,20 @@ const Dashboard = () => {
 
         {/* V5.0 POSTMAN KILLER Features Content */}
         
+        {/* Enhanced Variable Manager */}
+        {activeTab === 'enhanced-variables' && (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white">
+              <h2 className="text-2xl font-bold mb-2">Enhanced Variable Management</h2>
+              <p className="opacity-90">6 scope levels with local-by-default privacy. Auto-detects sensitive data!</p>
+            </div>
+            <EnhancedVariableManager 
+              projectId={projects[0]?.id}
+              onVariableChange={(variables) => { /* Handle variable changes */ }}
+            />
+          </div>
+        )}
+        
         {/* Natural Language Testing */}
         {activeTab === 'natural-language' && (
           <div className="space-y-6">
@@ -673,8 +700,8 @@ const Dashboard = () => {
             </div>
             <NaturalLanguageTesting 
               responseData={null}
-              onTestGenerated={(tests) => console.log('Tests generated:', tests)}
-              onTestRun={(test, result) => console.log('Test run:', test, result)}
+              onTestGenerated={(tests) => { /* Handle generated tests */ }}
+              onTestRun={(test, result) => { /* Handle test results */ }}
             />
           </div>
         )}
@@ -688,9 +715,9 @@ const Dashboard = () => {
             </div>
             <OfflineMode 
               collections={projects}
-              onCollectionSave={(collection, format) => console.log('Collection saved:', collection, format)}
-              onCollectionLoad={(collection) => console.log('Collection loaded:', collection)}
-              onSync={(synced) => console.log('Synced:', synced)}
+              onCollectionSave={(collection, format) => { /* Handle collection save */ }}
+              onCollectionLoad={(collection) => { /* Handle collection load */ }}
+              onSync={(synced) => { /* Handle sync */ }}
             />
           </div>
         )}
@@ -705,7 +732,7 @@ const Dashboard = () => {
             <ServiceVirtualization 
               openApiSpec={null}
               projectId={projects[0]?.id}
-              onServiceCreated={(service) => console.log('Service created:', service)}
+              onServiceCreated={(service) => { /* Handle service creation */ }}
             />
           </div>
         )}
@@ -719,8 +746,8 @@ const Dashboard = () => {
             </div>
             <PrivacyAI 
               data={null}
-              onProcessed={(result) => console.log('AI processed:', result)}
-              onAnonymized={(anonymized) => console.log('Data anonymized:', anonymized)}
+              onProcessed={(result) => { /* Handle AI processing */ }}
+              onAnonymized={(anonymized) => { /* Handle data anonymization */ }}
             />
           </div>
         )}

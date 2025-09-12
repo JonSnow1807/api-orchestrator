@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_CONFIG, API_ENDPOINTS } from '../config/api';
 import { 
   ServerIcon,
   PlayIcon,
@@ -84,7 +85,7 @@ const ServiceVirtualization = ({ openApiSpec, projectId, onServiceCreated }) => 
   const fetchServices = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/v5/virtualization/services', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.VIRTUALIZATION}/services`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -102,7 +103,7 @@ const ServiceVirtualization = ({ openApiSpec, projectId, onServiceCreated }) => 
   const createVirtualService = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/v5/virtualization/create-service', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.VIRTUALIZATION}/create-service`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,7 +133,7 @@ const ServiceVirtualization = ({ openApiSpec, projectId, onServiceCreated }) => 
   const setBehaviorForService = async (serviceId, newBehavior) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/v5/virtualization/set-behavior', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.VIRTUALIZATION}/set-behavior`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -166,7 +167,7 @@ const ServiceVirtualization = ({ openApiSpec, projectId, onServiceCreated }) => 
       
       if (!targetUrl) return;
       
-      const response = await fetch('/api/v5/virtualization/record', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.VIRTUALIZATION}/record`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -191,7 +192,7 @@ const ServiceVirtualization = ({ openApiSpec, projectId, onServiceCreated }) => 
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/v5/virtualization/chaos', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.VIRTUALIZATION}/chaos`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -216,7 +217,7 @@ const ServiceVirtualization = ({ openApiSpec, projectId, onServiceCreated }) => 
     
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/v5/virtualization/add-mock', {
+      const res = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.VIRTUALIZATION}/add-mock`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -362,7 +363,7 @@ const ServiceVirtualization = ({ openApiSpec, projectId, onServiceCreated }) => 
                   </label>
                   <div className="bg-gray-700 rounded-lg p-3">
                     <code className="text-green-400">
-                      http://localhost:8000/mock/{selectedService.id}
+                      {API_CONFIG.BASE_URL}/mock/{selectedService.id}
                     </code>
                   </div>
                 </div>

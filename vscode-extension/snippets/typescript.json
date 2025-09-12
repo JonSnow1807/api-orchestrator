@@ -1,0 +1,87 @@
+{
+  "API Orchestrator Test": {
+    "prefix": "aotest",
+    "body": [
+      "// API Orchestrator Test",
+      "describe('${1:API Endpoint}', () => {",
+      "  it('${2:should return 200}', async () => {",
+      "    const response = await fetch('${3:/api/endpoint}');",
+      "    expect(response.status).toBe(${4:200});",
+      "    ${5:// Add more assertions}",
+      "  });",
+      "});"
+    ],
+    "description": "Create an API test with TypeScript"
+  },
+  "API Interface": {
+    "prefix": "aointerface",
+    "body": [
+      "interface ${1:APIResponse}<T = any> {",
+      "  status: number;",
+      "  success: boolean;",
+      "  data?: T;",
+      "  error?: string;",
+      "  message?: string;",
+      "}"
+    ],
+    "description": "Create API response interface"
+  },
+  "API Client": {
+    "prefix": "aoclient",
+    "body": [
+      "class ${1:APIClient} {",
+      "  private baseURL: string = '${2:http://localhost:8000}';",
+      "  private token?: string;",
+      "",
+      "  constructor(token?: string) {",
+      "    this.token = token;",
+      "  }",
+      "",
+      "  async ${3:get}<T>(endpoint: string): Promise<T> {",
+      "    const response = await fetch(`\\${this.baseURL}\\${endpoint}`, {",
+      "      headers: {",
+      "        'Authorization': `Bearer \\${this.token}`",
+      "      }",
+      "    });",
+      "    return response.json();",
+      "  }",
+      "}"
+    ],
+    "description": "Create typed API client"
+  },
+  "Natural Language Test": {
+    "prefix": "aonltest",
+    "body": [
+      "import { NaturalLanguageTest } from 'api-orchestrator';",
+      "",
+      "interface TestResult {",
+      "  passed: boolean;",
+      "  name: string;",
+      "  error?: string;",
+      "}",
+      "",
+      "const test = new NaturalLanguageTest();",
+      "const tests = await test.generate('${1:Check if status is 200 and response contains valid email}');",
+      "const results: TestResult[] = await test.run(tests);"
+    ],
+    "description": "Generate typed test from natural language"
+  },
+  "Enhanced Variables": {
+    "prefix": "aovars",
+    "body": [
+      "import { VariableManager, VariableScope } from 'api-orchestrator';",
+      "",
+      "const variables = new VariableManager();",
+      "",
+      "// Set variable with scope",
+      "await variables.set('${1:API_KEY}', '${2:value}', {",
+      "  scope: VariableScope.${3|LOCAL,SHARED,WORKSPACE,COLLECTION,ENVIRONMENT,GLOBAL|},",
+      "  sensitive: ${4:true}",
+      "});",
+      "",
+      "// Get variable",
+      "const value = await variables.get('${1:API_KEY}');"
+    ],
+    "description": "Use enhanced variable management"
+  }
+}

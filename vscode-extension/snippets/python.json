@@ -1,0 +1,49 @@
+{
+  "API Orchestrator Test": {
+    "prefix": "aotest",
+    "body": [
+      "# API Orchestrator Test",
+      "def test_${1:api_endpoint}():",
+      "    response = client.${2:get}('${3:/api/endpoint}')",
+      "    assert response.status_code == ${4:200}",
+      "    ${5:# Add more assertions}"
+    ],
+    "description": "Create an API test"
+  },
+  "API Discovery": {
+    "prefix": "aodiscover",
+    "body": [
+      "from api_orchestrator import DiscoveryAgent",
+      "",
+      "agent = DiscoveryAgent()",
+      "endpoints = agent.discover('${1:./src}')",
+      "print(f'Found {len(endpoints)} endpoints')"
+    ],
+    "description": "Discover API endpoints"
+  },
+  "Mock Server": {
+    "prefix": "aomock",
+    "body": [
+      "from api_orchestrator import MockServer",
+      "",
+      "mock = MockServer()",
+      "mock.add_endpoint('${1:GET}', '${2:/api/users}', {",
+      "    'status': ${3:200},",
+      "    'data': ${4:[]},",
+      "})",
+      "mock.start(port=${5:8080})"
+    ],
+    "description": "Create a mock server"
+  },
+  "Natural Language Test": {
+    "prefix": "aonltest",
+    "body": [
+      "from api_orchestrator import NaturalLanguageTest",
+      "",
+      "test = NaturalLanguageTest()",
+      "test.generate('${1:Check if status is 200 and response contains valid email}')",
+      "test.run()"
+    ],
+    "description": "Generate test from natural language"
+  }
+}

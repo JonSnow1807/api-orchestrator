@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_CONFIG, API_ENDPOINTS } from '../config/api';
 import { 
   ShieldCheckIcon,
   LockClosedIcon,
@@ -90,7 +91,7 @@ const PrivacyAI = ({ data, onProcessed, onAnonymized }) => {
     for (const regulation of regulations) {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/v5/privacy-ai/compliance-check?regulation=${regulation}`, {
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.PRIVACY_AI}/compliance-check?regulation=${regulation}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -114,7 +115,7 @@ const PrivacyAI = ({ data, onProcessed, onAnonymized }) => {
     setProcessing(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/v5/privacy-ai/process', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.PRIVACY_AI}/process`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -149,7 +150,7 @@ const PrivacyAI = ({ data, onProcessed, onAnonymized }) => {
     setProcessing(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/v5/privacy-ai/anonymize', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.PRIVACY_AI}/anonymize`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
