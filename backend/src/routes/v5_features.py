@@ -17,13 +17,20 @@ from ..privacy_ai import PrivacyFirstAI, AIMode, DataClassification
 from ..offline_mode import OfflineManager, StorageFormat, OfflineCollection
 from ..service_virtualization import ServiceVirtualizer, MockBehavior
 
-# Initialize feature engines
+# Initialize feature engines (lazy initialization for those requiring DB)
 nl_test_generator = NaturalLanguageTestGenerator()
 data_viz_engine = DataVisualizationEngine()
-variable_manager = EnhancedVariableManager()
+variable_manager = None  # Will be initialized with DB session
 privacy_ai = PrivacyFirstAI()
 offline_manager = OfflineManager()
 service_virtualizer = ServiceVirtualizer()
+
+def get_variable_manager(db: Session):
+    """Get or create variable manager with DB session"""
+    global variable_manager
+    if variable_manager is None:
+        variable_manager = EnhancedVariableManager(db)
+    return variable_manager
 
 router = APIRouter(prefix="/api/v5", tags=["v5.0 Features"])
 
@@ -173,7 +180,8 @@ async def create_variable(
         collection_id = request.get("collection_id")
         environment_id = request.get("environment_id")
         
-        variable = await variable_manager.create_variable(
+        manager = get_variable_manager(db)
+        variable = await manager.create_variable(
             key=key,
             value=value,
             user_id=str(current_user.id),
@@ -203,7 +211,8 @@ async def list_variables(
     """
     try:
         scope_enum = VariableScope[scope] if scope else None
-        variables = await variable_manager.get_variables(
+        manager = get_variable_manager(db)
+        variables = await manager.get_variables(
             user_id=str(current_user.id),
             scope=scope_enum,
             workspace_id=workspace_id,
@@ -232,7 +241,8 @@ async def share_variable(
         team_ids = request.get("team_ids", [])
         expiration = request.get("expiration")
         
-        result = await variable_manager.share_variable(
+        manager = get_variable_manager(db)
+        result = await manager.share_variable(
             variable_id=variable_id,
             owner_id=str(current_user.id),
             user_ids=user_ids,
@@ -258,7 +268,8 @@ async def detect_sensitive_data(
     """
     try:
         value = request.get("value", "")
-        is_sensitive = variable_manager.detect_sensitive_data(str(value))
+        manager = EnhancedVariableManager(None)  # Static method, no DB needed
+        is_sensitive = manager.detect_sensitive_data(str(value))
         
         return {
             "success": True,

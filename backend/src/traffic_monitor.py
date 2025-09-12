@@ -92,11 +92,21 @@ class TrafficMonitor:
         
         # Start background tasks
         self.running = True
-        asyncio.create_task(self._aggregate_metrics_task())
-        asyncio.create_task(self._cleanup_old_data_task())
+        self._tasks_started = False
     
+    async def start_background_tasks(self):
+        """Start background tasks when event loop is available"""
+        if not self._tasks_started:
+            self._tasks_started = True
+            asyncio.create_task(self._aggregate_metrics_task())
+            asyncio.create_task(self._cleanup_old_data_task())
+
     async def record_metric(self, metric: TrafficMetric):
         """Record a new traffic metric"""
+        # Ensure background tasks are started
+        if not self._tasks_started:
+            await self.start_background_tasks()
+            
         # Add to metrics deque
         self.metrics.append(metric)
         self.current_minute_metrics.append(metric)
@@ -375,4 +385,12 @@ class TrafficMonitor:
         self.running = False
 
 # Global traffic monitor instance
-traffic_monitor = TrafficMonitor()
+# Create singleton instance - will be initialized when needed
+traffic_monitor = None
+
+def get_traffic_monitor():
+    """Get or create the traffic monitor instance"""
+    global traffic_monitor
+    if traffic_monitor is None:
+        traffic_monitor = TrafficMonitor()
+    return traffic_monitor

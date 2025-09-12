@@ -23,8 +23,8 @@ import {
 } from 'lucide-react';
 
 // Initialize Stripe - use production key from environment
-const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51S48yyPWjc2GvwDdJ6GJHdKYj1SKGCxVXhzzEYqvgq0BuECVzuq2OfrdlMOwRoqzhJmN0y1KXaM2XHO3COs2FNou00wBQ2bmOd';
-if (!STRIPE_KEY || STRIPE_KEY === 'pk_test_YOUR_ACTUAL_PUBLISHABLE_KEY_HERE') {
+const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+if (!STRIPE_KEY) {
   console.error('Stripe publishable key is missing. Please set VITE_STRIPE_PUBLISHABLE_KEY in .env');
 }
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;

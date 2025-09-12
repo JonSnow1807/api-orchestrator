@@ -292,8 +292,14 @@ class AgentBuilder:
             "execution_time": datetime.now().isoformat()
         }
     
-    def _create_langchain_tools(self, tool_configs: List[Dict[str, Any]]) -> List[Tool]:
+    def _create_langchain_tools(self, tool_configs: List[Dict[str, Any]]) -> List[Any]:
         """Convert tool configurations to LangChain tools"""
+        if not LANGCHAIN_AVAILABLE:
+            return []
+            
+        # Import Tool here to ensure it's available
+        from langchain.tools import Tool
+        
         tools = []
         
         for config in tool_configs:

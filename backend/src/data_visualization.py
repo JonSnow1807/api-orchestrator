@@ -142,9 +142,6 @@ class DataVisualizationEngine:
                     analysis['recommended_viz'].append(VisualizationType.RADAR.value)
                     analysis['insights'].append("Multi-dimensional data - radar chart available")
         
-        # Always include table as an option
-        analysis['recommended_viz'].append(VisualizationType.TABLE.value)
-        
         # For simple arrays
         elif all(isinstance(item, (int, float)) for item in data):
             analysis['recommended_viz'].extend([
@@ -152,6 +149,9 @@ class DataVisualizationEngine:
                 VisualizationType.BAR.value
             ])
             analysis['insights'].append("Numerical array - line or bar chart recommended")
+        
+        # Always include table as an option
+        analysis['recommended_viz'].append(VisualizationType.TABLE.value)
         
         return analysis
     
