@@ -1,7 +1,7 @@
 {
   "name": "api-orchestrator",
-  "displayName": "API Orchestrator",
-  "description": "AI-powered API development right in VS Code. Transform your code into production-ready APIs instantly.",
+  "displayName": "API Orchestrator - Postman Killer",
+  "description": "Test APIs without leaving VS Code. Better than Thunder Client & Postman. Full API testing, mocking, AI analysis.",
   "version": "1.0.0",
   "engines": {
     "vscode": "^1.74.0"
@@ -37,6 +37,26 @@
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "api-orchestrator.newRequest",
+        "title": "API Orchestrator: New Request",
+        "icon": "$(add)"
+      },
+      {
+        "command": "api-orchestrator.runRequest",
+        "title": "API Orchestrator: Run Request",
+        "icon": "$(run)"
+      },
+      {
+        "command": "api-orchestrator.runAllRequests",
+        "title": "API Orchestrator: Run All Requests",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "api-orchestrator.importPostman",
+        "title": "API Orchestrator: Import Postman Collection",
+        "icon": "$(cloud-download)"
+      },
       {
         "command": "api-orchestrator.scan",
         "title": "API Orchestrator: Scan Current Project",
@@ -94,6 +114,30 @@
     },
     "views": {
       "api-orchestrator": [
+        {
+          "id": "apiRequests",
+          "name": "Requests",
+          "icon": "$(globe)",
+          "contextualTitle": "API Requests"
+        },
+        {
+          "id": "apiCollections",
+          "name": "Collections",
+          "icon": "$(folder)",
+          "contextualTitle": "API Collections"
+        },
+        {
+          "id": "apiEnvironments",
+          "name": "Environments",
+          "icon": "$(settings-gear)",
+          "contextualTitle": "Environments"
+        },
+        {
+          "id": "apiHistory",
+          "name": "History",
+          "icon": "$(history)",
+          "contextualTitle": "Request History"
+        },
         {
           "id": "apiEndpoints",
           "name": "Discovered APIs",
@@ -171,6 +215,38 @@
           "default": "http://localhost:8000",
           "description": "API Orchestrator server URL"
         },
+        "api-orchestrator.theme": {
+          "type": "string",
+          "enum": ["dark", "light", "auto"],
+          "default": "auto",
+          "description": "UI theme"
+        },
+        "api-orchestrator.privacyMode": {
+          "type": "string",
+          "enum": ["cloud", "local", "hybrid", "disabled"],
+          "default": "hybrid",
+          "description": "AI privacy mode"
+        },
+        "api-orchestrator.enableNaturalLanguage": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable natural language test generation"
+        },
+        "api-orchestrator.enableVisualization": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable response data visualization"
+        },
+        "api-orchestrator.timeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "Request timeout in milliseconds"
+        },
+        "api-orchestrator.followRedirects": {
+          "type": "boolean",
+          "default": true,
+          "description": "Follow HTTP redirects"
+        },
         "api-orchestrator.autoScan": {
           "type": "boolean",
           "default": true,
@@ -199,6 +275,17 @@
       }
     },
     "keybindings": [
+      {
+        "command": "api-orchestrator.runRequest",
+        "key": "ctrl+alt+r",
+        "mac": "cmd+alt+r",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "api-orchestrator.newRequest",
+        "key": "ctrl+alt+n",
+        "mac": "cmd+alt+n"
+      },
       {
         "command": "api-orchestrator.scan",
         "key": "ctrl+shift+a",
@@ -251,14 +338,37 @@
   },
   "dependencies": {
     "axios": "^1.6.0",
-    "socket.io-client": "^4.5.4"
+    "socket.io-client": "^4.5.4",
+    "ws": "^8.14.0",
+    "yaml": "^2.3.0",
+    "jsonpath": "^1.1.1",
+    "dotenv": "^16.3.0"
   },
   "activationEvents": [
+    "onCommand:api-orchestrator.newRequest",
+    "onCommand:api-orchestrator.runRequest",
+    "onCommand:api-orchestrator.openPanel",
+    "onView:apiRequests",
+    "onLanguage:http",
+    "workspaceContains:**/*.http",
+    "workspaceContains:**/*.rest",
     "workspaceContains:**/*.py",
     "workspaceContains:**/*.js",
-    "workspaceContains:**/*.ts",
-    "workspaceContains:**/*.java",
-    "workspaceContains:**/*.go",
-    "workspaceContains:**/*.rb"
+    "workspaceContains:**/*.ts"
+  ],
+  "languages": [
+    {
+      "id": "http",
+      "aliases": ["HTTP", "http"],
+      "extensions": [".http", ".rest"],
+      "configuration": "./language-configuration.json"
+    }
+  ],
+  "grammars": [
+    {
+      "language": "http",
+      "scopeName": "source.http",
+      "path": "./syntaxes/http.tmLanguage.json"
+    }
   ]
 }
