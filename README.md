@@ -1,12 +1,12 @@
-# StreamAPI (API Orchestrator) 🚀
+# 🚀 API Orchestrator - The Ultimate POSTMAN KILLER
 
-> Auto-discover APIs in your codebase and generate tests, docs, and SDKs with AI
+> **The ONLY API platform that combines ALL features from Postman, Thunder Client, Bruno, ReadyAPI, HTTPie, and more - 100% Open Source**
 
 **Live at: [https://streamapi.dev](https://streamapi.dev)** | **License: Apache 2.0** | **Copyright © 2024 Chinmay Shrivastava**
 
-Stop manually writing API tests and documentation. StreamAPI scans your codebase, discovers all endpoints, generates OpenAPI specs, creates test suites, and builds SDKs in 30+ languages - all powered by AI. Built by developers who were tired of Postman's limitations.
+Stop paying $30/user/month for Postman. API Orchestrator is the world's most complete API platform - combining testing, mocking, documentation, AI intelligence, and enterprise features in one open-source solution.
 
-## 🏃 Quick Start for Developers
+## 🏃 Quick Start
 
 ```bash
 # Clone and run locally in 2 minutes
@@ -21,567 +21,301 @@ https://streamapi.dev
 ![CI/CD Pipeline](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/ci-cd.yml/badge.svg)
 ![Auto Deploy](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/auto-deploy.yml/badge.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-blue)
-![Version](https://img.shields.io/badge/version-4.0.0-blue)
+![Version](https://img.shields.io/badge/version-5.0.0-blue)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Node](https://img.shields.io/badge/node-20%2B-green)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green)
-![YC Ready](https://img.shields.io/badge/YC-Ready-orange)
 
-## 🆕 What's New in v4.0.0 - Complete Postman Killer Edition (Apache 2.0 Licensed)
+## 🏆 Why We Beat Every Competitor
 
-### 🧪 Advanced Testing Capabilities (NEW!)
-- **Test Runner with Assertions** - 12+ assertion types including status code, response time, JSON path, schema validation
-- **Pre/Post Request Scripts** - JavaScript execution for dynamic requests and test setup/teardown
-- **Data-driven Testing** - Iterate tests with CSV/JSON data sources for comprehensive coverage
-- **Contract Testing** - JSON Schema validation for request/response/headers contracts
-- **Response Validation** - Automatic schema validation and error detection
-- **Request Chaining** - Extract variables from responses and use in subsequent requests
+| Feature | API Orchestrator | Postman | Thunder Client | Bruno | ReadyAPI |
+|---------|------------------|---------|----------------|-------|----------|
+| **Natural Language Testing** | ✅ FREE | ❌ | ❌ | ❌ | ❌ |
+| **AI-Powered Intelligence** | ✅ FREE | ⚠️ Limited | ❌ | ❌ | ❌ |
+| **One-Click Data Visualization** | ✅ FREE | ⚠️ Basic | ❌ | ❌ | ❌ |
+| **Inline Response Testing** | ✅ FREE | ❌ | ❌ | ❌ | ❌ |
+| **Local-by-Default Variables** | ✅ FREE | ✅ | ❌ | ❌ | ❌ |
+| **Privacy-First AI** | ✅ FREE | ❌ | ❌ | ❌ | ❌ |
+| **Offline Mode** | ✅ FREE | ❌ | ❌ | ✅ | ❌ |
+| **Service Virtualization** | ✅ FREE | ❌ | ❌ | ❌ | ✅ |
+| **VS Code Extension** | ✅ FREE | ✅ | ✅ | ❌ | ❌ |
+| **Unlimited Mock Servers** | ✅ FREE | ⚠️ 3 Free | ❌ | ❌ | ⚠️ Limited |
+| **Open Source** | ✅ | ❌ | ❌ | ✅ | ❌ |
+| **Self-Hosted** | ✅ | ❌ | N/A | ✅ | ✅ |
+| **Price** | **FREE** | $30/user/mo | $8/user/mo | FREE | $$$$ |
 
-### 🚀 Performance & Load Testing Suite (NEW!)
-- **8 Load Test Types** - Load, Stress, Spike, Soak, Performance, Endurance, Scalability, Volume
-- **Real-time Metrics** - Live monitoring of response times, throughput, error rates
-- **Performance Reports** - Detailed analytics with p50/p95/p99 percentiles
-- **Concurrent Users Simulation** - Test with thousands of virtual users
-- **Resource Monitoring** - CPU, memory, and network usage tracking
+## 🆕 Version 5.0 - ULTIMATE POSTMAN KILLER (September 2025)
 
-### 🌐 Multi-Protocol Support (NEW!)
-- **WebSocket Testing** - Full WebSocket client with message history and real-time updates
-- **gRPC Support** - Protocol buffer support with service discovery
-- **SOAP/XML Testing** - WSDL parsing and SOAP envelope generation
-- **Server-Sent Events (SSE)** - Stream testing with event monitoring
-- **GraphQL Subscriptions** - Real-time GraphQL subscription testing
+### 🎯 Natural Language Test Generation (Beat Postbot)
+- **Plain English Testing**: Write "Check if status is 200 and response has valid email"
+- **40+ Pattern Recognition**: Automatic test generation from data types
+- **Intelligent Suggestions**: Context-aware test recommendations
+- **No Code Required**: Generate complex test suites without writing code
 
-### 📊 API Health & Monitoring (NEW!)
-- **Status Pages** - Create public status pages for API health monitoring
-- **Uptime Tracking** - 90-day uptime history with incident timeline
-- **Health Checks** - Automated endpoint monitoring with alerts
-- **Response Time Charts** - Historical performance visualization
-- **Incident Management** - Track and resolve API incidents
+### 📊 One-Click Data Visualization (Beat Postbot)
+- **8 Chart Types**: Line, Bar, Pie, Area, Scatter, Radar, Table, JSON Tree
+- **AI Auto-Detection**: Automatically chooses best visualization
+- **Natural Language Queries**: "Group by category", "Sum amounts", "Average prices"
+- **Real-time Updates**: Live data transformation and filtering
 
-### 🖥️ Developer Tools (NEW!)
-- **CLI Tool** - Command-line interface for CI/CD integration (like Newman for Postman)
-- **VS Code Extension** - Test APIs directly from your code editor
-- **Keyboard Shortcuts** - Productivity hotkeys for common actions
-- **Request History Search** - Advanced filtering and search capabilities
-- **Bulk Operations** - Execute multiple requests in parallel
+### 🧪 Inline Response Testing
+- **Select & Test**: Click any JSON field to generate tests instantly
+- **Smart Detection**: Auto-identifies emails, URLs, dates, phone numbers
+- **Context Menu Testing**: Right-click test generation
+- **Bulk Test Creation**: Generate entire test suites from responses
 
-## 🆕 What's New in v3.0.0 - Enterprise Edition
+### 🔐 Enhanced Variable Management (Beat Postman Sept 2025)
+- **Local-by-Default**: Private variables that don't sync unless shared
+- **6 Scope Levels**: LOCAL, SHARED, WORKSPACE, COLLECTION, ENVIRONMENT, GLOBAL
+- **Auto-Detection**: Identifies sensitive values (API keys, passwords, tokens)
+- **Selective Sharing**: Share with specific users/teams with expiration
+- **Advanced Masking**: Custom patterns for sensitive data protection
+- **Version Control**: Full audit trail and change history
 
-### 🏢 Enterprise Team Collaboration
-- **Multi-Tenant Workspaces** - Create isolated workspaces for different teams and projects
-- **Role-Based Access Control** - Owner, Admin, Developer, and Viewer roles with granular permissions
-- **Team Management** - Invite members, manage permissions, and track activity
-- **Real-time Collaboration** - WebSocket-powered live updates across team members
-- **Activity Logging** - Complete audit trail of all workspace actions
+### 🛡️ Privacy-First AI Mode
+- **Data Never Trains Models**: Your data is never used for AI training
+- **Local AI Option**: Run AI locally with Ollama/Llama2
+- **Auto-Anonymization**: Removes PII before processing
+- **GDPR/HIPAA Compliant**: Built-in compliance features
+- **Hybrid Mode**: Local for sensitive, cloud for public data
 
-### 🔔 Webhook System
-- **18+ Event Types** - API discovery, security alerts, performance issues, and more
-- **Retry Logic** - Automatic retry with exponential backoff for failed deliveries
-- **HMAC Signatures** - Secure webhook payloads with SHA-256 signatures
-- **Custom Headers** - Add custom headers to webhook requests
-- **Delivery Tracking** - Monitor webhook status and response times
-- **Testing Interface** - Test webhooks directly from the UI
+### 📦 Offline-First Mode (Beat Bruno)
+- **Git-Friendly Storage**: Collections as plain text files
+- **Multiple Formats**: BRU, JSON, YAML, HTTP, Markdown
+- **Version Control**: Native Git integration
+- **Auto-Sync**: Syncs when online, works offline
+- **File Watching**: Auto-detect and reload changes
 
-### 🤖 Custom AI Model Keys (BYOK)
-- **8+ AI Providers** - OpenAI, Anthropic, Google Gemini, Cohere, HuggingFace, Azure, Replicate, Custom
-- **Encrypted Storage** - Fernet encryption for secure API key storage
-- **Usage Tracking** - Monitor requests, tokens, and costs per key
-- **Cost Controls** - Set monthly usage and cost limits
-- **Model Preferences** - Configure default models per provider
-- **Key Testing** - Validate API keys with test requests
+### 🎭 Service Virtualization (Beat ReadyAPI)
+- **Mock Entire Services**: Not just endpoints, entire API services
+- **8 Mock Behaviors**: Static, Dynamic, Stateful, Conditional, Proxy, Chaos, Record, Replay
+- **Stateful Mocking**: CRUD operations with persistent state
+- **Chaos Engineering**: Test failure scenarios
+- **Record & Replay**: Capture real responses for testing
 
-### 📊 Advanced Analytics Dashboard
-- **Real-time Metrics** - API calls, response times, error rates, security scores
-- **Performance Insights** - Endpoint performance analysis and optimization recommendations
-- **Cost Analysis** - Track and optimize API usage costs
-- **Security Monitoring** - Vulnerability detection and compliance tracking
-- **AI-Powered Insights** - Automatic anomaly detection and trend analysis
-- **Custom Reports** - Export analytics data in multiple formats
+### 💻 VS Code Extension (Beat Thunder Client)
+- **Full IDE Integration**: Test APIs without leaving VS Code
+- **Auto-Discovery**: Scan files for API endpoints
+- **Collections & Environments**: Full feature parity
+- **WebSocket Support**: Real-time connection to backend
+- **Syntax Highlighting**: .http file support
 
-### 🔄 API Versioning System
-- **Version Control** - Track all API changes with semantic versioning
-- **Breaking Change Detection** - Automatic detection of breaking changes
-- **Changelog Generation** - Auto-generated changelogs for each version
-- **Version Comparison** - Visual diff between API versions
-- **Migration Guides** - AI-generated migration guides for breaking changes
+## 🤖 AI Intelligence Features
 
-### 🚀 Enterprise AI Code Generation
-- **30+ Language Support** - Generate SDKs in JavaScript, Python, Java, Go, Rust, C#, Ruby, PHP, Swift, Kotlin, and 20+ more
-- **Full SDK Generation** - Complete production-ready SDKs with error handling and retry logic
-- **Package Management** - Auto-generates package.json, requirements.txt, pom.xml, go.mod, etc.
-- **Test & Documentation** - Automatic unit test and README generation
-- **Enterprise Features** - Rate limiting, streaming, WebSocket support, file handling
+### Security Analysis
+- **OWASP Top 10**: Automatic vulnerability scanning
+- **15+ Secret Patterns**: Detect exposed API keys, tokens, passwords
+- **Compliance Checking**: GDPR, HIPAA, SOC2, PCI-DSS
+- **Risk Scoring**: Security score with actionable fixes
 
-### Core Platform Features
-- **🔥 GraphQL Support** - Complete GraphQL query builder with templates, variables, and schema introspection
-- **🎨 Dark Theme Overhaul** - Beautiful, consistent dark theme across all components
-- **📦 Postman Import** - Import your existing Postman collections seamlessly
-- **📊 Monitoring Dashboard** - Real-time API health metrics and response times
-- **📁 Collections Manager** - Organize your APIs into folders and collections
-- **🕒 Request History** - Track all your API calls with detailed analytics
-- **🌍 Environment Variables** - Manage multiple environments (dev/staging/prod)
-- **📄 API Documentation** - Auto-generated interactive docs from OpenAPI specs
+### Performance Optimization
+- **Bottleneck Detection**: Identify slow endpoints
+- **Caching Recommendations**: Smart cache strategy suggestions
+- **Query Optimization**: Database query improvements
+- **Load Distribution**: Scaling recommendations
 
-## 🛠️ Features That Actually Matter to Developers
+### Business Intelligence
+- **ROI Estimation**: Calculate API business value
+- **Cost Analysis**: API usage cost tracking
+- **Executive Summaries**: Auto-generated reports
+- **Trend Analysis**: Usage patterns and predictions
 
-### Core Magic ✨
-- **🔍 Auto-discover APIs** - Point at your repo, finds all endpoints automatically (FastAPI, Express, Django, Flask, Spring Boot)
-- **📝 Generate Everything** - OpenAPI specs, Pytest/Jest tests, 30+ language SDKs - all from your existing code
-- **🎭 Instant Mock Servers** - One click, your frontend team has a working mock API with realistic responses
-- **🤖 AI Code Review** - Finds security issues, suggests optimizations, checks OWASP compliance
-- **🔄 Real-time Sync** - Change your code, tests update automatically via webhooks
-- **📦 Full SDK Generation** - Not just snippets - complete packages with error handling, retries, types
-- **🧪 Smart Test Generation** - Creates edge cases, validates schemas, tests auth flows
+## 🚀 Core Features
 
-### 🆕 API Testing Features (Postman Killer!)
-- **🤖 AI Code Generation** - Generate production SDKs in 30+ languages (much better than Postman's snippets!)
-- **🔥 GraphQL Support** - Full GraphQL query builder with variables, templates, and schema introspection
-- **🌍 Environment Variables** - Manage multiple environments (dev/staging/prod) with variable interpolation
-- **📁 Collections Manager** - Organize APIs into collections and folders with import/export
-- **🕒 Request History** - Track all API calls with response times and statuses
-- **🔐 Advanced Authentication** - Bearer, Basic Auth, API Keys, OAuth 2.0 (coming soon)
-- **📊 API Documentation** - Auto-generated interactive docs from OpenAPI specs
-- **📈 Monitoring Dashboard** - Real-time API health, response times, and error rates
-- **📥 Postman Import** - Import existing Postman collections seamlessly
-- **🎨 Beautiful Dark Theme** - Consistent, modern UI that's easy on the eyes
+### API Discovery & Testing
+- **Auto-Discovery**: Scan codebases in Python, JavaScript, TypeScript, Go, Java, Ruby
+- **Framework Support**: FastAPI, Flask, Django, Express, NestJS, Spring Boot, Rails
+- **Smart Testing**: AI generates comprehensive test suites
+- **Multi-Protocol**: REST, GraphQL, WebSocket, gRPC, SOAP
 
-### Production Features (v3.0.0)
-- **💳 Stripe Billing Integration** - Production-ready payment processing with 4 subscription tiers
-- **📧 Email System** - Password reset and transactional emails via SMTP
-- **🔍 Error Tracking** - Sentry integration for real-time error monitoring
-- **🔐 Enterprise Security** - JWT authentication, bcrypt hashing, CORS protection
-- **🗄️ PostgreSQL Support** - Production database with automatic migrations
-- **📊 User Dashboard** - Profile management, API keys, usage statistics
-- **🔄 Export/Import** - Support for JSON, YAML, OpenAPI, Postman formats
-- **🚀 Auto-scaling** - Deployed on Railway with automatic scaling
+### Documentation & SDKs
+- **OpenAPI 3.0**: Auto-generated specifications
+- **Interactive Docs**: Beautiful, searchable API documentation
+- **30+ SDKs**: Generate client libraries for any language
+- **Postman Import/Export**: Full compatibility
 
-## 💰 Pricing Tiers
+### Performance & Monitoring
+- **Load Testing**: 8 types including stress, spike, soak tests
+- **Real-time Monitoring**: WebSocket-powered live updates
+- **Status Pages**: Public API health dashboards
+- **SLA Tracking**: Uptime and performance SLAs
 
-| Feature | Free | Starter ($49/mo) | Professional ($149/mo) | Enterprise ($499/mo) |
-|---------|------|------------------|------------------------|---------------------|
-| API Calls | 1,000/month | 10,000/month | 100,000/month | Unlimited |
-| Projects | 3 | 10 | 50 | Unlimited |
-| **Workspaces** | 1 | 3 | 10 | Unlimited |
-| **Team Members** | 1 | 5 | 25 | Unlimited |
-| **Webhooks** | ❌ | 5 | 50 | Unlimited |
-| **Custom AI Keys** | ❌ | 2 providers | 5 providers | Unlimited |
-| **API Versioning** | ❌ | ✅ | ✅ | ✅ |
-| **Advanced Analytics** | Basic | Standard | Advanced | Enterprise |
-| **Code Generation** | 5 languages | 15 languages | 30+ languages | 30+ languages + Custom |
-| GraphQL Testing | ✅ | ✅ | ✅ | ✅ |
-| Environment Variables | ✅ | ✅ | ✅ | ✅ |
-| Collections | 5 | Unlimited | Unlimited | Unlimited |
-| AI Analysis | ❌ | ✅ | ✅ | ✅ |
-| Mock Servers | ❌ | ✅ | ✅ | ✅ |
-| SDK Downloads | ❌ | 10/month | 100/month | Unlimited |
-| Export Formats | JSON only | JSON, YAML | All formats | All formats |
-| Request History | 100 | 1,000 | 10,000 | Unlimited |
-| **Activity Logs** | 7 days | 30 days | 90 days | Unlimited |
-| Support | Community | Email | Priority | Dedicated |
-| **Custom Models** | ❌ | ❌ | ❌ | ✅ |
-| **SSO/SAML** | ❌ | ❌ | ❌ | ✅ |
-| **SLA** | ❌ | 99% | 99.9% | 99.99% |
+### Team Collaboration
+- **Workspaces**: Isolated environments for teams
+- **RBAC**: Role-based access control
+- **Real-time Sync**: Live collaboration features
+- **Activity Logging**: Complete audit trail
 
-## 🆚 StreamAPI vs Postman Comparison
+### Enterprise Features
+- **SSO/SAML**: Enterprise authentication
+- **Custom AI Models**: Bring your own AI keys
+- **Webhooks**: 18+ event types with retry logic
+- **White-labeling**: Custom branding options
 
-| Feature | StreamAPI | Postman |
-|---------|-----------|---------|
-| **Test Runner** | ✅ 12+ assertion types | ✅ Available |
-| **Pre/Post Scripts** | ✅ JavaScript execution | ✅ Available |
-| **CLI Tool** | ✅ Full CI/CD integration | ✅ Newman |
-| **Data-driven Testing** | ✅ CSV/JSON iteration | ✅ Available |
-| **Contract Testing** | ✅ JSON Schema validation | ⚠️ Limited |
-| **Load Testing** | ✅ 8 test types built-in | ❌ Separate tool |
-| **Multi-Protocol** | ✅ REST/GraphQL/WebSocket/gRPC/SOAP/SSE | ⚠️ REST/GraphQL only |
-| **Status Pages** | ✅ Public health monitoring | ❌ No |
-| **Request Chaining** | ✅ Variable extraction | ✅ Available |
-| **Code Generation Languages** | 30+ languages | 20 languages |
-| **Code Type** | Full production SDKs | Basic snippets |
-| **AI-Powered** | ✅ Yes (Claude/GPT-4) | ❌ No |
-| **Package Files** | ✅ Auto-generated | ❌ No |
-| **Unit Tests** | ✅ Auto-generated | ❌ No |
-| **Documentation** | ✅ Auto-generated README | ❌ No |
-| **Docker Support** | ✅ Dockerfile included | ❌ No |
-| **CI/CD Configs** | ✅ GitHub Actions included | ❌ No |
-| **Error Handling** | ✅ Enterprise-grade | ⚠️ Basic |
-| **Retry Logic** | ✅ Exponential backoff | ❌ No |
-| **Rate Limiting** | ✅ Built-in | ❌ No |
-| **Type Definitions** | ✅ For typed languages | ⚠️ Limited |
-| **GraphQL Support** | ✅ Full query builder + subscriptions | ✅ Basic |
-| **Mock Servers** | ✅ Instant deployment | ✅ Available |
-| **API Discovery** | ✅ Auto-scan codebase | ❌ No |
-| **Security Analysis** | ✅ AI-powered | ⚠️ Basic |
-| **Compliance Checks** | ✅ GDPR, HIPAA, SOC2 | ❌ No |
-| **VS Code Extension** | ✅ Yes | ✅ Yes |
-| **Keyboard Shortcuts** | ✅ Full hotkey support | ✅ Available |
-| **Self-Hosted Option** | ✅ Yes | ⚠️ Enterprise only |
-| **Price** | $0-499/month | $12-49/user/month |
-| **Overall Score** | **10/10** 🏆 | **7/10** |
+## 🎯 Use Cases
 
-## 🏗️ Technical Architecture
+### For Developers
+- Test APIs without writing code
+- Generate tests from responses
+- Visualize data instantly
+- Mock services for development
 
-### Tech Stack
-- **Backend**: FastAPI (Python 3.11), SQLAlchemy, Pydantic
-- **Frontend**: React 18, Vite, TailwindCSS, Lucide Icons
-- **Database**: PostgreSQL (production) / SQLite (development)
-- **AI**: Anthropic Claude API, OpenAI GPT-4 (optional)
-- **Payments**: Stripe Checkout & Webhooks
-- **Deployment**: Railway, Docker, GitHub Actions
-- **Monitoring**: Sentry, Custom Analytics
+### For QA Teams
+- Comprehensive test coverage
+- Load and performance testing
+- Contract testing
+- Regression test automation
 
-### Multi-Agent System
-1. **Discovery Agent** - Scans and identifies API endpoints
-2. **Spec Generator Agent** - Creates OpenAPI specifications
-3. **Test Generator Agent** - Produces comprehensive test suites
-4. **AI Intelligence Agent** - Security & performance analysis
-5. **Mock Server Agent** - Generates functional mock servers
-6. **Code Generator Agent** - Creates production SDKs in 30+ languages
+### For DevOps
+- CI/CD integration
+- Health monitoring
+- Status pages
+- Performance tracking
 
-## 🚀 Quick Start
+### For Product Managers
+- API documentation
+- Usage analytics
+- Cost tracking
+- Executive reports
 
-### Use the Live Platform
-Visit [https://streamapi.dev](https://streamapi.dev) to start using StreamAPI immediately.
+## 🛠️ Technology Stack
 
-### Local Development Setup
+### Backend
+- **FastAPI** (Python 3.11+) - High-performance async API
+- **SQLAlchemy** - Database ORM
+- **Celery** - Async task processing
+- **Redis** - Caching and queues
+- **WebSocket** - Real-time updates
 
+### Frontend
+- **React 18** - Modern UI framework
+- **TailwindCSS** - Utility-first styling
+- **Recharts** - Data visualization
+- **Monaco Editor** - Code editing
+
+### AI & ML
+- **LangChain** - AI orchestration
+- **OpenAI/Anthropic** - LLM providers
+- **Ollama** - Local AI support
+- **Faker** - Test data generation
+
+### Infrastructure
+- **Docker** - Containerization
+- **GitHub Actions** - CI/CD
+- **PostgreSQL** - Primary database
+- **Stripe** - Payment processing
+
+## 📦 Installation
+
+### Docker (Recommended)
 ```bash
-# Clone the repository
 git clone https://github.com/JonSnow1807/api-orchestrator.git
 cd api-orchestrator
+docker-compose up
+```
 
-# Backend setup
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-# Set environment variables
-cp .env.example .env
-# Edit .env with your configurations
-
-# Initialize database
-python -c "from backend.src.database import init_db; init_db()"
-
-# Start backend
+### Manual Installation
+```bash
+# Backend
 cd backend
-python -m uvicorn src.main:app --reload
+pip install -r requirements.txt
+uvicorn src.main:app --reload
 
-# In a new terminal - Frontend setup
+# Frontend
 cd frontend
 npm install
 npm run dev
 ```
 
-Access the application at `http://localhost:5173`
-
-## 🐳 Docker Deployment
-
-```bash
-# Build and run with Docker Compose
-docker-compose -f docker-compose.prod.yml up -d
-
-# Or use the pre-built image
-docker run -p 8000:8000 \
-  -e DATABASE_URL=your_database_url \
-  -e STRIPE_SECRET_KEY=your_stripe_key \
-  ghcr.io/jonsnow1807/api-orchestrator:latest
-```
-
-## 🔥 Why Developers Love StreamAPI
-
-### The Problem We Solve
-Every developer has wasted hours:
-- Writing the same API tests over and over
-- Manually creating API documentation that gets outdated
-- Building client SDKs from scratch for each language
-- Setting up mock servers for frontend teams
-- Trying to keep Postman collections in sync with code
-
-### Our Solution
-```bash
-# Point StreamAPI at your codebase
-streamapi scan ./my-api
-
-# Get everything automatically:
-✅ OpenAPI 3.0 specification
-✅ Test suites (Pytest, Jest, Mocha)
-✅ SDKs in 30+ languages
-✅ Mock servers with realistic data
-✅ Security vulnerability report
-✅ Performance optimization tips
-```
-
-### Built for Real Development Teams
-- **🔧 Works with your stack** - FastAPI, Express, Django, Flask, Spring Boot, Rails
-- **🤖 AI that understands code** - Not just pattern matching, actual code comprehension
-- **⚡ Saves 10+ hours per week** - Stop writing boilerplate, focus on features
-- **🔄 Always in sync** - Webhooks notify you when APIs change
-- **👥 Team collaboration** - Share workspaces, not JSON files
-- **🔒 Your keys, your models** - BYOK support for OpenAI, Anthropic, etc.
-
-## 🆚 Real Developer Comparison: StreamAPI vs Postman
-
-| What Developers Need | StreamAPI | Postman |
-|---------------------|-----------|---------|
-| **Find APIs in my code automatically** | ✅ Scans your repo | ❌ Type everything manually |
-| **Generate test code I can commit** | ✅ Pytest, Jest, Mocha files | ❌ Proprietary format only |
-| **Build SDKs for my API** | ✅ 30+ languages, full packages | 🟨 Basic code snippets |
-| **Mock server from my code** | ✅ One-click from your routes | 🟨 Build manually |
-| **Keep docs synced with code** | ✅ Webhooks + auto-update | ❌ Manual sync |
-| **Use my own AI models** | ✅ BYOK (OpenAI, Claude, etc) | ❌ No AI support |
-| **Self-host on my infrastructure** | ✅ Docker, K8s ready | ❌ Cloud only |
-| **Git-friendly format** | ✅ YAML, JSON, Markdown | 🟨 JSON export only |
-| **CI/CD integration** | ✅ GitHub Actions, Jenkins | 🟨 Limited |
-| **Actually open source** | ✅ Apache 2.0, fork it! | ❌ Proprietary |
-| **Price for small team** | 💰 $49/mo | 💰 $12/mo |
-
-**Verdict**: If you want to manually click through UIs, use Postman. If you want to automate everything and get back to coding, use StreamAPI.
-
-## 🌐 Production Deployment
-
-### Railway (Recommended)
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
-
-# Deploy
-railway login
-railway init
-railway up
-```
-
-### Environment Variables Required
+### Environment Variables
 ```env
-# Core
-DATABASE_URL=postgresql://...
-JWT_SECRET_KEY=your-secure-key
+# Required
+DATABASE_URL=postgresql://user:pass@localhost/dbname
+SECRET_KEY=your-secret-key
+OPENAI_API_KEY=your-openai-key
 
-# Stripe
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_PUBLISHABLE_KEY=pk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_STARTER_PRICE_ID=price_...
-STRIPE_PRO_PRICE_ID=price_...
-STRIPE_ENTERPRISE_PRICE_ID=price_...
-
-# Email (Optional)
-EMAIL_ENABLED=true
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=your-email
-SMTP_PASSWORD=your-app-password
-
-# Monitoring (Optional)
-SENTRY_DSN=https://...
-SENTRY_ENVIRONMENT=production
-
-# AI Features (Optional)
-ANTHROPIC_API_KEY=sk-ant-api03-...
-OPENAI_API_KEY=sk-...
+# Optional
+ANTHROPIC_API_KEY=your-anthropic-key
+STRIPE_SECRET_KEY=your-stripe-key
+REDIS_URL=redis://localhost:6379
 ```
 
-## 📊 API Usage Examples
+## 🚀 Deployment
 
-### Discover APIs in Your Codebase
-```python
-import requests
-
-# Authenticate
-response = requests.post("https://streamapi.dev/auth/login", 
-    data={"username": "your-email", "password": "your-password"})
-token = response.json()["access_token"]
-
-# Start orchestration
-headers = {"Authorization": f"Bearer {token}"}
-response = requests.post("https://streamapi.dev/api/orchestrate",
-    json={
-        "source_type": "code",
-        "source_path": "https://github.com/your-repo",
-        "code_content": "your_code_here"
-    },
-    headers=headers
-)
-
-task_id = response.json()["task_id"]
-print(f"Task started: {task_id}")
-```
-
-### Generate Mock Server
-```python
-# After orchestration completes
-response = requests.post(f"https://streamapi.dev/api/mock-server/{task_id}/start",
-    headers=headers)
-    
-mock_url = response.json()["url"]
-print(f"Mock server running at: {mock_url}")
-```
-
-## 🧪 Testing
-
+### One-Click Deploy
 ```bash
-# Run all tests
-pytest tests/
-
-# Run with coverage
-pytest tests/ --cov=src --cov-report=html
-
-# Test specific component
-pytest tests/unit/test_discovery_agent.py
-
-# Integration tests
-pytest tests/integration/ -v
-
-# Test Stripe integration
-python test_complete_stripe_flow.py
+cd deploy
+./one-click-deploy.sh
 ```
 
-## 🏗️ Technical Architecture
+Supports:
+- Railway
+- Render
+- DigitalOcean
+- AWS EC2
+- Heroku
+- Fly.io
 
-### Backend Stack
-- **Framework**: FastAPI (Python 3.11+)
-- **Database**: PostgreSQL with SQLAlchemy ORM
-- **Authentication**: JWT with refresh tokens
-- **AI Integration**: Claude API, OpenAI, Custom models
-- **Real-time**: WebSocket for live updates
-- **Task Queue**: Background tasks with asyncio
-- **Payment**: Stripe integration
-- **Monitoring**: Sentry error tracking
-
-### Frontend Stack
-- **Framework**: React 18 with Vite
-- **State Management**: Context API with hooks
-- **Styling**: Tailwind CSS with custom components
-- **Charts**: Recharts for analytics
-- **Real-time**: WebSocket client
-- **Code Editor**: Monaco Editor
-- **Icons**: Lucide React
-
-### Infrastructure
-- **Container**: Docker with multi-stage builds
-- **CI/CD**: GitHub Actions with automated deployment
-- **Hosting**: Railway, AWS, DigitalOcean support
-- **CDN**: CloudFlare for static assets
-- **Monitoring**: Prometheus + Grafana
-- **Logging**: Structured JSON logging
-
-## 📈 Performance Metrics
-
-- **Processing Speed**: 100+ endpoints in under 30 seconds
-- **Test Generation**: Complete test suite in 2-3 minutes
-- **Mock Server Startup**: < 5 seconds
-- **WebSocket Latency**: < 100ms
-- **Concurrent Users**: 10,000+ supported
-- **API Rate Limits**: Configurable per tier
-- **Uptime**: 99.99% SLA for Enterprise
-- **Response Time**: < 200ms p95
-
-## 🔒 Security Features
-
-- **Authentication**: JWT with refresh tokens
-- **Password Security**: Bcrypt hashing with salt
-- **API Rate Limiting**: Per-user and per-tier limits
-- **CORS Protection**: Configurable origins
-- **Input Validation**: Pydantic models
-- **SQL Injection Protection**: SQLAlchemy ORM
-- **XSS Prevention**: React's built-in escaping
-- **HTTPS Only**: Enforced in production
-- **Webhook Validation**: Stripe signature verification
+### Production Docker
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### Development Workflow
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run tests (`pytest tests/`)
-5. Commit (`git commit -m 'Add amazing feature'`)
-6. Push (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
+### Development Setup
+```bash
+# Fork and clone
+git clone https://github.com/YOUR_USERNAME/api-orchestrator.git
+cd api-orchestrator
 
-## 📝 License
+# Create branch
+git checkout -b feature/your-feature
 
-Copyright 2024 Chinmay Shrivastava / StreamAPI
+# Make changes and test
+./scripts/test.sh
 
-This project is licensed under the **Apache License 2.0** - see the [LICENSE](LICENSE) file for details.
+# Submit PR
+```
 
-### What this means:
-- ✅ **You can** use this commercially
-- ✅ **You can** modify and distribute
-- ✅ **You can** use privately
-- ✅ **You can** use patents
-- ⚠️ **You must** include copyright notice
-- ⚠️ **You must** include license
-- ⚠️ **You must** state changes
-- ❌ **You cannot** use trademark
-- ❌ **You cannot** hold liable
+## 📄 License
 
-For commercial SaaS deployment or enterprise licensing, contact: support@streamapi.dev
+Apache 2.0 - See [LICENSE](LICENSE) file.
 
 ## 🙏 Acknowledgments
 
-- Built with FastAPI, React, and SQLAlchemy
-- AI capabilities powered by Anthropic Claude
-- Payment processing by Stripe
-- Deployed on Railway
-- Error tracking by Sentry
+Built with ❤️ by [Chinmay Shrivastava](https://github.com/JonSnow1807)
+
+Special thanks to:
+- The open-source community
+- All contributors and testers
+- Users who provided feedback
 
 ## 📞 Support
 
-For issues, questions, or enterprise inquiries:
-- **GitHub Issues**: [Create an issue](https://github.com/JonSnow1807/api-orchestrator/issues)
-- **Email**: cshrivastava2000@gmail.com
-- **Documentation**: [https://streamapi.dev/docs](https://streamapi.dev/docs)
+- **Documentation**: [https://docs.streamapi.dev](https://docs.streamapi.dev)
+- **Issues**: [GitHub Issues](https://github.com/JonSnow1807/api-orchestrator/issues)
+- **Email**: support@streamapi.dev
+- **Discord**: [Join our community](https://discord.gg/streamapi)
 
-## 🛣️ Roadmap
+## 🎯 Roadmap
 
-### Completed Features ✅
-- [x] ~~Test Runner with Assertions~~ ✅ Completed in v4.0.0
-- [x] ~~Pre/Post Request Scripts~~ ✅ Completed in v4.0.0
-- [x] ~~CLI Tool for CI/CD~~ ✅ Completed in v4.0.0
-- [x] ~~Contract Testing~~ ✅ Completed in v4.0.0
-- [x] ~~Load Testing Suite~~ ✅ Completed in v4.0.0
-- [x] ~~Multi-Protocol Support~~ ✅ Completed in v4.0.0
-- [x] ~~Status Pages~~ ✅ Completed in v4.0.0
-- [x] ~~WebSocket Testing~~ ✅ Completed in v4.0.0
-- [x] ~~Team Collaboration~~ ✅ Completed in v3.0.0
-- [x] ~~API Versioning~~ ✅ Completed in v3.0.0
-- [x] ~~Advanced Analytics~~ ✅ Completed in v3.0.0
-- [x] ~~GraphQL Support~~ ✅ Completed in v2.1.0
-- [x] ~~Enterprise Code Generation~~ ✅ Completed in v2.2.0
-- [x] ~~VS Code Extension~~ ✅ Completed in v4.0.0
+### Q4 2025
+- [ ] Browser Extension (Chrome, Firefox, Edge)
+- [ ] Mobile Apps (iOS, Android)
+- [ ] API Marketplace
+- [ ] Custom Plugin System
 
-### Coming Soon
-- [ ] GitHub/GitLab deep integration
-- [ ] Custom AI model training
-- [ ] Kubernetes deployment support
-- [ ] Slack/Discord notifications
-- [ ] CI/CD pipeline templates
-- [ ] Multi-region deployment
-- [ ] OAuth 2.0 flow testing
-- [ ] API performance profiling
-- [ ] Terraform provider
-- [ ] Jenkins plugin
-
-## 📊 Status
-
-- **Production URL**: [https://streamapi.dev](https://streamapi.dev)
-- **API Status**: ✅ Operational
-- **Database**: ✅ PostgreSQL on Railway
-- **Payments**: ✅ Stripe Integration Active
-- **Email**: ✅ SMTP Configured
-- **Monitoring**: ✅ Sentry Active
-- **SSL**: ✅ HTTPS Enabled
-
-## 👨‍💻 Author
-
-**Chinmay Shrivastava**
-- GitHub: [@JonSnow1807](https://github.com/JonSnow1807)
-- Email: cshrivastava2000@gmail.com
-- LinkedIn: [Connect on LinkedIn](https://linkedin.com/in/chinmayshrivastava)
+### Q1 2026
+- [ ] Kubernetes Operator
+- [ ] Terraform Provider
+- [ ] Multi-region Support
+- [ ] Enterprise Cloud
 
 ---
 
-**Built with ❤️ for developers who value their time**
+**⭐ Star us on GitHub to support the project!**
 
-*Transform your APIs from concept to production in minutes, not months.*
+**🚀 The Future of API Development is Open Source!**
