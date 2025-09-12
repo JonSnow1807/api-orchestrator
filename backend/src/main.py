@@ -681,6 +681,10 @@ except ImportError as e:
 try:
     from src.routes.native_integrations import router as native_integrations_router
     app.include_router(native_integrations_router)
+    
+    # V5.0 POSTMAN KILLER Features
+    from src.routes.v5_features import router as v5_features_router
+    app.include_router(v5_features_router)
     print("✅ Native Integrations routes loaded!")
 except ImportError as e:
     print(f"⚠️ Native Integrations routes not available: {e}")
