@@ -52,6 +52,10 @@ import LoadTesting from './LoadTesting';
 import ContractTesting from './ContractTesting';
 import StatusPages from './StatusPages';
 import AIAgentBuilder from './AIAgentBuilder';
+import NaturalLanguageTesting from './NaturalLanguageTesting';
+import OfflineMode from './OfflineMode';
+import ServiceVirtualization from './ServiceVirtualization';
+import PrivacyAI from './PrivacyAI';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -398,6 +402,56 @@ const Dashboard = () => {
               <Zap className="w-4 h-4" />
               <span>Webhooks</span>
             </button>
+            
+            {/* V5.0 POSTMAN KILLER Features */}
+            <button
+              onClick={() => setActiveTab('natural-language')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition relative ${
+                activeTab === 'natural-language' 
+                  ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Brain className="w-4 h-4" />
+              <span>Natural Language</span>
+              <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-green-500 text-white text-xs rounded-full animate-pulse">v5</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('offline-mode')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition relative ${
+                activeTab === 'offline-mode' 
+                  ? 'bg-gradient-to-r from-orange-600 to-yellow-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Download className="w-4 h-4" />
+              <span>Offline Mode</span>
+              <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-green-500 text-white text-xs rounded-full animate-pulse">v5</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('virtualization')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition relative ${
+                activeTab === 'virtualization' 
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Globe className="w-4 h-4" />
+              <span>Service Virtualization</span>
+              <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-green-500 text-white text-xs rounded-full animate-pulse">v5</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('privacy-ai')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition relative ${
+                activeTab === 'privacy-ai' 
+                  ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Shield className="w-4 h-4" />
+              <span>Privacy AI</span>
+              <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-green-500 text-white text-xs rounded-full animate-pulse">v5</span>
+            </button>
           </nav>
         </div>
 
@@ -606,6 +660,69 @@ const Dashboard = () => {
         {/* Webhooks Tab */}
         {activeTab === 'webhooks' && (
           <WebhookManager workspaceId={currentWorkspace?.id} />
+        )}
+
+        {/* V5.0 POSTMAN KILLER Features Content */}
+        
+        {/* Natural Language Testing */}
+        {activeTab === 'natural-language' && (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-xl p-6 text-white">
+              <h2 className="text-2xl font-bold mb-2">Natural Language Test Generation</h2>
+              <p className="opacity-90">Generate comprehensive test suites using plain English - no coding required!</p>
+            </div>
+            <NaturalLanguageTesting 
+              responseData={null}
+              onTestGenerated={(tests) => console.log('Tests generated:', tests)}
+              onTestRun={(test, result) => console.log('Test run:', test, result)}
+            />
+          </div>
+        )}
+        
+        {/* Offline Mode */}
+        {activeTab === 'offline-mode' && (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-orange-600 to-yellow-600 rounded-xl p-6 text-white">
+              <h2 className="text-2xl font-bold mb-2">Offline-First Mode</h2>
+              <p className="opacity-90">Work offline with Git-friendly storage formats. Perfect for version control!</p>
+            </div>
+            <OfflineMode 
+              collections={projects}
+              onCollectionSave={(collection, format) => console.log('Collection saved:', collection, format)}
+              onCollectionLoad={(collection) => console.log('Collection loaded:', collection)}
+              onSync={(synced) => console.log('Synced:', synced)}
+            />
+          </div>
+        )}
+        
+        {/* Service Virtualization */}
+        {activeTab === 'virtualization' && (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+              <h2 className="text-2xl font-bold mb-2">Service Virtualization</h2>
+              <p className="opacity-90">Mock entire API services with 8 advanced behaviors including chaos engineering!</p>
+            </div>
+            <ServiceVirtualization 
+              openApiSpec={null}
+              projectId={projects[0]?.id}
+              onServiceCreated={(service) => console.log('Service created:', service)}
+            />
+          </div>
+        )}
+        
+        {/* Privacy-First AI */}
+        {activeTab === 'privacy-ai' && (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-6 text-white">
+              <h2 className="text-2xl font-bold mb-2">Privacy-First AI Mode</h2>
+              <p className="opacity-90">Your data NEVER trains our models. GDPR/HIPAA compliant with local AI options!</p>
+            </div>
+            <PrivacyAI 
+              data={null}
+              onProcessed={(result) => console.log('AI processed:', result)}
+              onAnonymized={(anonymized) => console.log('Data anonymized:', anonymized)}
+            />
+          </div>
         )}
 
         {/* API Limits - Show on all tabs */}
