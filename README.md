@@ -1,10 +1,10 @@
-# 🚀 API Orchestrator - The Ultimate POSTMAN KILLER
+# 🚀 API Orchestrator v5.0 - The Ultimate API Development Platform
 
-> **The ONLY API platform that combines ALL features from Postman, Thunder Client, Bruno, ReadyAPI, HTTPie, and more - 100% Open Source**
+> **The most comprehensive API platform that surpasses Postman, Thunder Client, Bruno, ReadyAPI, HTTPie, and more - with flexible pricing from FREE to Enterprise**
 
 **Live at: [https://streamapi.dev](https://streamapi.dev)** | **License: Apache 2.0** | **Copyright © 2024 Chinmay Shrivastava**
 
-Stop paying $30/user/month for Postman. API Orchestrator is the world's most complete API platform - combining testing, mocking, documentation, AI intelligence, and enterprise features in one open-source solution.
+The world's most complete API platform - combining testing, mocking, documentation, AI intelligence, and enterprise features. Available with flexible pricing tiers to suit everyone from individual developers to large enterprises.
 
 ## 🏃 Quick Start
 
@@ -26,23 +26,34 @@ https://streamapi.dev
 ![Node](https://img.shields.io/badge/node-20%2B-green)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green)
 
-## 🏆 Why We Beat Every Competitor
+## 💰 Flexible Pricing Tiers
+
+| Plan | Price | API Calls | Projects | Mock Servers | Team Members | Best For |
+|------|-------|-----------|----------|--------------|--------------|----------|
+| **Free** | $0/mo | 1,000/mo | 3 | 1 | 1 | Individual developers |
+| **Starter** | $49/mo | 10,000/mo | 10 | 3 | 3 | Small teams |
+| **Professional** | $199/mo | 100,000/mo | 50 | 10 | 10 | Growing companies |
+| **Enterprise** | $999/mo | Unlimited | Unlimited | Unlimited | Unlimited | Large organizations |
+
+*All tiers include core features. Higher tiers unlock advanced AI, team collaboration, priority support, and enterprise features.*
+
+## 🏆 Feature Comparison with Competitors
 
 | Feature | API Orchestrator | Postman | Thunder Client | Bruno | ReadyAPI |
 |---------|------------------|---------|----------------|-------|----------|
-| **Natural Language Testing** | ✅ FREE | ❌ | ❌ | ❌ | ❌ |
-| **AI-Powered Intelligence** | ✅ FREE | ⚠️ Limited | ❌ | ❌ | ❌ |
-| **One-Click Data Visualization** | ✅ FREE | ⚠️ Basic | ❌ | ❌ | ❌ |
-| **Inline Response Testing** | ✅ FREE | ❌ | ❌ | ❌ | ❌ |
-| **Local-by-Default Variables** | ✅ FREE | ✅ | ❌ | ❌ | ❌ |
-| **Privacy-First AI** | ✅ FREE | ❌ | ❌ | ❌ | ❌ |
-| **Offline Mode** | ✅ FREE | ❌ | ❌ | ✅ | ❌ |
-| **Service Virtualization** | ✅ FREE | ❌ | ❌ | ❌ | ✅ |
-| **VS Code Extension** | ✅ FREE | ✅ | ✅ | ❌ | ❌ |
-| **Unlimited Mock Servers** | ✅ FREE | ⚠️ 3 Free | ❌ | ❌ | ⚠️ Limited |
+| **Natural Language Testing** | ✅ All Tiers | ❌ | ❌ | ❌ | ❌ |
+| **AI-Powered Intelligence** | ✅ Starter+ | ⚠️ Limited | ❌ | ❌ | ❌ |
+| **Data Visualization** | ✅ All Tiers | ⚠️ Basic | ❌ | ❌ | ❌ |
+| **Inline Response Testing** | ✅ All Tiers | ❌ | ❌ | ❌ | ❌ |
+| **Enhanced Variables** | ✅ All Tiers | ✅ | ❌ | ❌ | ❌ |
+| **Privacy-First AI** | ✅ Starter+ | ❌ | ❌ | ❌ | ❌ |
+| **Offline Mode** | ✅ All Tiers | ❌ | ❌ | ✅ | ❌ |
+| **Service Virtualization** | ✅ Pro+ | ❌ | ❌ | ❌ | ✅ |
+| **VS Code Extension** | ✅ All Tiers | ✅ | ✅ | ❌ | ❌ |
+| **Mock Servers** | 1-∞ by tier | 3 Free | ❌ | ❌ | Limited |
 | **Open Source** | ✅ | ❌ | ❌ | ✅ | ❌ |
 | **Self-Hosted** | ✅ | ❌ | N/A | ✅ | ✅ |
-| **Price** | **FREE** | $30/user/mo | $8/user/mo | FREE | $$$$ |
+| **Price Range** | $0-999/mo | $12-49/user | $8/user | FREE | $$$$+ |
 
 ## 🆕 Version 5.0 - ULTIMATE POSTMAN KILLER (September 2025)
 
