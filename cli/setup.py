@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="api-orchestrator",
-    version="1.0.0",
+    version="5.0.0",
     author="API Orchestrator Team",
     author_email="support@api-orchestrator.com",
     description="AI-powered API development platform - Transform any codebase into production-ready APIs",
@@ -35,8 +35,8 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "api-orchestrator=api_orchestrator:cli",
-            "apo=api_orchestrator:cli",  # Short alias
+            "api-orchestrator=api_orchestrator_cli_enhanced:cli",
+            "apo=api_orchestrator_cli_enhanced:cli",  # Short alias
         ],
     },
     project_urls={
