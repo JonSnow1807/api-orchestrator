@@ -61,17 +61,17 @@ class Variable(Base):
     auto_save = Column(Boolean, default=True)
     version = Column(Integer, default=1)
     last_modified = Column(DateTime, default=datetime.utcnow)
-    last_modified_by = Column(String, ForeignKey("users.id"))
+    last_modified_by = Column(Integer, ForeignKey("users.id"))
     
     # Relationships
-    owner_id = Column(String, ForeignKey("users.id"))
-    workspace_id = Column(String, ForeignKey("workspaces.id"))
-    collection_id = Column(String, ForeignKey("collections.id"))
-    environment_id = Column(String, ForeignKey("environments.id"))
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"))
+    collection_id = Column(Integer, ForeignKey("collections.id"))
+    environment_id = Column(Integer, ForeignKey("environments.id"))
     
     # Audit
     created_at = Column(DateTime, default=datetime.utcnow)
-    created_by = Column(String, ForeignKey("users.id"))
+    created_by = Column(Integer, ForeignKey("users.id"))
     change_history = Column(JSON, default=list)  # Track all changes
 
 class VariableHistory(Base):
