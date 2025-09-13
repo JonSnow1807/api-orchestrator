@@ -28,8 +28,14 @@ import {
   CreditCard,
   BookOpen,
   Building2,
-  Brain
+  Brain,
+  Keyboard,
+  HelpCircle
 } from 'lucide-react';
+import Breadcrumbs from './Breadcrumbs';
+import FontSizeControl from './FontSizeControl';
+import OnboardingTour from './OnboardingTour';
+import useKeyboardShortcuts, { KeyboardShortcutsGuide } from '../hooks/useKeyboardShortcuts';
 import TaskManager from './TaskManager';
 import FileUpload from './FileUpload';
 import ExportImport from './ExportImport';
@@ -68,6 +74,14 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('analytics');
   const [currentTaskId, setCurrentTaskId] = useState(null);
   const [currentWorkspace, setCurrentWorkspace] = useState(null);
+  const [showShortcutsGuide, setShowShortcutsGuide] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts({
+    '?': () => setShowShortcutsGuide(true),
+    'escape': () => setShowShortcutsGuide(false)
+  });
 
   useEffect(() => {
     fetchProjects();
@@ -114,8 +128,14 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col">
+      {/* Onboarding Tour */}
+      {showOnboarding && <OnboardingTour onComplete={() => setShowOnboarding(false)} />}
+      
+      {/* Keyboard Shortcuts Guide */}
+      <KeyboardShortcutsGuide isOpen={showShortcutsGuide} onClose={() => setShowShortcutsGuide(false)} />
+      
       {/* Header */}
-      <header className="bg-gray-800/50 backdrop-blur-lg border-b border-gray-700 flex-shrink-0">
+      <header className="bg-gray-800/50 backdrop-blur-lg border-b border-gray-700 flex-shrink-0" role="banner">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-6">
@@ -154,13 +174,29 @@ const Dashboard = () => {
               <Link
                 to="/profile"
                 className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"
+                aria-label="User Profile"
               >
                 <User className="w-5 h-5" />
                 <span>{user?.username || 'Profile'}</span>
               </Link>
+              
+              {/* Font Size Control */}
+              <FontSizeControl />
+              
+              {/* Help Button */}
+              <button
+                onClick={() => setShowShortcutsGuide(true)}
+                className="p-2 text-gray-400 hover:text-white transition"
+                aria-label="Keyboard shortcuts"
+                title="Press ? for keyboard shortcuts"
+              >
+                <Keyboard className="w-5 h-5" />
+              </button>
+              
               <button
                 onClick={handleLogout}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white transition"
+                aria-label="Logout"
               >
                 <LogOut className="w-5 h-5" />
                 <span>Logout</span>
@@ -169,16 +205,19 @@ const Dashboard = () => {
           </div>
         </div>
       </header>
+      
+      {/* Breadcrumbs */}
+      <Breadcrumbs />
 
       {/* Main Content Container with Scroll */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto" role="main">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 relative z-10">
-          <div className="bg-gray-800/50 backdrop-blur rounded-xl p-6 border border-gray-700">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 relative z-10" role="region" aria-label="Dashboard Statistics">
+          <div className="bg-gray-800/50 backdrop-blur rounded-xl p-6 border border-gray-700" role="article" aria-label="Total Projects">
             <div className="flex items-center justify-between mb-4">
-              <FolderOpen className="w-8 h-8 text-purple-500" />
-              <span className="text-2xl font-bold text-white">{stats?.total_projects || 0}</span>
+              <FolderOpen className="w-8 h-8 text-purple-500" aria-hidden="true" />
+              <span className="text-2xl font-bold text-white" aria-label={`${stats?.total_projects || 0} projects`}>{stats?.total_projects || 0}</span>
             </div>
             <h3 className="text-gray-400 text-sm">Total Projects</h3>
           </div>
