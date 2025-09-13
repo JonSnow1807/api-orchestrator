@@ -35,7 +35,8 @@ import {
 import Breadcrumbs from './Breadcrumbs';
 import FontSizeControl from './FontSizeControl';
 import OnboardingTour from './OnboardingTour';
-import useKeyboardShortcuts, { KeyboardShortcutsGuide } from '../hooks/useKeyboardShortcuts';
+import KeyboardShortcutsGuide from './KeyboardShortcutsGuide';
+import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
 import TaskManager from './TaskManager';
 import FileUpload from './FileUpload';
 import ExportImport from './ExportImport';
