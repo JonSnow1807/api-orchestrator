@@ -82,7 +82,7 @@ class VariableHistory(Base):
     variable_id = Column(String, ForeignKey("enhanced_variables.id"))
     old_value = Column(Text)
     new_value = Column(Text)
-    changed_by = Column(String, ForeignKey("users.id"))
+    changed_by = Column(Integer, ForeignKey("users.id"))
     changed_at = Column(DateTime, default=datetime.utcnow)
     change_reason = Column(Text)
 
