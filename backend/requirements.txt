@@ -62,3 +62,7 @@ colorama==0.4.6  # Cross-platform colored output
 markdown==3.5.1  # For DocumentationAgent - markdown processing
 weasyprint==60.2  # For DocumentationAgent - PDF generation
 requests==2.31.0  # For IntegrationAgent - HTTP requests for integrations
+
+# Railway Deployment Force Update
+# Added to force Railway to pick up latest requirements.txt changes
+# This ensures all AI agent dependencies are installed
