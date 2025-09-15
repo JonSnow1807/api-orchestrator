@@ -207,9 +207,17 @@ def cli():
 def test(collection, environment, reporters, bail, timeout, delay, iterations, folder):
     """Run API tests from a collection file"""
 
+    print(f"🔍 Debug: Starting test command")
+    print(f"🔍 Debug: Collection={collection}")
+    print(f"🔍 Debug: Environment={environment}")
+    print(f"🔍 Debug: Reporters={reporters}")
+    print(f"🔍 Debug: Working directory: {os.getcwd()}")
+    print(f"🔍 Debug: Collection exists: {os.path.exists(collection)}")
+
     # Validate collection file exists
     if not os.path.exists(collection):
         click.echo(f"Error: Collection file '{collection}' not found", err=True)
+        print(f"🔍 Debug: Available files: {os.listdir('.')}")
         sys.exit(1)
 
     # Parse reporters
