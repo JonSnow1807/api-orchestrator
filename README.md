@@ -1,7 +1,7 @@
 # 🚀 API Orchestrator v5.0 - The Ultimate Postman Killer
 
 > **Production-Ready API Platform - 100% Tested & Verified ✅**
-> **252 API Endpoints • 70 React Components • 5 AI Agents • 14 Test Suites**
+> **252 API Endpoints • 70 React Components • 12 AI Agents • 14 Test Suites**
 
 **License: Apache 2.0** | **Open Source API Platform**
 
@@ -12,7 +12,7 @@ The world's most comprehensive API platform that **completely replaces Postman**
 ### ✅ **Latest Updates (September 2025) - Postman Killer Features Added**
 - **✅ Backend**: 252 API endpoints with new governance routes
 - **✅ Frontend**: 70+ React components including new workflow builder
-- **✅ AI Agents**: 5 specialized agents tested and operational
+- **✅ AI Agents**: 12 specialized agents tested and operational
 - **✅ Authentication**: JWT system working with database fixes
 - **✅ CLI Tool**: Enhanced Newman-equivalent with governance commands
 - **✅ Visual Workflow Builder**: Postman Flows equivalent with AI blocks
@@ -128,13 +128,20 @@ pm.test("Response time is under 200ms", () => {
 // ... and 65+ more components
 ```
 
-### **AI Agents (5 Specialized Agents)**
+### **AI Agents (12 Specialized Agents)**
 ```python
-1. AIIntelligenceAgent    # Security & performance analysis
-2. DiscoveryAgent        # Auto-discover APIs
-3. MockServerAgent       # Intelligent mocking
-4. CodeGeneratorAgent    # SDK generation
-5. SpecAgent            # OpenAPI handling
+1. AIIntelligenceAgent         # Security & performance analysis
+2. DiscoveryAgent             # Auto-discover APIs in codebases
+3. MockServerAgent            # Intelligent API mocking
+4. CodeGeneratorAgent         # SDK generation for 30+ languages
+5. SpecAgent                  # OpenAPI specification handling
+6. TestAgent                  # Advanced test generation
+7. TestRunnerAgent            # Test execution & reporting
+8. WorkflowOptimizationAgent  # User workflow pattern analysis
+9. PerformanceAgent           # Real-time performance monitoring
+10. DocumentationAgent        # AI-powered documentation generation
+11. SecurityComplianceAgent   # Continuous security scanning
+12. IntegrationAgent          # Tool integrations & automation
 ```
 
 ## 📦 **Installation & Deployment**

@@ -15,6 +15,11 @@ class AgentType(Enum):
     DOCUMENTATION = "documentation"
     VERSION_MANAGER = "version_manager"
     AI_INTELLIGENCE = "ai_intelligence"
+    WORKFLOW_OPTIMIZATION = "workflow_optimization"
+    PERFORMANCE_MONITORING = "performance_monitoring"
+    DOCUMENTATION_GENERATION = "documentation_generation"
+    SECURITY_COMPLIANCE = "security_compliance"
+    INTEGRATION = "integration"
 
 @dataclass
 class APIEndpoint:

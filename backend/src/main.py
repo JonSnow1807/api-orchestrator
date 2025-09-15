@@ -54,6 +54,11 @@ from src.agents.test_agent import TestGeneratorAgent
 
 from src.agents.ai_agent import AIIntelligenceAgent
 from src.agents.mock_server_agent import MockServerAgent
+from src.agents.workflow_optimization_agent import WorkflowOptimizationAgent
+from src.agents.performance_agent import PerformanceAgent
+from src.agents.documentation_agent import DocumentationAgent
+from src.agents.security_compliance_agent import SecurityComplianceAgent
+from src.agents.integration_agent import IntegrationAgent
 from src.database import init_db, SessionLocal, DatabaseManager, get_db, User
 from sqlalchemy.orm import Session
 
@@ -878,6 +883,11 @@ async def initialize_orchestrator():
     orchestrator.register_agent(AgentType.TEST_GENERATOR, TestGeneratorAgent())
     orchestrator.register_agent(AgentType.AI_INTELLIGENCE, AIIntelligenceAgent())
     orchestrator.register_agent(AgentType.MOCK_SERVER, MockServerAgent())
+    orchestrator.register_agent(AgentType.WORKFLOW_OPTIMIZATION, WorkflowOptimizationAgent())
+    orchestrator.register_agent(AgentType.PERFORMANCE_MONITORING, PerformanceAgent())
+    orchestrator.register_agent(AgentType.DOCUMENTATION_GENERATION, DocumentationAgent())
+    orchestrator.register_agent(AgentType.SECURITY_COMPLIANCE, SecurityComplianceAgent())
+    orchestrator.register_agent(AgentType.INTEGRATION, IntegrationAgent())
     
     # Broadcast initialization status
     await manager.broadcast({
