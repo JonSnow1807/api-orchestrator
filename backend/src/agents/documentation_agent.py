@@ -11,8 +11,22 @@ from datetime import datetime
 from dataclasses import dataclass, asdict
 from pathlib import Path
 import yaml
-import markdown
 from jinja2 import Template
+
+# Conditional imports for production resilience
+try:
+    import markdown
+    MARKDOWN_AVAILABLE = True
+except ImportError:
+    MARKDOWN_AVAILABLE = False
+    print("⚠️ Warning: markdown package not available, falling back to basic text processing")
+
+try:
+    import weasyprint
+    PDF_GENERATION_AVAILABLE = True
+except ImportError:
+    PDF_GENERATION_AVAILABLE = False
+    print("⚠️ Warning: weasyprint package not available, PDF generation disabled")
 
 @dataclass
 class APIEndpoint:
@@ -1305,8 +1319,12 @@ If you encounter errors that aren't covered in this documentation:
         for section in sorted(sections, key=lambda s: s.order):
             content += f'<div class="section" id="{section.title.lower().replace(" ", "-")}">\n'
 
-            # Convert Markdown to HTML
-            html_content = markdown.markdown(section.content, extensions=['codehilite', 'tables'])
+            # Convert Markdown to HTML (with fallback)
+            if MARKDOWN_AVAILABLE:
+                html_content = markdown.markdown(section.content, extensions=['codehilite', 'tables'])
+            else:
+                # Fallback: basic HTML conversion
+                html_content = section.content.replace('\n', '<br>\n')
             content += html_content
             content += '</div>\n'
 
