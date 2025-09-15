@@ -9,7 +9,7 @@
       "name": "SQL Injection Test",
       "request": {
         "method": "GET",
-        "url": "https://httpbin.org/get?id=' OR '1'='1",
+        "url": "https://jsonplaceholder.typicode.com/posts?id=' OR '1'='1",
         "header": []
       },
       "test": [
@@ -31,7 +31,7 @@
       "name": "XSS Protection Test",
       "request": {
         "method": "GET",
-        "url": "https://httpbin.org/get?data=<script>alert('xss')</script>",
+        "url": "https://jsonplaceholder.typicode.com/posts?data=<script>alert('xss')</script>",
         "header": []
       },
       "test": [
@@ -52,7 +52,7 @@
       "name": "Security Headers Check",
       "request": {
         "method": "GET",
-        "url": "https://httpbin.org/get",
+        "url": "https://jsonplaceholder.typicode.com/posts/1",
         "header": []
       },
       "test": [
