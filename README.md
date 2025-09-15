@@ -20,8 +20,9 @@ The world's most comprehensive API platform that **completely replaces Postman**
 - **✅ Unit Tests**: 97/97 tests passing (100% success rate)
 - **✅ Code Quality**: All deprecated warnings fixed, modern patterns
 
-![CI/CD Pipeline](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/ci-cd.yml/badge.svg)
+![CI/CD Pipeline](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/ci-cd-simple.yml/badge.svg)
 ![Auto Deploy](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/auto-deploy.yml/badge.svg)
+![Test Suite](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/test-api-orchestrator.yml/badge.svg)
 ![Tests](https://img.shields.io/badge/tests-97%2F97%20passing-brightgreen)
 ![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen)
 ![Version](https://img.shields.io/badge/version-5.0.0-blue)
