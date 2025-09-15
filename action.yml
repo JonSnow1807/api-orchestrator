@@ -1,0 +1,90 @@
+name: 'API Orchestrator Test'
+description: 'Run API tests using API Orchestrator - The AI-powered Postman alternative'
+author: 'API Orchestrator Team'
+branding:
+  icon: 'check-circle'
+  color: 'purple'
+
+inputs:
+  collection:
+    description: 'Path to collection file (JSON/YAML)'
+    required: false
+    default: './api-tests.json'
+  
+  environment:
+    description: 'Environment file or name'
+    required: false
+    default: 'production'
+  
+  api-key:
+    description: 'API Orchestrator API key for cloud features'
+    required: false
+  
+  reporters:
+    description: 'Test reporters (json, junit, html, cli)'
+    required: false
+    default: 'cli,json'
+  
+  bail:
+    description: 'Stop on first test failure'
+    required: false
+    default: 'false'
+  
+  timeout:
+    description: 'Request timeout in ms'
+    required: false
+    default: '30000'
+  
+  delay:
+    description: 'Delay between requests in ms'
+    required: false
+    default: '0'
+  
+  iterations:
+    description: 'Number of iterations to run'
+    required: false
+    default: '1'
+  
+  folder:
+    description: 'Run specific folder from collection'
+    required: false
+  
+  working-directory:
+    description: 'Working directory for tests'
+    required: false
+    default: './'
+  
+  fail-on-error:
+    description: 'Fail the action if tests fail'
+    required: false
+    default: 'true'
+
+outputs:
+  total:
+    description: 'Total number of tests'
+  passed:
+    description: 'Number of passed tests'
+  failed:
+    description: 'Number of failed tests'
+  duration:
+    description: 'Total duration in ms'
+  report-path:
+    description: 'Path to generated report'
+
+runs:
+  using: 'docker'
+  image: 'action.Dockerfile'
+  args:
+    - ${{ inputs.collection }}
+    - --environment
+    - ${{ inputs.environment }}
+    - --reporters
+    - ${{ inputs.reporters }}
+    - --bail
+    - ${{ inputs.bail }}
+    - --timeout
+    - ${{ inputs.timeout }}
+    - --delay
+    - ${{ inputs.delay }}
+    - --iterations
+    - ${{ inputs.iterations }}

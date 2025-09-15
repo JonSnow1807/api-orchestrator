@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker, relationship, Session
 from sqlalchemy.sql import func
 from datetime import datetime
 import os
-from typing import Optional
+from typing import Optional, List
 import json
 
 # Database URL from environment or default to SQLite
@@ -338,7 +338,13 @@ class User(Base):
     # API Keys
     api_key = Column(String(255), unique=True)
     api_key_created_at = Column(DateTime)
-    
+
+    # Enterprise SSO
+    sso_provider = Column(String(100))  # SAML/OIDC provider ID
+    sso_user_id = Column(String(255))   # Provider's user ID
+    sso_attributes = Column(JSON)        # Additional SSO attributes
+    enforce_sso = Column(Boolean, default=False)  # Require SSO login
+
     # Relationships
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
     usage_events = relationship("UsageEvent", back_populates="user", cascade="all, delete-orphan")
@@ -790,7 +796,7 @@ class DatabaseManager:
         return task
     
     @staticmethod
-    def save_ai_analysis(db: Session, project_id: int, analysis_type: str, 
+    def save_ai_analysis(db: Session, project_id: int, analysis_type: str,
                          results: dict, ai_model: str = "claude-3", cost: float = 0.0) -> AIAnalysis:
         """Save AI analysis results"""
         analysis = AIAnalysis(
@@ -804,6 +810,103 @@ class DatabaseManager:
         db.commit()
         db.refresh(analysis)
         return analysis
+
+    @staticmethod
+    def get_user_by_email(db: Session, email: str) -> Optional['User']:
+        """Get user by email"""
+        return db.query(User).filter(User.email == email).first()
+
+    @staticmethod
+    def get_user_by_id(db: Session, user_id: int) -> Optional['User']:
+        """Get user by ID"""
+        return db.query(User).filter(User.id == user_id).first()
+
+    @staticmethod
+    def create_user(db: Session, email: str, password_hash: str, full_name: str = None) -> 'User':
+        """Create a new user"""
+        user = User(
+            email=email,
+            hashed_password=password_hash,
+            full_name=full_name,
+            is_active=True
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
+
+    @staticmethod
+    def update_user(db: Session, user_id: int, **kwargs) -> Optional['User']:
+        """Update user fields"""
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            for key, value in kwargs.items():
+                if hasattr(user, key):
+                    setattr(user, key, value)
+            db.commit()
+            db.refresh(user)
+        return user
+
+    @staticmethod
+    def delete_user(db: Session, user_id: int) -> bool:
+        """Delete a user"""
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            db.delete(user)
+            db.commit()
+            return True
+        return False
+
+    @staticmethod
+    def get_user_projects(db: Session, user_id: int) -> List[Project]:
+        """Get all projects for a user"""
+        return db.query(Project).filter(Project.user_id == user_id).all()
+
+    @staticmethod
+    def get_api_by_id(db: Session, api_id: int) -> Optional[API]:
+        """Get API by ID"""
+        return db.query(API).filter(API.id == api_id).first()
+
+    @staticmethod
+    def get_project_apis(db: Session, project_id: int) -> List[API]:
+        """Get all APIs for a project"""
+        return db.query(API).filter(API.project_id == project_id).all()
+
+    @staticmethod
+    def create_usage_event(db: Session, user_id: int, event_type: str,
+                          metadata: dict = None) -> UsageEvent:
+        """Create a usage event for tracking"""
+        event = UsageEvent(
+            user_id=user_id,
+            event_type=event_type,
+            metadata=metadata or {}
+        )
+        db.add(event)
+        db.commit()
+        db.refresh(event)
+        return event
+
+    @staticmethod
+    def get_user_usage_stats(db: Session, user_id: int, days: int = 30) -> dict:
+        """Get usage statistics for a user"""
+        from datetime import datetime, timedelta
+        cutoff_date = datetime.now() - timedelta(days=days)
+
+        events = db.query(UsageEvent).filter(
+            UsageEvent.user_id == user_id,
+            UsageEvent.timestamp >= cutoff_date
+        ).all()
+
+        stats = {}
+        for event in events:
+            event_type = event.event_type
+            stats[event_type] = stats.get(event_type, 0) + 1
+
+        return {
+            'total_events': len(events),
+            'by_type': stats,
+            'period_days': days
+        }
 
 if __name__ == "__main__":
     # Initialize database when run directly

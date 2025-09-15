@@ -10,7 +10,7 @@ from datetime import datetime
 from jinja2 import Template
 from markdown import markdown
 import re
-from sqlalchemy import Column, Integer, String, JSON, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, JSON, Boolean, DateTime, ForeignKey, Text, func
 from sqlalchemy.orm import Session, relationship
 from pydantic import BaseModel, Field
 
@@ -48,10 +48,159 @@ class PublicDocumentation(Base):
     tutorials = Column(JSON)  # List of tutorial objects
     code_examples = Column(JSON)  # Language-specific examples
     sdks = Column(JSON)  # SDK download links
+
+    # Public hosting
+    subdomain = Column(String(255), unique=True)  # docs.streamapi.dev/subdomain
+    custom_domain = Column(String(255))  # custom.com
+    is_public = Column(Boolean, default=False)
+    analytics_id = Column(String(100))  # Google Analytics ID
+
+    # SEO optimization
+    meta_title = Column(String(255))
+    meta_description = Column(String(500))
+    meta_keywords = Column(Text)
+
+    # Timestamps
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
     # Access control
-    is_public = Column(Boolean, default=True)
+    is_public_orig = Column(Boolean, default=True)
     requires_auth = Column(Boolean, default=False)
+
+class DocumentationGenerator:
+    """Generates public API documentation"""
+
+    def __init__(self):
+        self.template = self._get_html_template()
+
+    def generate_html_docs(self, docs: PublicDocumentation) -> str:
+        """Generate HTML documentation"""
+        return f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{docs.title or 'API Documentation'}</title>
+    <meta name="description" content="{docs.description or 'API Documentation'}">
+    <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; }}
+        .container {{ max-width: 1200px; margin: 0 auto; }}
+        .header {{ text-align: center; margin-bottom: 40px; }}
+        .endpoints {{ margin-top: 40px; }}
+        .endpoint {{ background: #f8f9fa; padding: 20px; margin: 10px 0; border-radius: 8px; }}
+        .method {{ display: inline-block; padding: 4px 8px; border-radius: 4px; color: white; font-weight: bold; }}
+        .get {{ background: #28a745; }}
+        .post {{ background: #007bff; }}
+        .put {{ background: #ffc107; color: #000; }}
+        .delete {{ background: #dc3545; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{docs.title or 'API Documentation'}</h1>
+            <p>{docs.description or 'API Documentation'}</p>
+            <p>Version: {docs.version or '1.0.0'}</p>
+        </div>
+
+        {self._generate_getting_started_section(docs)}
+        {self._generate_auth_section(docs)}
+        {self._generate_endpoints_section(docs)}
+    </div>
+</body>
+</html>
+        """
+
+    def _generate_getting_started_section(self, docs: PublicDocumentation) -> str:
+        """Generate getting started section"""
+        if not docs.getting_started:
+            return ""
+
+        return f"""
+        <div class="section">
+            <h2>Getting Started</h2>
+            <div>{markdown(docs.getting_started) if docs.getting_started else ''}</div>
+        </div>
+        """
+
+    def _generate_auth_section(self, docs: PublicDocumentation) -> str:
+        """Generate authentication section"""
+        if not docs.auth_description:
+            return ""
+
+        return f"""
+        <div class="section">
+            <h2>Authentication</h2>
+            <p>{docs.auth_description}</p>
+        </div>
+        """
+
+    def _generate_endpoints_section(self, docs: PublicDocumentation) -> str:
+        """Generate endpoints section from OpenAPI spec"""
+        if not docs.openapi_spec or 'paths' not in docs.openapi_spec:
+            return ""
+
+        endpoints_html = "<div class='endpoints'><h2>API Endpoints</h2>"
+
+        for path, methods in docs.openapi_spec['paths'].items():
+            for method, spec in methods.items():
+                endpoints_html += f"""
+                <div class="endpoint">
+                    <div>
+                        <span class="method {method.lower()}">{method.upper()}</span>
+                        <strong>{path}</strong>
+                    </div>
+                    <p>{spec.get('summary', 'No description available')}</p>
+                </div>
+                """
+
+        endpoints_html += "</div>"
+        return endpoints_html
+
+    def generate_sitemap(self, docs: PublicDocumentation) -> str:
+        """Generate sitemap.xml"""
+        base_url = f"https://docs.streamapi.dev/{docs.subdomain}"
+        if docs.custom_domain:
+            base_url = f"https://{docs.custom_domain}"
+
+        return f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>{base_url}</loc>
+        <lastmod>{docs.updated_at.isoformat()}</lastmod>
+        <priority>1.0</priority>
+    </url>
+</urlset>"""
+
+    def generate_robots_txt(self, docs: PublicDocumentation) -> str:
+        """Generate robots.txt"""
+        base_url = f"https://docs.streamapi.dev/{docs.subdomain}"
+        if docs.custom_domain:
+            base_url = f"https://{docs.custom_domain}"
+
+        return f"""User-agent: *
+Allow: /
+
+Sitemap: {base_url}/sitemap.xml"""
+
+    def _get_html_template(self) -> str:
+        """Get HTML template"""
+        return """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <meta name="description" content="{{ description }}">
+</head>
+<body>
+    {{ content }}
+</body>
+</html>
+        """
     allowed_domains = Column(JSON, default=[])  # Domain whitelist
     
     # SEO

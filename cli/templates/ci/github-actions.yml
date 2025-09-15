@@ -1,0 +1,172 @@
+# API Orchestrator - GitHub Actions CI/CD Template
+# Auto-generated for enterprise-grade API testing
+name: API Testing with API Orchestrator
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  API_ORCHESTRATOR_URL: ${{ secrets.API_ORCHESTRATOR_URL || 'https://streamapi.dev' }}
+  API_ORCHESTRATOR_KEY: ${{ secrets.API_ORCHESTRATOR_KEY }}
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [development, staging, production]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install API Orchestrator CLI
+      run: |
+        pip install api-orchestrator-cli[ci]
+        api-orchestrator --version
+
+    - name: Validate API Collections
+      run: |
+        # Validate all collection files
+        find . -name "*.postman_collection.json" -o -name "*.aorch.json" | \
+        xargs -I {} api-orchestrator validate {}
+
+    - name: Run API Tests - ${{ matrix.environment }}
+      run: |
+        api-orchestrator run \
+          --collection tests/api-collection.json \
+          --environment envs/${{ matrix.environment }}.json \
+          --reporters cli,junit,allure \
+          --output-dir results/${{ matrix.environment }} \
+          --parallel 3 \
+          --timeout 30000 \
+          --retry 2 \
+          --bail-on-first-failure false
+
+    - name: Security Scan
+      if: matrix.environment == 'production'
+      run: |
+        api-orchestrator security-scan \
+          --collection tests/api-collection.json \
+          --output results/security-report.json \
+          --severity high
+
+    - name: Performance Tests
+      if: matrix.environment == 'staging'
+      run: |
+        api-orchestrator load-test \
+          --collection tests/performance.json \
+          --virtual-users 10 \
+          --duration 60s \
+          --ramp-up 10s \
+          --output results/performance.json
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.environment }}
+        path: results/
+
+    - name: Publish Test Results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: API Tests - ${{ matrix.environment }}
+        path: results/${{ matrix.environment }}/junit.xml
+        reporter: java-junit
+
+    - name: Comment PR with Results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          try {
+            const results = fs.readFileSync('results/${{ matrix.environment }}/summary.json', 'utf8');
+            const data = JSON.parse(results);
+
+            const comment = `## 🚀 API Test Results - ${{ matrix.environment }}
+
+            **Total Tests:** ${data.stats.total}
+            **Passed:** ${data.stats.passed} ✅
+            **Failed:** ${data.stats.failed} ❌
+            **Duration:** ${data.stats.duration}ms
+
+            ${data.stats.failed > 0 ? '⚠️ Some tests failed. Please check the details.' : '🎉 All tests passed!'}
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } catch (error) {
+            console.log('Could not read test results:', error.message);
+          }
+
+    - name: Slack Notification
+      if: failure() && github.ref == 'refs/heads/main'
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        channel: '#api-alerts'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        text: |
+          🚨 API tests failed in ${{ matrix.environment }}!
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref }}
+          Commit: ${{ github.sha }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: api-tests
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - name: Deploy API Changes
+      run: |
+        echo "🚀 Deploying API changes..."
+        # Add your deployment commands here
+
+    - name: Smoke Tests
+      run: |
+        pip install api-orchestrator-cli
+        api-orchestrator run \
+          --collection tests/smoke-tests.json \
+          --environment envs/production.json \
+          --timeout 10000 \
+          --reporter cli
+
+    - name: Update API Documentation
+      run: |
+        api-orchestrator docs generate \
+          --spec openapi.yaml \
+          --output docs/ \
+          --format html \
+          --theme modern
+
+    - name: Success Notification
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        text: |
+          ✅ API deployment successful!
+          Repository: ${{ github.repository }}
+          Tests: All passed
+          Documentation: Updated

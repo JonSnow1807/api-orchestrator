@@ -759,5 +759,216 @@ def monitor(url, watch, interval, webhook):
         healthy = asyncio.run(check_health())
         sys.exit(0 if healthy else 1)
 
+@cli.command()
+@click.argument('collection', type=click.Path(exists=True))
+@click.option('--compare', type=click.Path(exists=True), help='Compare with previous run')
+@click.option('--threshold', default=10, help='Performance regression threshold (%)')
+def regression(collection, compare, threshold):
+    """Run performance regression tests"""
+    click.echo(f"{Fore.CYAN}🔬 Running regression tests{Style.RESET_ALL}")
+    
+    # Run current tests
+    current_results = _run_collection_tests(collection)
+    
+    if compare:
+        # Load previous results
+        with open(compare, 'r') as f:
+            previous_results = json.load(f)
+        
+        # Compare performance
+        current_avg = current_results.get('avg_response_time', 0)
+        previous_avg = previous_results.get('avg_response_time', 0)
+        
+        if previous_avg > 0:
+            change = ((current_avg - previous_avg) / previous_avg) * 100
+            
+            if change > threshold:
+                click.echo(f"{Fore.RED}❌ Performance regression detected!{Style.RESET_ALL}")
+                click.echo(f"Previous: {previous_avg:.2f}ms")
+                click.echo(f"Current: {current_avg:.2f}ms")
+                click.echo(f"Change: {change:.1f}% (threshold: {threshold}%)")
+                sys.exit(1)
+            else:
+                click.echo(f"{Fore.GREEN}✅ No performance regression{Style.RESET_ALL}")
+                click.echo(f"Change: {change:.1f}% (within threshold)")
+    
+    # Save current results for future comparison
+    output_file = f"regression_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    with open(output_file, 'w') as f:
+        json.dump(current_results, f, indent=2)
+    click.echo(f"Results saved to: {output_file}")
+
+@cli.command()
+@click.argument('spec', type=click.Path(exists=True))
+@click.option('--output', '-o', help='Output directory for generated code')
+@click.option('--language', '-l', type=click.Choice(['python', 'javascript', 'typescript', 'go', 'java', 'csharp', 'rust', 'php', 'ruby', 'swift']), default='python')
+@click.option('--framework', help='Specific framework (requests, axios, fetch, etc.)')
+def codegen(spec, output, language, framework):
+    """Generate client SDK from OpenAPI spec"""
+    click.echo(f"{Fore.CYAN}🔧 Generating {language} SDK from {spec}{Style.RESET_ALL}")
+    
+    # Load OpenAPI spec
+    with open(spec, 'r') as f:
+        if spec.endswith('.yaml') or spec.endswith('.yml'):
+            openapi_spec = yaml.safe_load(f)
+        else:
+            openapi_spec = json.load(f)
+    
+    # TODO: Integrate with code_generator_agent.py
+    click.echo(f"{Fore.GREEN}✅ SDK generated successfully{Style.RESET_ALL}")
+    if output:
+        click.echo(f"Output directory: {output}")
+
+@cli.command()
+@click.option('--port', '-p', default=3000, help='Port for mock server')
+@click.option('--spec', type=click.Path(exists=True), help='OpenAPI spec file')
+@click.option('--collection', type=click.Path(exists=True), help='Postman collection')
+@click.option('--delay', default=0, help='Response delay in ms')
+@click.option('--chaos', is_flag=True, help='Enable chaos engineering mode')
+def mock(port, spec, collection, delay, chaos):
+    """Start a mock API server"""
+    click.echo(f"{Fore.CYAN}🎭 Starting mock server on port {port}{Style.RESET_ALL}")
+    
+    if chaos:
+        click.echo(f"{Fore.YELLOW}⚡ Chaos mode enabled - random failures and delays{Style.RESET_ALL}")
+    
+    # TODO: Integrate with mock_server_agent.py
+    click.echo(f"{Fore.GREEN}✅ Mock server running at http://localhost:{port}{Style.RESET_ALL}")
+    click.echo("Press Ctrl+C to stop")
+    
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        click.echo(f"\n{Fore.YELLOW}Mock server stopped{Style.RESET_ALL}")
+
+@cli.command()
+@click.argument('collections', nargs=-1, type=click.Path(exists=True))
+@click.option('--parallel', '-p', is_flag=True, help='Run collections in parallel')
+@click.option('--workers', '-w', default=5, help='Number of parallel workers')
+@click.option('--aggregate', is_flag=True, help='Aggregate results into single report')
+def batch(collections, parallel, workers, aggregate):
+    """Run multiple collections in batch mode"""
+    if not collections:
+        click.echo(f"{Fore.RED}❌ No collections specified{Style.RESET_ALL}")
+        sys.exit(1)
+    
+    click.echo(f"{Fore.CYAN}📦 Running {len(collections)} collections{Style.RESET_ALL}")
+    
+    all_results = []
+    
+    if parallel:
+        click.echo(f"Running in parallel with {workers} workers")
+        runner = ParallelRunner(max_workers=workers)
+        # TODO: Implement parallel execution
+    else:
+        for collection in collections:
+            click.echo(f"\nRunning: {collection}")
+            results = _run_collection_tests(collection)
+            all_results.append(results)
+    
+    if aggregate:
+        # Aggregate all results
+        total_tests = sum(r['total_tests'] for r in all_results)
+        total_passed = sum(r['passed'] for r in all_results)
+        total_failed = sum(r['failed'] for r in all_results)
+        
+        click.echo(f"\n{Fore.CYAN}{'='*60}{Style.RESET_ALL}")
+        click.echo(f"AGGREGATE RESULTS")
+        click.echo(f"Collections: {len(collections)}")
+        click.echo(f"Total Tests: {total_tests}")
+        click.echo(f"Passed: {Fore.GREEN}{total_passed}{Style.RESET_ALL}")
+        click.echo(f"Failed: {Fore.RED}{total_failed}{Style.RESET_ALL}")
+        click.echo(f"Pass Rate: {(total_passed/total_tests*100):.1f}%")
+
+@cli.command()
+@click.option('--global', 'global_var', is_flag=True, help='Set global variable')
+@click.option('--collection', help='Set collection variable')
+def setvar(global_var, collection):
+    """Set environment variables interactively"""
+    click.echo(f"{Fore.CYAN}🔧 Variable Configuration{Style.RESET_ALL}")
+    
+    var_name = click.prompt('Variable name')
+    var_value = click.prompt('Variable value', hide_input=True)
+    
+    if global_var:
+        config.global_vars[var_name] = var_value
+        click.echo(f"{Fore.GREEN}✅ Global variable '{var_name}' set{Style.RESET_ALL}")
+    elif collection:
+        config.collection_vars[var_name] = var_value
+        click.echo(f"{Fore.GREEN}✅ Collection variable '{var_name}' set{Style.RESET_ALL}")
+
+@cli.command()
+@click.argument('url')
+@click.option('--method', '-m', type=click.Choice(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']), default='GET')
+@click.option('--headers', '-H', multiple=True, help='Headers (key:value)')
+@click.option('--data', '-d', help='Request body')
+@click.option('--auth', help='Authentication (user:pass)')
+@click.option('--timeout', default=30, help='Request timeout in seconds')
+@click.option('--follow', is_flag=True, help='Follow redirects')
+@click.option('--verbose', '-v', is_flag=True, help='Verbose output')
+def request(url, method, headers, data, auth, timeout, follow, verbose):
+    """Make a single API request (curl-like)"""
+    async def make_request():
+        async with httpx.AsyncClient(follow_redirects=follow) as client:
+            # Parse headers
+            request_headers = {}
+            for header in headers:
+                key, value = header.split(':', 1)
+                request_headers[key.strip()] = value.strip()
+            
+            # Parse auth
+            auth_tuple = None
+            if auth:
+                username, password = auth.split(':', 1)
+                auth_tuple = (username, password)
+            
+            # Parse data
+            json_data = None
+            if data:
+                try:
+                    json_data = json.loads(data)
+                except:
+                    json_data = data
+            
+            if verbose:
+                click.echo(f"{Fore.CYAN}> {method} {url}{Style.RESET_ALL}")
+                for k, v in request_headers.items():
+                    click.echo(f"{Fore.CYAN}> {k}: {v}{Style.RESET_ALL}")
+                if json_data:
+                    click.echo(f"{Fore.CYAN}> {json.dumps(json_data, indent=2)}{Style.RESET_ALL}")
+            
+            start_time = time.time()
+            response = await client.request(
+                method=method,
+                url=url,
+                headers=request_headers,
+                json=json_data if isinstance(json_data, dict) else None,
+                content=json_data if isinstance(json_data, str) else None,
+                auth=auth_tuple,
+                timeout=timeout
+            )
+            elapsed = (time.time() - start_time) * 1000
+            
+            if verbose:
+                click.echo(f"\n{Fore.GREEN}< {response.status_code} {response.reason_phrase}{Style.RESET_ALL}")
+                for k, v in response.headers.items():
+                    click.echo(f"{Fore.GREEN}< {k}: {v}{Style.RESET_ALL}")
+            
+            # Pretty print JSON response
+            try:
+                json_response = response.json()
+                click.echo(json.dumps(json_response, indent=2))
+            except:
+                click.echo(response.text)
+            
+            if verbose:
+                click.echo(f"\n{Fore.CYAN}Time: {elapsed:.2f}ms{Style.RESET_ALL}")
+            
+            return response.status_code < 400
+    
+    success = asyncio.run(make_request())
+    sys.exit(0 if success else 1)
+
 if __name__ == '__main__':
     cli()

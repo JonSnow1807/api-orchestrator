@@ -31,6 +31,7 @@ import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from src.config import settings
+from src.cache import cache, cached_async, CacheKeys, performance_cached
 
 # Initialize Sentry if enabled
 if settings.SENTRY_ENABLED and settings.SENTRY_DSN:
@@ -214,13 +215,14 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Configure CORS for frontend
+# Configure CORS for frontend - Production Ready
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
+    allow_methods=settings.CORS_ALLOW_METHODS,
+    allow_headers=settings.CORS_ALLOW_HEADERS,
+    expose_headers=["X-Total-Count", "X-Rate-Limit-Remaining", "X-Rate-Limit-Reset"]
 )
 
 # Include webhook routes
@@ -689,6 +691,15 @@ except ImportError as e:
 try:
     from src.routes.v5_features import router as v5_features_router
     app.include_router(v5_features_router)
+
+    # Enterprise SSO Routes
+    from src.routes.enterprise_sso import router as enterprise_sso_router
+    app.include_router(enterprise_sso_router)
+
+    # Public Documentation Hosting Routes
+    from src.routes.public_docs import router as public_docs_router
+    app.include_router(public_docs_router)
+
     print("✅ V5.0 POSTMAN KILLER Features loaded successfully!")
 except ImportError as e:
     print(f"⚠️ V5.0 features routes not available: {e}")
@@ -733,6 +744,31 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         print(f"WebSocket error: {e}")
         manager.disconnect(websocket)
+
+# API Discovery endpoint
+@app.get("/api/discover")
+async def discover_apis(
+    source_path: str = None,
+    github_url: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Discover APIs from source path or GitHub URL"""
+    try:
+        if source_path:
+            # Discover from local path
+            discovery_agent = DiscoveryAgent()
+            results = await discovery_agent.discover_apis(source_path)
+            return {"status": "success", "apis": results, "source": "local"}
+        elif github_url:
+            # Discover from GitHub
+            discovery_agent = DiscoveryAgent()
+            results = await discovery_agent.discover_github_apis(github_url)
+            return {"status": "success", "apis": results, "source": "github"}
+        else:
+            return {"status": "error", "message": "Please provide source_path or github_url"}
+    except Exception as e:
+        logger.error(f"Discovery error: {e}")
+        return {"status": "error", "message": str(e)}
 
 # Main orchestration endpoint (protected)
 @app.post("/api/orchestrate", response_model=OrchestrationResponse)
@@ -2205,6 +2241,7 @@ async def create_project(
     )
 
 @app.get("/api/projects", response_model=ProjectListResponse)
+@performance_cached(ttl=300)  # Cache for 5 minutes
 async def list_projects(
     page: int = 1,
     per_page: int = 10,
@@ -2212,7 +2249,17 @@ async def list_projects(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """List all projects for the current user"""
+    """List all projects for the current user with caching"""
+    # Check cache first
+    cache_key = cache._generate_key(
+        CacheKeys.user_specific(current_user.id, "projects"),
+        page, per_page, search
+    )
+
+    cached_result = cache.get(cache_key)
+    if cached_result:
+        return cached_result
+
     result = ProjectManager.list_projects(db, current_user.id, page, per_page, search)
     
     projects = [

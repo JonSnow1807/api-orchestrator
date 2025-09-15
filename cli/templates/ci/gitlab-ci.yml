@@ -1,0 +1,219 @@
+# API Orchestrator - GitLab CI/CD Template
+# Enterprise-grade API testing pipeline
+
+stages:
+  - validate
+  - test
+  - security
+  - performance
+  - deploy
+  - smoke-test
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  API_ORCHESTRATOR_URL: "${API_ORCHESTRATOR_URL:-https://streamapi.dev}"
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+before_script:
+  - python3 -m venv venv
+  - source venv/bin/activate
+  - pip install api-orchestrator-cli[ci]
+
+# Validate API Collections
+validate:
+  stage: validate
+  script:
+    - echo "🔍 Validating API collections..."
+    - find . -name "*.postman_collection.json" -o -name "*.aorch.json" |
+      xargs -I {} api-orchestrator validate {}
+    - api-orchestrator lint --collection tests/api-collection.json
+  artifacts:
+    reports:
+      junit: validation-results.xml
+
+# API Testing - Multiple Environments
+.test_template: &test_template
+  stage: test
+  script:
+    - echo "🧪 Running API tests for $ENVIRONMENT..."
+    - api-orchestrator run
+        --collection tests/api-collection.json
+        --environment envs/$ENVIRONMENT.json
+        --reporters cli,junit,allure,json
+        --output-dir results/$ENVIRONMENT
+        --parallel 3
+        --timeout 30000
+        --retry 2
+  artifacts:
+    reports:
+      junit: results/$ENVIRONMENT/junit.xml
+    paths:
+      - results/
+    expire_in: 1 week
+  coverage: '/Coverage: \d+\.\d+%/'
+
+test:development:
+  <<: *test_template
+  variables:
+    ENVIRONMENT: "development"
+
+test:staging:
+  <<: *test_template
+  variables:
+    ENVIRONMENT: "staging"
+  only:
+    - main
+    - develop
+
+test:production:
+  <<: *test_template
+  variables:
+    ENVIRONMENT: "production"
+  only:
+    - main
+  when: manual
+  allow_failure: false
+
+# Security Testing
+security_scan:
+  stage: security
+  script:
+    - echo "🛡️ Running security scans..."
+    - api-orchestrator security-scan
+        --collection tests/api-collection.json
+        --output results/security-report.json
+        --severity medium
+        --format sarif
+  artifacts:
+    reports:
+      sast: results/security-report.sarif
+    paths:
+      - results/security-report.json
+  only:
+    - main
+    - develop
+
+# Performance Testing
+performance_test:
+  stage: performance
+  script:
+    - echo "⚡ Running performance tests..."
+    - api-orchestrator load-test
+        --collection tests/performance.json
+        --virtual-users 20
+        --duration 120s
+        --ramp-up 30s
+        --output results/performance.json
+        --threshold response_time:2000,success_rate:95
+  artifacts:
+    paths:
+      - results/performance.json
+      - results/performance.html
+  only:
+    - main
+
+# Deploy
+deploy:
+  stage: deploy
+  script:
+    - echo "🚀 Deploying API changes..."
+    # Add your deployment commands here
+    - kubectl apply -f k8s/ || echo "No k8s deployment"
+  environment:
+    name: production
+    url: $API_BASE_URL
+  only:
+    - main
+  needs:
+    - test:production
+
+# Smoke Tests Post-Deploy
+smoke_tests:
+  stage: smoke-test
+  script:
+    - echo "💨 Running smoke tests..."
+    - api-orchestrator run
+        --collection tests/smoke-tests.json
+        --environment envs/production.json
+        --timeout 10000
+        --reporter cli,slack
+        --fail-fast
+  only:
+    - main
+  needs:
+    - deploy
+
+# Generate and Deploy Documentation
+docs_deploy:
+  stage: deploy
+  script:
+    - echo "📚 Generating API documentation..."
+    - api-orchestrator docs generate
+        --spec openapi.yaml
+        --output public/docs/
+        --format html
+        --theme modern
+    - echo "Deploying to GitLab Pages..."
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
+  needs:
+    - test:production
+
+# Scheduled Health Checks
+health_check:
+  stage: test
+  script:
+    - echo "❤️ Running health checks..."
+    - api-orchestrator health-check
+        --url $API_BASE_URL
+        --collection tests/health.json
+        --notify-slack $SLACK_WEBHOOK
+  only:
+    - schedules
+  retry: 2
+
+# Container Registry Push
+docker_build:
+  stage: deploy
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - echo "🐳 Building and pushing Docker image..."
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+    - main
+
+# Notification Jobs
+slack_notification:
+  stage: .post
+  script:
+    - echo "📢 Sending notifications..."
+    - |
+      curl -X POST -H 'Content-type: application/json' \
+      --data "{\"text\":\"✅ Pipeline completed for $CI_PROJECT_NAME\n$CI_PIPELINE_URL\"}" \
+      $SLACK_WEBHOOK
+  only:
+    - main
+  when: on_success
+
+slack_failure:
+  stage: .post
+  script:
+    - |
+      curl -X POST -H 'Content-type: application/json' \
+      --data "{\"text\":\"❌ Pipeline failed for $CI_PROJECT_NAME\n$CI_PIPELINE_URL\"}" \
+      $SLACK_WEBHOOK
+  only:
+    - main
+  when: on_failure

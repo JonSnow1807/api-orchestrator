@@ -139,7 +139,8 @@ class APIOrchestrator:
         """Get orchestrator status"""
         return {
             "is_running": self.is_running,
-            "registered_agents": list(self.agents.keys()),
-            "discovered_apis": len(self.api_registry),
+            "registered_agents": list(self.agents.keys()) if self.agents else [],
+            "discovered_apis": len(self.api_registry) if self.api_registry else 0,
+            "agents": [str(agent_type) for agent_type in self.agents.keys()] if self.agents else [],
             "queued_messages": len(self.message_queue)
         }

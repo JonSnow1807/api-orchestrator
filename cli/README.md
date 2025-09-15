@@ -1,190 +1,68 @@
-# API Orchestrator CLI 🚀
+# 🚀 API Orchestrator CLI
 
-Transform any codebase into production-ready APIs with a single command.
+> The ultimate API testing CLI - Newman killer with AI-powered features
 
-## Installation
+[![PyPI version](https://badge.fury.io/py/api-orchestrator-cli.svg)](https://badge.fury.io/py/api-orchestrator-cli)
+[![Python Support](https://img.shields.io/pypi/pyversions/api-orchestrator-cli.svg)](https://pypi.org/project/api-orchestrator-cli/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/JonSnow1807/api-orchestrator/blob/main/LICENSE)
 
-```bash
-# Via pip (coming soon to PyPI)
-pip install api-orchestrator
+## 🌟 Features
 
-# From source
-git clone https://github.com/JonSnow1807/api-orchestrator
-cd api-orchestrator/cli
-pip install -e .
-```
+### **Newman Parity + AI Intelligence**
+- ✅ **100% Newman Compatible** - Drop-in replacement for existing pipelines
+- 🤖 **AI-Powered Analysis** - Security scanning and performance optimization
+- 🚀 **Enterprise Ready** - SSO, RBAC, audit logging
+- 🎯 **Multi-Protocol** - REST, GraphQL, WebSocket, gRPC, SOAP
+- 📊 **Advanced Reporting** - HTML, JUnit, Allure, SARIF formats
+- 🔄 **CI/CD Integration** - GitHub Actions, GitLab CI, Jenkins templates
 
-## Quick Start
-
-```bash
-# 1. Login to API Orchestrator
-api-orchestrator login
-
-# 2. Scan your codebase
-api-orchestrator scan ./my-project
-
-# 3. Your API artifacts are ready!
-ls ./api-output/
-```
-
-## Features
-
-### 🔍 Intelligent Code Scanning
-```bash
-# Auto-detect framework
-api-orchestrator scan .
-
-# Specify framework
-api-orchestrator scan ./backend --framework fastapi
-
-# Custom output directory
-api-orchestrator scan . -o ./my-api-docs
-```
-
-### 🎭 Instant Mock Servers
-```bash
-# Start mock server from OpenAPI spec
-api-orchestrator mock ./openapi.json --port 3000
-```
-
-### 👀 Watch Mode
-```bash
-# Auto-regenerate on file changes
-api-orchestrator scan . --watch
-```
-
-### 📊 Task Management
-```bash
-# List all tasks
-api-orchestrator list
-
-# Check task status
-api-orchestrator status <task-id>
-```
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `login` | Authenticate with API Orchestrator |
-| `logout` | Logout from current session |
-| `scan` | Scan codebase and generate API artifacts |
-| `mock` | Start mock server from OpenAPI spec |
-| `list` | List all orchestration tasks |
-| `status` | Check task status |
-| `init` | Initialize project configuration |
-| `config` | Show current configuration |
-
-## Configuration
-
-Create `.api-orchestrator.yml` in your project:
-
-```yaml
-version: "1.0"
-framework: auto  # auto/fastapi/flask/express/django
-output: ./api-output
-options:
-  include_tests: true
-  include_mock: true
-  include_ai_analysis: true
-ignore:
-  - node_modules
-  - .git
-  - __pycache__
-  - "*.pyc"
-  - .env
-```
-
-## Examples
-
-### Basic Usage
-```bash
-# Scan current directory
-api-orchestrator scan .
-
-# Scan with specific framework
-api-orchestrator scan ./src --framework express
-
-# Generate only OpenAPI spec (no tests/mocks)
-api-orchestrator scan . --no-tests --no-mock
-```
-
-### CI/CD Integration
-```yaml
-# GitHub Actions
-- name: Generate API Docs
-  run: |
-    pip install api-orchestrator
-    api-orchestrator login --email ${{ secrets.APO_EMAIL }} --password ${{ secrets.APO_PASSWORD }}
-    api-orchestrator scan . -o ./docs/api
-```
-
-### Pre-commit Hook
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: local
-    hooks:
-      - id: api-orchestrator
-        name: Update API Documentation
-        entry: api-orchestrator scan . -o ./docs/api
-        language: system
-        pass_filenames: false
-```
-
-## Output Structure
-
-```
-api-output/
-├── openapi.json       # OpenAPI 3.0 specification
-├── openapi.yaml       # YAML version
-├── tests/             # Generated test suites
-│   ├── unit/         # Unit tests
-│   └── integration/  # Integration tests
-├── mock_server/       # Mock server implementation
-└── analysis.json      # AI-powered insights
-```
-
-## VS Code Integration
-
-Install the API Orchestrator VS Code extension for seamless IDE integration:
+## 📦 Installation
 
 ```bash
-code --install-extension api-orchestrator.vscode-api-orchestrator
+# Install via pip
+pip install api-orchestrator-cli
+
+# Verify installation
+api-orchestrator --version
 ```
 
-## Environment Variables
+## 🚀 Quick Start
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `APO_API_URL` | API server URL | `http://localhost:8000` |
-| `APO_TOKEN` | Authentication token | - |
-| `APO_CONFIG_DIR` | Config directory | `~/.api-orchestrator` |
-
-## Troubleshooting
-
-### Connection Issues
 ```bash
-# Check API server
-api-orchestrator config
+# Basic collection run (Newman compatible)
+api-orchestrator run collection.json
 
-# Use custom API URL
-api-orchestrator login --api-url https://api.your-server.com
+# With environment and reporting
+api-orchestrator run \
+  --collection tests/api-tests.json \
+  --environment envs/staging.json \
+  --reporters cli,junit,html \
+  --output-dir results/
 ```
 
-### Authentication
+## 🏢 CI/CD Integration
+
+### **GitHub Actions**
 ```bash
-# Re-authenticate
-api-orchestrator logout
-api-orchestrator login
+api-orchestrator init ci github
 ```
 
-## License
+### **GitLab CI**
+```bash
+api-orchestrator init ci gitlab
+```
 
-MIT License - see [LICENSE](LICENSE) file for details.
+### **Jenkins**
+```bash
+api-orchestrator init ci jenkins
+```
 
-## Support
+## 🆘 Support
 
-- 📧 Email: support@api-orchestrator.com
-- 💬 Discord: [Join our community](https://discord.gg/api-orchestrator)
-- 🐛 Issues: [GitHub Issues](https://github.com/JonSnow1807/api-orchestrator/issues)
+- **Documentation**: [docs.streamapi.dev](https://docs.streamapi.dev)
+- **Issues**: [GitHub Issues](https://github.com/JonSnow1807/api-orchestrator/issues)
+- **Email**: support@streamapi.dev
+
+## 📄 License
+
+Apache 2.0 - see [LICENSE](LICENSE) file for details.

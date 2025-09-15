@@ -33,11 +33,34 @@ class Settings:
     ANTHROPIC_API_KEY: Optional[str] = os.getenv("ANTHROPIC_API_KEY")
     OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
     
-    # CORS Settings
+    # CORS Settings - Production Ready
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
-        "http://localhost:5173", 
-        "http://localhost:5174"
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "https://streamapi.dev",
+        "https://app.streamapi.dev",
+        "https://api.streamapi.dev",
+        "https://*.streamapi.dev"
+    ]
+
+    # Additional CORS configuration
+    CORS_ALLOW_CREDENTIALS: bool = True
+    CORS_ALLOW_METHODS: List[str] = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"]
+    CORS_ALLOW_HEADERS: List[str] = [
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "User-Agent",
+        "DNT",
+        "Cache-Control",
+        "X-Mx-ReqToken",
+        "Keep-Alive",
+        "X-Requested-With",
+        "If-Modified-Since",
+        "X-API-Key",
+        "X-Workspace-ID"
     ]
     
     # Rate Limiting
@@ -59,12 +82,14 @@ class Settings:
     MOCK_SERVER_PORT_RANGE_START: int = int(os.getenv("MOCK_SERVER_PORT_RANGE_START", "9000"))
     MOCK_SERVER_PORT_RANGE_END: int = int(os.getenv("MOCK_SERVER_PORT_RANGE_END", "9100"))
     
-    # Password Policy
-    PASSWORD_MIN_LENGTH: int = 8
+    # Password Policy - Enterprise Grade
+    PASSWORD_MIN_LENGTH: int = 12
     PASSWORD_REQUIRE_UPPERCASE: bool = True
     PASSWORD_REQUIRE_LOWERCASE: bool = True
     PASSWORD_REQUIRE_NUMBERS: bool = True
-    PASSWORD_REQUIRE_SPECIAL: bool = False
+    PASSWORD_REQUIRE_SPECIAL: bool = True
+    PASSWORD_MAX_CONSECUTIVE_CHARS: int = 3
+    PASSWORD_BLACKLIST_COMMON: bool = True
     
     # Email Settings for Password Reset
     SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
@@ -122,22 +147,44 @@ class Settings:
     
     @classmethod
     def validate_password(cls, password: str) -> tuple[bool, str]:
-        """Validate password against policy"""
+        """Validate password against enterprise-grade policy"""
         if len(password) < cls.PASSWORD_MIN_LENGTH:
             return False, f"Password must be at least {cls.PASSWORD_MIN_LENGTH} characters long"
-        
+
         if cls.PASSWORD_REQUIRE_UPPERCASE and not any(c.isupper() for c in password):
             return False, "Password must contain at least one uppercase letter"
-        
+
         if cls.PASSWORD_REQUIRE_LOWERCASE and not any(c.islower() for c in password):
             return False, "Password must contain at least one lowercase letter"
-        
+
         if cls.PASSWORD_REQUIRE_NUMBERS and not any(c.isdigit() for c in password):
             return False, "Password must contain at least one number"
-        
+
         if cls.PASSWORD_REQUIRE_SPECIAL and not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
             return False, "Password must contain at least one special character"
-        
-        return True, "Password is valid"
+
+        # Check for consecutive characters
+        if cls.PASSWORD_MAX_CONSECUTIVE_CHARS:
+            for i in range(len(password) - cls.PASSWORD_MAX_CONSECUTIVE_CHARS + 1):
+                substring = password[i:i + cls.PASSWORD_MAX_CONSECUTIVE_CHARS]
+                # Check for consecutive identical chars
+                if len(set(substring)) == 1:
+                    return False, f"Password cannot contain {cls.PASSWORD_MAX_CONSECUTIVE_CHARS} consecutive identical characters"
+                # Check for sequential chars (abc, 123, etc.)
+                if all(ord(substring[j]) == ord(substring[j-1]) + 1 for j in range(1, len(substring))):
+                    return False, f"Password cannot contain {cls.PASSWORD_MAX_CONSECUTIVE_CHARS} consecutive sequential characters"
+
+        # Check against common passwords
+        if cls.PASSWORD_BLACKLIST_COMMON:
+            common_passwords = {
+                'password123', '123456789', 'qwertyuiop', 'password1',
+                'admin123456', 'welcome123', 'letmein123', '1q2w3e4r5t',
+                'password!@#', 'adminadmin', 'rootpassword', 'testtest123',
+                'changeme123', 'defaultpass', 'newpassword', 'temppass123'
+            }
+            if password.lower() in common_passwords:
+                return False, "Password is too common and easily guessable"
+
+        return True, "Password meets all security requirements"
 
 settings = Settings()
