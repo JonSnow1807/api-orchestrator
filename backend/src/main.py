@@ -704,6 +704,14 @@ try:
 except ImportError as e:
     print(f"⚠️ V5.0 features routes not available: {e}")
 
+# API Governance Engine - The Postman Killer Feature
+try:
+    from src.routes.governance import router as governance_router
+    app.include_router(governance_router)
+    print("✅ API Governance Engine loaded - Postman Spectral killer!")
+except ImportError as e:
+    print(f"⚠️ API Governance Engine not available: {e}")
+
 # WebSocket endpoint for real-time updates
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

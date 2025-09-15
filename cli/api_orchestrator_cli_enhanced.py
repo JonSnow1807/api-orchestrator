@@ -899,6 +899,220 @@ def setvar(global_var, collection):
         click.echo(f"{Fore.GREEN}✅ Collection variable '{var_name}' set{Style.RESET_ALL}")
 
 @cli.command()
+@click.argument('spec', type=click.Path(exists=True))
+@click.option('--ruleset', '-r', default='enterprise-standards', help='Governance ruleset to apply')
+@click.option('--output', '-o', type=click.Path(), help='Output file for report')
+@click.option('--format', '-f', type=click.Choice(['json', 'html', 'cli']), default='cli', help='Report format')
+@click.option('--fail-on-error', is_flag=True, help='Exit with non-zero code on governance failures')
+def governance(spec, ruleset, output, format, fail_on_error):
+    """
+    Validate API specification against governance rules
+
+    Examples:
+        # Validate OpenAPI spec with default enterprise rules
+        api-orchestrator governance openapi.yaml
+
+        # Use specific ruleset and save JSON report
+        api-orchestrator governance openapi.yaml -r security-focused -o report.json -f json
+
+        # Fail CI/CD on governance violations
+        api-orchestrator governance openapi.yaml --fail-on-error
+    """
+
+    async def run_governance_check():
+        # Load specification
+        with open(spec, 'r') as f:
+            if spec.endswith('.yaml') or spec.endswith('.yml'):
+                spec_content = f.read()
+                spec_format = 'yaml'
+            else:
+                spec_content = f.read()
+                spec_format = 'json'
+
+        # Make API request to governance endpoint
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{config.api_url}/api/governance/validate",
+                    json={
+                        "spec_content": spec_content,
+                        "format": spec_format,
+                        "ruleset": ruleset
+                    },
+                    headers={"Authorization": f"Bearer {config.api_key}"} if config.api_key else {},
+                    timeout=30
+                )
+
+                if response.status_code == 200:
+                    result = response.json()
+
+                    if format == 'cli':
+                        _display_governance_results(result)
+                    elif format == 'json':
+                        if output:
+                            with open(output, 'w') as f:
+                                json.dump(result, f, indent=2)
+                            click.echo(f"📄 Governance report saved to: {output}")
+                        else:
+                            click.echo(json.dumps(result, indent=2))
+                    elif format == 'html':
+                        if output:
+                            _generate_governance_html_report(result, output)
+                            click.echo(f"📄 HTML governance report saved to: {output}")
+                        else:
+                            click.echo("HTML format requires --output option")
+                            return 1
+
+                    # Exit code based on governance results
+                    if fail_on_error and (result['errors'] > 0):
+                        return 1
+
+                    return 0
+                else:
+                    error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {"detail": response.text}
+                    click.echo(f"{Fore.RED}❌ Governance validation failed: {error_data.get('detail', 'Unknown error')}{Style.RESET_ALL}")
+                    return 1
+
+            except Exception as e:
+                click.echo(f"{Fore.RED}❌ Error during governance validation: {str(e)}{Style.RESET_ALL}")
+                return 1
+
+    exit_code = asyncio.run(run_governance_check())
+    sys.exit(exit_code)
+
+def _display_governance_results(result):
+    """Display governance results in CLI format"""
+
+    # Header
+    click.echo(f"{Fore.CYAN}{'='*60}{Style.RESET_ALL}")
+    click.echo(f"{Fore.CYAN}🛡️ API GOVERNANCE REPORT{Style.RESET_ALL}")
+    click.echo(f"{Fore.CYAN}{'='*60}{Style.RESET_ALL}\n")
+
+    # Score and summary
+    score = result['score']
+    if score >= 80:
+        score_color = Fore.GREEN
+        score_icon = "✅"
+    elif score >= 60:
+        score_color = Fore.YELLOW
+        score_icon = "⚠️"
+    else:
+        score_color = Fore.RED
+        score_icon = "❌"
+
+    click.echo(f"{score_icon} {score_color}Governance Score: {score:.1f}%{Style.RESET_ALL}")
+    click.echo(f"📋 Specification: {result['spec_name']}")
+    click.echo(f"🔧 Rules Applied: {result['total_rules']}")
+    click.echo(f"📊 Compliance Level: {result['summary'].get('compliance_level', 'Unknown')}")
+
+    # Violations summary
+    errors = result['errors']
+    warnings = result['warnings']
+    info = result['info']
+
+    click.echo(f"\n{Fore.CYAN}📈 VIOLATIONS SUMMARY{Style.RESET_ALL}")
+    click.echo(f"❌ Errors: {Fore.RED}{errors}{Style.RESET_ALL}")
+    click.echo(f"⚠️ Warnings: {Fore.YELLOW}{warnings}{Style.RESET_ALL}")
+    click.echo(f"ℹ️ Info: {Fore.BLUE}{info}{Style.RESET_ALL}")
+
+    # Detailed violations
+    if result['violations']:
+        click.echo(f"\n{Fore.CYAN}🚨 DETAILED VIOLATIONS{Style.RESET_ALL}")
+        for violation in result['violations'][:10]:  # Show first 10
+            severity_icon = {"error": "❌", "warning": "⚠️", "info": "ℹ️"}.get(violation['severity'], "•")
+            severity_color = {"error": Fore.RED, "warning": Fore.YELLOW, "info": Fore.BLUE}.get(violation['severity'], "")
+
+            click.echo(f"\n{severity_icon} {severity_color}{violation['rule_name']}{Style.RESET_ALL}")
+            click.echo(f"   {violation['message']}")
+            click.echo(f"   Path: {violation['path']}")
+            click.echo(f"   Category: {violation['category']}")
+
+            if violation.get('suggested_fix'):
+                click.echo(f"   💡 Fix: {violation['suggested_fix']}")
+
+        if len(result['violations']) > 10:
+            click.echo(f"\n... and {len(result['violations']) - 10} more violations")
+    else:
+        click.echo(f"\n{Fore.GREEN}🎉 No violations found! Your API specification is fully compliant.{Style.RESET_ALL}")
+
+    # Categories breakdown
+    if result['summary'].get('categories'):
+        click.echo(f"\n{Fore.CYAN}📂 VIOLATIONS BY CATEGORY{Style.RESET_ALL}")
+        for category, count in result['summary']['categories'].items():
+            click.echo(f"   {category}: {count}")
+
+def _generate_governance_html_report(result, output_file):
+    """Generate HTML governance report"""
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>API Governance Report</title>
+    <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 40px; }}
+        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 10px; text-align: center; }}
+        .score {{ font-size: 2em; margin: 20px 0; }}
+        .violations {{ margin: 20px 0; }}
+        .violation {{ padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid; }}
+        .error {{ background: #fef2f2; border-color: #ef4444; }}
+        .warning {{ background: #fffbeb; border-color: #f59e0b; }}
+        .info {{ background: #eff6ff; border-color: #3b82f6; }}
+        .summary {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }}
+        .metric {{ background: #f8fafc; padding: 20px; border-radius: 8px; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛡️ API Governance Report</h1>
+        <div class="score">Score: {result['score']:.1f}%</div>
+        <p>Generated by API Orchestrator CLI - The Postman Killer</p>
+    </div>
+
+    <div class="summary">
+        <div class="metric">
+            <h3>Errors</h3>
+            <div style="font-size: 2em; color: #ef4444;">{result['errors']}</div>
+        </div>
+        <div class="metric">
+            <h3>Warnings</h3>
+            <div style="font-size: 2em; color: #f59e0b;">{result['warnings']}</div>
+        </div>
+        <div class="metric">
+            <h3>Info</h3>
+            <div style="font-size: 2em; color: #3b82f6;">{result['info']}</div>
+        </div>
+        <div class="metric">
+            <h3>Rules</h3>
+            <div style="font-size: 2em; color: #6b7280;">{result['total_rules']}</div>
+        </div>
+    </div>
+
+    <div class="violations">
+        <h2>Violations</h2>
+"""
+
+    for violation in result['violations']:
+        css_class = violation['severity']
+        html_content += f"""
+        <div class="violation {css_class}">
+            <h4>{violation['rule_name']}</h4>
+            <p>{violation['message']}</p>
+            <small>Path: {violation['path']} | Category: {violation['category']}</small>
+            {f'<br><strong>💡 Fix:</strong> {violation["suggested_fix"]}' if violation.get('suggested_fix') else ''}
+        </div>
+"""
+
+    html_content += f"""
+    </div>
+    <footer style="text-align: center; margin-top: 40px; color: #6b7280;">
+        Report generated at {result['timestamp']}
+    </footer>
+</body>
+</html>"""
+
+    with open(output_file, 'w') as f:
+        f.write(html_content)
+
+@cli.command()
 @click.argument('url')
 @click.option('--method', '-m', type=click.Choice(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']), default='GET')
 @click.option('--headers', '-H', multiple=True, help='Headers (key:value)')

@@ -64,6 +64,8 @@ import OfflineMode from './OfflineMode';
 import ServiceVirtualization from './ServiceVirtualization';
 import PrivacyAI from './PrivacyAI';
 import EnhancedVariableManager from './EnhancedVariableManager';
+import VisualWorkflowBuilder from './VisualWorkflowBuilder';
+import ApiGovernance from './ApiGovernance';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -446,10 +448,34 @@ const Dashboard = () => {
             
             {/* V5.0 POSTMAN KILLER Features */}
             <button
+              onClick={() => setActiveTab('visual-workflows')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition relative ${
+                activeTab === 'visual-workflows'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Zap className="w-4 h-4" />
+              <span>Visual Workflows</span>
+              <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-red-500 text-white text-xs rounded-full animate-pulse">NEW</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('api-governance')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition relative ${
+                activeTab === 'api-governance'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Shield className="w-4 h-4" />
+              <span>API Governance</span>
+              <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-red-500 text-white text-xs rounded-full animate-pulse">NEW</span>
+            </button>
+            <button
               onClick={() => setActiveTab('enhanced-variables')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition relative ${
-                activeTab === 'enhanced-variables' 
-                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white' 
+                activeTab === 'enhanced-variables'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
@@ -716,9 +742,31 @@ const Dashboard = () => {
         )}
 
         {/* V5.0 POSTMAN KILLER Features Content */}
-        
-        {/* Enhanced Variable Manager */}
-        {activeTab === 'enhanced-variables' && (
+
+        {/* Visual Workflow Builder */}
+        {activeTab === 'visual-workflows' && (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white">
+              <h2 className="text-2xl font-bold mb-2">Visual Workflow Builder</h2>
+              <p className="opacity-90">Drag & drop interface with 7 block types including AI blocks. Better than Postman Flows!</p>
+            </div>
+            <VisualWorkflowBuilder />
+          </div>
+        )}
+
+        {/* API Governance Engine */}
+        {activeTab === 'api-governance' && (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white">
+              <h2 className="text-2xl font-bold mb-2">API Governance Engine</h2>
+              <p className="opacity-90">8 built-in rules, 4 predefined rulesets. Complete compliance scoring system!</p>
+            </div>
+            <ApiGovernance />
+          </div>
+        )}
+
+        {/* Enhanced Variable Manager */
+        } {activeTab === 'enhanced-variables' && (
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white">
               <h2 className="text-2xl font-bold mb-2">Enhanced Variable Management</h2>
@@ -815,9 +863,9 @@ const Dashboard = () => {
             />
           </div>
         </div>
-        </div>
       </div>
-      
+      </div>
+
       {/* AI Assistant - Floating, non-intrusive */}
       <AIAssistant />
     </div>
