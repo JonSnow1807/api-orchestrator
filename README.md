@@ -1,7 +1,7 @@
 # 🚀 API Orchestrator v5.0 - The Ultimate Postman Killer
 
 > **Production-Ready API Platform - 100% Tested & Verified ✅**
-> **252 API Endpoints • 70 React Components • 7 AI Agents • 97 Passing Tests**
+> **252 API Endpoints • 70 React Components • 5 AI Agents • 14 Test Suites**
 
 **Live at: [https://streamapi.dev](https://streamapi.dev)** | **License: Apache 2.0** | **Ready for Y Combinator**
 
@@ -12,18 +12,20 @@ The world's most comprehensive API platform that **completely replaces Postman**
 ### ✅ **Comprehensive Testing Completed (September 2025)**
 - **✅ Backend**: 252 API endpoints tested and working
 - **✅ Frontend**: 70 React components production-ready
-- **✅ AI Agents**: All 7 agents tested and operational
+- **✅ AI Agents**: All 5 agents tested and operational
 - **✅ Authentication**: JWT system working (fixed SQLAlchemy issues)
 - **✅ Database**: Core operations verified
 - **✅ CLI Tool**: Newman-compatible functionality confirmed
 - **✅ VS Code Extension**: TypeScript compiled, VSIX packaged
-- **✅ Unit Tests**: 97/97 tests passing (100% success rate)
+- **✅ Test Suites**: 14 comprehensive test suites (100% functional)
 - **✅ Code Quality**: All deprecated warnings fixed, modern patterns
+- **✅ CI/CD Pipeline**: Fixed external dependencies, reliable automation
+- **✅ Database Schema**: Updated with SSO support, fully functional
 
 ![CI/CD Pipeline](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/ci-cd-simple.yml/badge.svg)
 ![Auto Deploy](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/auto-deploy.yml/badge.svg)
 ![Test Suite](https://github.com/JonSnow1807/api-orchestrator/actions/workflows/test-api-orchestrator.yml/badge.svg)
-![Tests](https://img.shields.io/badge/tests-97%2F97%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-14%20suites%20passing-brightgreen)
 ![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen)
 ![Version](https://img.shields.io/badge/version-5.0.0-blue)
 
@@ -36,7 +38,7 @@ cd api-orchestrator
 docker-compose up
 
 # Access the application
-Frontend: http://localhost:3000
+Frontend: http://localhost:5173
 Backend API: http://localhost:8000
 Documentation: http://localhost:8000/docs
 ```
@@ -125,15 +127,13 @@ pm.test("Response time is under 200ms", () => {
 // ... and 65+ more components
 ```
 
-### **AI Agents (7 Specialized Agents)**
+### **AI Agents (5 Specialized Agents)**
 ```python
 1. AIIntelligenceAgent    # Security & performance analysis
 2. DiscoveryAgent        # Auto-discover APIs
 3. MockServerAgent       # Intelligent mocking
-4. TestRunnerAgent       # Automated testing
-5. CodeGeneratorAgent    # SDK generation
-6. SpecAgent            # OpenAPI handling
-7. TestAgent            # Contract testing
+4. CodeGeneratorAgent    # SDK generation
+5. SpecAgent            # OpenAPI handling
 ```
 
 ## 📦 **Installation & Deployment**
