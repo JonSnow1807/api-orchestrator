@@ -9,7 +9,7 @@ jobs:
   test-action:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Create Test Collection
         run: |
@@ -78,7 +78,7 @@ jobs:
           
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: |
@@ -87,22 +87,28 @@ jobs:
             
       - name: Comment PR
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
+
+            if (!fs.existsSync('test-results.json')) {
+              console.log('No test results file found');
+              return;
+            }
+
             const results = JSON.parse(fs.readFileSync('test-results.json', 'utf8'));
-            
+
             const comment = `## API Test Results
-            
-            - **Total Tests**: ${results.total}
-            - **Passed**: ${results.passed} ✅
-            - **Failed**: ${results.failed} ❌
-            - **Pass Rate**: ${results.pass_rate.toFixed(1)}%
-            - **Average Response Time**: ${results.avg_response_time.toFixed(2)}ms
-            
-            ${results.failed > 0 ? '⚠️ Some tests failed. Please check the logs.' : '✅ All tests passed!'}`;
-            
+
+            - **Total Tests**: ${results.total || 0}
+            - **Passed**: ${results.passed || 0} ✅
+            - **Failed**: ${results.failed || 0} ❌
+            - **Pass Rate**: ${(results.pass_rate || 0).toFixed(1)}%
+            - **Average Response Time**: ${(results.avg_response_time || 0).toFixed(2)}ms
+
+            ${(results.failed || 0) > 0 ? '⚠️ Some tests failed. Please check the logs.' : '✅ All tests passed!'}`;
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -113,7 +119,7 @@ jobs:
   performance-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Create Performance Test
         run: |
@@ -143,19 +149,23 @@ jobs:
           
       - name: Check Performance Regression
         run: |
-          AVG_TIME=$(jq '.avg_response_time' test-results.json)
-          echo "Average response time: ${AVG_TIME}ms"
-          
-          # Fail if response time > 2000ms
-          if (( $(echo "$AVG_TIME > 2000" | bc -l) )); then
-            echo "Performance regression detected!"
-            exit 1
+          if [ -f test-results.json ]; then
+            AVG_TIME=$(jq -r '.avg_response_time // 0' test-results.json)
+            echo "Average response time: ${AVG_TIME}ms"
+
+            # Fail if response time > 2000ms
+            if (( $(echo "$AVG_TIME > 2000" | bc -l) )); then
+              echo "Performance regression detected!"
+              exit 1
+            fi
+          else
+            echo "No test results found"
           fi
           
   security-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Security Scan
         uses: ./

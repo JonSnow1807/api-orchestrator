@@ -7,20 +7,20 @@ RUN apt-get update && apt-get install -y \
     curl \
     jq \
     git \
+    bc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy CLI and dependencies
-COPY cli/api_orchestrator_cli_enhanced.py /app/
-COPY cli/requirements.txt /app/cli-requirements.txt
-COPY backend/requirements.txt /app/backend-requirements.txt
+# Create requirements file with essential packages
+RUN echo "requests>=2.28.0\nclick>=8.0.0\npyyaml>=6.0\nrequests-toolbelt>=0.10.0\njsonschema>=4.0.0\ncolorama>=0.4.0" > /app/requirements.txt
 
 # Install Python dependencies
-RUN pip install --no-cache-dir \
-    -r cli-requirements.txt \
-    -r backend-requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend source for API client
-COPY backend/src /app/src
+# Copy CLI script
+COPY cli/api_orchestrator_cli_enhanced.py /app/
+
+# Create a minimal backend structure for imports (if needed)
+RUN mkdir -p /app/src && echo "# Minimal backend for CLI" > /app/src/__init__.py
 
 # Create entrypoint script
 RUN echo '#!/bin/bash\n\

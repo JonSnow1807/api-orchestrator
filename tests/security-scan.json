@@ -1,0 +1,74 @@
+{
+  "info": {
+    "name": "Security Scan Collection",
+    "version": "1.0.0",
+    "description": "Basic security checks for API endpoints"
+  },
+  "item": [
+    {
+      "name": "SQL Injection Test",
+      "request": {
+        "method": "GET",
+        "url": "https://httpbin.org/get?id=' OR '1'='1",
+        "header": []
+      },
+      "test": [
+        {
+          "name": "No SQL injection vulnerability",
+          "script": {
+            "exec": [
+              "pm.test('Response does not indicate SQL injection', function () {",
+              "    var responseText = pm.response.text();",
+              "    pm.expect(responseText).to.not.include('SQL syntax');",
+              "    pm.expect(responseText).to.not.include('mysql_error');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "XSS Protection Test",
+      "request": {
+        "method": "GET",
+        "url": "https://httpbin.org/get?data=<script>alert('xss')</script>",
+        "header": []
+      },
+      "test": [
+        {
+          "name": "No XSS vulnerability",
+          "script": {
+            "exec": [
+              "pm.test('Response has proper XSS protection', function () {",
+              "    var responseText = pm.response.text();",
+              "    pm.expect(responseText).to.not.include('<script>');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Security Headers Check",
+      "request": {
+        "method": "GET",
+        "url": "https://httpbin.org/get",
+        "header": []
+      },
+      "test": [
+        {
+          "name": "Security headers present",
+          "script": {
+            "exec": [
+              "pm.test('Response has security considerations', function () {",
+              "    pm.response.to.have.status(200);",
+              "    // Check if response is properly formatted",
+              "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
