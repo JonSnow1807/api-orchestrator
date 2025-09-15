@@ -34,8 +34,16 @@ CMD="python /app/github_action_runner.py test ${COLLECTION}"
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
-        --environment|--reporters|--bail|--timeout|--delay|--iterations|--folder)
+        --environment|--reporters|--timeout|--delay|--iterations|--folder)
             CMD="${CMD} $1 $2"
+            shift
+            shift
+            ;;
+        --bail)
+            # Handle boolean flag - only add if value is "true"
+            if [[ "$2" == "true" ]]; then
+                CMD="${CMD} $1"
+            fi
             shift
             shift
             ;;
