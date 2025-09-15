@@ -4,7 +4,7 @@ Supports HTTP, HTTPS, and SOCKS proxy configurations with authentication
 """
 
 from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 import httpx
 import re
@@ -39,15 +39,17 @@ class ProxyConfig(BaseModel):
     verify_ssl: bool = True
     timeout: int = 30
     
-    @validator('port')
+    @field_validator('port')
+    @classmethod
     def validate_port(cls, v):
         if v < 1 or v > 65535:
             raise ValueError("Port must be between 1 and 65535")
         return v
     
-    @validator('host')
-    def validate_host(cls, v, values):
-        if values.get('enabled') and not v and not values.get('use_system_proxy'):
+    @field_validator('host')
+    @classmethod
+    def validate_host(cls, v, info):
+        if info.data.get('enabled') and not v and not info.data.get('use_system_proxy'):
             raise ValueError("Host is required when proxy is enabled")
         return v
     

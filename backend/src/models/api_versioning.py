@@ -52,9 +52,9 @@ class APIVersion(Base):
     # Relationships
     api_spec = relationship("APISpec", backref="versions")
     creator = relationship("User", foreign_keys=[created_by])
-    comparisons = relationship("APIVersionComparison", 
+    comparisons = relationship("APIVersionComparison",
                               foreign_keys="APIVersionComparison.version_a_id",
-                              backref="version_a_comparisons")
+                              back_populates="version_a")
     changelog_entries = relationship("APIChangelog", back_populates="version", cascade="all, delete-orphan")
     
     def compare_with(self, other_version: 'APIVersion') -> Dict[str, Any]:

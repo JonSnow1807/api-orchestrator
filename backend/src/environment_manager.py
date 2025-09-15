@@ -56,7 +56,7 @@ class EnvironmentVariable(Base):
     
     # Relationships
     user = relationship("User", backref="environment_variables")
-    children = relationship("EnvironmentVariable", backref=relationship("EnvironmentVariable", remote_side=[id]))
+    children = relationship("EnvironmentVariable", remote_side=[id], backref="parent")
 
 class EnvironmentManager:
     """Manages environment variables with inheritance and dynamic resolution"""

@@ -237,7 +237,7 @@ class TestAuthManager:
         user_data = UserCreate(
             email="test@example.com",
             username="testuser",
-            password="weak"
+            password="weakpass"  # 8 chars to pass min_length validation
         )
         
         with pytest.raises(HTTPException) as exc_info:

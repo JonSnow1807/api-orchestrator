@@ -10,7 +10,7 @@ from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 import os
 
 from src.database import get_db, User, DatabaseManager
@@ -35,7 +35,8 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=6, max_length=100)
     full_name: Optional[str] = Field(None, max_length=255)
     
-    @validator('username')
+    @field_validator('username')
+    @classmethod
     def validate_username(cls, v):
         if not v or not v.strip():
             raise ValueError('Username cannot be empty')
