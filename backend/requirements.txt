@@ -57,3 +57,8 @@ semver==3.0.2  # Semantic versioning
 # CLI enhancements
 tabulate==0.9.0  # Table formatting
 colorama==0.4.6  # Cross-platform colored output
+
+# New AI Agents Dependencies
+markdown==3.5.1  # For DocumentationAgent - markdown processing
+weasyprint==60.2  # For DocumentationAgent - PDF generation
+requests==2.31.0  # For IntegrationAgent - HTTP requests for integrations
