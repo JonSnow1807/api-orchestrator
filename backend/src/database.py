@@ -75,6 +75,10 @@ def get_db():
     finally:
         db.close()
 
+def get_session():
+    """Get database session (synchronous version)"""
+    return SessionLocal()
+
 # Models
 
 class Project(Base):

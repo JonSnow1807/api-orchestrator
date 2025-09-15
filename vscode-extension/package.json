@@ -29,11 +29,7 @@
     "color": "#7C3AED",
     "theme": "dark"
   },
-  "publisher": "api-orchestrator",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/JonSnow1807/api-orchestrator"
-  },
+  "publisher": "ChinmayShrivastava",
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
