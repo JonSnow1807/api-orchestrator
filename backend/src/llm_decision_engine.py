@@ -771,6 +771,18 @@ Ensure your response includes specific, actionable recommendations that a securi
                     context.endpoint_data,
                     context.business_context
                 )
+            elif action.tool_name == "devops_security_scan":
+                result = await executor.execute_devops_security_scan(
+                    action.parameters,
+                    context.endpoint_data,
+                    context.business_context
+                )
+            elif action.tool_name == "database_security_audit":
+                result = await executor.execute_database_security_audit(
+                    action.parameters,
+                    context.endpoint_data,
+                    context.business_context
+                )
             else:
                 # Fallback for unknown tools
                 result = {

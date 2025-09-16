@@ -21,6 +21,13 @@ try:
 except ImportError:
     REFACTORING_AVAILABLE = False
 
+# Import specialized agents
+try:
+    from specialized_agents import DevOpsSecurityAgent, DatabaseSecurityAgent
+    SPECIALIZED_AGENTS_AVAILABLE = True
+except ImportError:
+    SPECIALIZED_AGENTS_AVAILABLE = False
+
 # Import RAG system
 try:
     from rag_knowledge_system import RAGKnowledgeSystem
@@ -352,6 +359,139 @@ class SecurityToolExecutor:
                 "action_id": f"smart_refactoring_{int(datetime.now().timestamp())}",
                 "status": "failed",
                 "tool": "smart_refactoring",
+                "execution_time": execution_time,
+                "error": str(e)
+            }
+
+    async def execute_devops_security_scan(self, parameters: Dict[str, Any], endpoint_data: Dict[str, Any], business_context: str = "") -> Dict[str, Any]:
+        """Execute DevOps security analysis using specialized agent"""
+
+        print("🔧 Executing DevOps Security Scan...")
+
+        start_time = datetime.now()
+
+        if not SPECIALIZED_AGENTS_AVAILABLE:
+            return {
+                "action_id": f"devops_security_{int(datetime.now().timestamp())}",
+                "status": "unavailable",
+                "tool": "devops_security",
+                "error": "Specialized agents not available",
+                "execution_time": 0
+            }
+
+        try:
+            # Create DevOps security agent
+            devops_agent = DevOpsSecurityAgent()
+            devops_agent.safe_mode = self.safe_mode
+
+            # Execute CI/CD security scan
+            ci_cd_result = await devops_agent.execute_ci_cd_security_scan(parameters, endpoint_data)
+
+            # Execute container security analysis
+            container_result = await devops_agent.execute_container_security_analysis(parameters, endpoint_data)
+
+            # Execute Infrastructure as Code audit
+            iac_result = await devops_agent.execute_infrastructure_as_code_audit(parameters, endpoint_data)
+
+            execution_time = (datetime.now() - start_time).total_seconds()
+
+            result = {
+                "action_id": f"devops_security_{int(datetime.now().timestamp())}",
+                "status": "completed",
+                "tool": "devops_security",
+                "execution_time": execution_time,
+                "ci_cd_findings": ci_cd_result.get("findings_count", 0),
+                "container_findings": container_result.get("container_findings", 0),
+                "iac_findings": iac_result.get("iac_findings", 0),
+                "total_findings": (ci_cd_result.get("findings_count", 0) +
+                                 container_result.get("container_findings", 0) +
+                                 iac_result.get("iac_findings", 0)),
+                "security_scores": {
+                    "ci_cd": ci_cd_result.get("security_score", {}),
+                    "container": container_result.get("container_security_score", {}),
+                    "infrastructure": iac_result.get("infrastructure_security_score", {})
+                },
+                "detailed_results": {
+                    "ci_cd": ci_cd_result,
+                    "container": container_result,
+                    "infrastructure": iac_result
+                }
+            }
+
+            print(f"   ✅ DevOps security scan completed: {result['total_findings']} findings")
+            return result
+
+        except Exception as e:
+            execution_time = (datetime.now() - start_time).total_seconds()
+            return {
+                "action_id": f"devops_security_{int(datetime.now().timestamp())}",
+                "status": "failed",
+                "tool": "devops_security",
+                "execution_time": execution_time,
+                "error": str(e)
+            }
+
+    async def execute_database_security_audit(self, parameters: Dict[str, Any], endpoint_data: Dict[str, Any], business_context: str = "") -> Dict[str, Any]:
+        """Execute database security audit using specialized agent"""
+
+        print("🗄️ Executing Database Security Audit...")
+
+        start_time = datetime.now()
+
+        if not SPECIALIZED_AGENTS_AVAILABLE:
+            return {
+                "action_id": f"database_security_{int(datetime.now().timestamp())}",
+                "status": "unavailable",
+                "tool": "database_security",
+                "error": "Specialized agents not available",
+                "execution_time": 0
+            }
+
+        try:
+            # Create Database security agent
+            db_agent = DatabaseSecurityAgent()
+            db_agent.safe_mode = self.safe_mode
+
+            # Execute SQL injection analysis
+            sql_injection_result = await db_agent.execute_sql_injection_analysis(parameters, endpoint_data)
+
+            # Execute database configuration audit
+            db_config_result = await db_agent.execute_database_configuration_audit(parameters, endpoint_data)
+
+            execution_time = (datetime.now() - start_time).total_seconds()
+
+            result = {
+                "action_id": f"database_security_{int(datetime.now().timestamp())}",
+                "status": "completed",
+                "tool": "database_security",
+                "execution_time": execution_time,
+                "sql_vulnerabilities": sql_injection_result.get("sql_vulnerabilities", 0),
+                "orm_issues": sql_injection_result.get("orm_issues", 0),
+                "config_issues": sql_injection_result.get("config_issues", 0),
+                "connection_issues": db_config_result.get("connection_issues", 0),
+                "total_findings": (sql_injection_result.get("sql_vulnerabilities", 0) +
+                                 sql_injection_result.get("orm_issues", 0) +
+                                 sql_injection_result.get("config_issues", 0) +
+                                 db_config_result.get("connection_issues", 0)),
+                "risk_assessment": sql_injection_result.get("risk_score", {}),
+                "security_posture": db_config_result.get("security_posture", {}),
+                "remediation_plan": sql_injection_result.get("remediation_plan", []),
+                "compliance_gaps": db_config_result.get("compliance_gaps", []),
+                "detailed_results": {
+                    "sql_injection": sql_injection_result,
+                    "configuration": db_config_result
+                }
+            }
+
+            print(f"   ✅ Database security audit completed: {result['total_findings']} findings")
+            return result
+
+        except Exception as e:
+            execution_time = (datetime.now() - start_time).total_seconds()
+            return {
+                "action_id": f"database_security_{int(datetime.now().timestamp())}",
+                "status": "failed",
+                "tool": "database_security",
                 "execution_time": execution_time,
                 "error": str(e)
             }
