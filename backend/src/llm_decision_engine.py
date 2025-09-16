@@ -117,18 +117,24 @@ class LLMDecisionEngine:
 
     def _initialize_clients(self, api_key: str = None):
         """Initialize LLM clients based on availability and preference"""
-        if self.provider == "anthropic" and ANTHROPIC_AVAILABLE:
-            self.anthropic_client = anthropic.AsyncAnthropic(
-                api_key=api_key or os.getenv("ANTHROPIC_API_KEY")
-            )
-            self.logger.info("Initialized Anthropic client for LLM decisions")
-        elif self.provider == "openai" and OPENAI_AVAILABLE:
-            self.openai_client = openai.AsyncOpenAI(
-                api_key=api_key or os.getenv("OPENAI_API_KEY")
-            )
-            self.logger.info("Initialized OpenAI client for LLM decisions")
+        # For beta testing, use fallback mode if no API keys
+        anthropic_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+        openai_key = api_key or os.getenv("OPENAI_API_KEY")
+
+        if self.provider == "anthropic" and ANTHROPIC_AVAILABLE and anthropic_key:
+            try:
+                self.anthropic_client = anthropic.AsyncAnthropic(api_key=anthropic_key)
+                self.logger.info("Initialized Anthropic client for LLM decisions")
+            except Exception as e:
+                self.logger.warning(f"Failed to initialize Anthropic client: {e}")
+        elif self.provider == "openai" and OPENAI_AVAILABLE and openai_key:
+            try:
+                self.openai_client = openai.AsyncOpenAI(api_key=openai_key)
+                self.logger.info("Initialized OpenAI client for LLM decisions")
+            except Exception as e:
+                self.logger.warning(f"Failed to initialize OpenAI client: {e}")
         else:
-            self.logger.warning("No LLM client available - decisions will be limited")
+            self.logger.warning("No LLM client available - using fallback mode for testing")
 
     async def create_decision_plan(
         self,
@@ -162,53 +168,75 @@ class LLMDecisionEngine:
             return self._create_fallback_plan(context, decision_type)
 
     def _build_decision_prompt(self, context: DecisionContext, decision_type: DecisionType) -> str:
-        """Build the prompt for LLM decision making"""
+        """Build enhanced prompts based on beta testing findings and enterprise requirements"""
+
+        # Extract industry and compliance context
+        business_context = context.business_context or ""
+        industry_type = self._identify_industry(context)
+        compliance_requirements = self._identify_compliance_requirements(context)
 
         base_prompt = f"""
-You are an expert AI agent specializing in API security and optimization. Your task is to create an intelligent action plan for {decision_type.value}.
+You are an expert AI security agent specializing in enterprise API security assessment and remediation. Your expertise covers OWASP API Security Top 10 (2023), industry-specific compliance requirements, and modern threat patterns.
 
-CONTEXT:
-- Endpoint: {context.endpoint_data.get('path', 'Unknown')} [{context.endpoint_data.get('method', 'Unknown')}]
-- Project Type: {context.business_context or 'General API'}
-- Available Tools: {', '.join(context.available_tools)}
-- Current Findings: {json.dumps(context.current_findings, indent=2)}
+ENDPOINT ANALYSIS:
+- Endpoint: {context.endpoint_data.get('method', 'UNKNOWN')} {context.endpoint_data.get('path', 'unknown')}
+- Industry Context: {industry_type}
+- Business Context: {business_context}
+- Compliance Requirements: {', '.join(compliance_requirements) if compliance_requirements else 'General security standards'}
 
-DECISION GUIDELINES:
-1. SAFETY FIRST: Always assess risk before recommending actions
-2. USER PREFERENCES: Consider the user's past preferences and approval patterns
-3. BUSINESS IMPACT: Prioritize actions with high business value
-4. EFFICIENCY: Choose the most effective combination of tools
-5. DEPENDENCIES: Order actions logically with proper dependencies
+SECURITY ASSESSMENT FRAMEWORK:
+Focus on OWASP API Security Top 10 (2023):
+1. API1:2023 - Broken Object Level Authorization (BOLA/IDOR)
+2. API2:2023 - Broken Authentication
+3. API3:2023 - Broken Object Property Level Authorization
+4. API4:2023 - Unrestricted Resource Consumption
+5. API5:2023 - Broken Function Level Authorization
+6. API6:2023 - Unrestricted Access to Sensitive Business Flows
+7. API7:2023 - Server Side Request Forgery (SSRF)
+8. API8:2023 - Security Misconfiguration
+9. API9:2023 - Improper Inventory Management
+10. API10:2023 - Unsafe Consumption of APIs
 
-RISK LEVELS:
-- SAFE: No risk of breaking functionality (e.g., generating reports)
-- LOW: Minimal risk with easy rollback (e.g., adding security headers)
-- MEDIUM: Some risk, needs user approval (e.g., changing authentication)
-- HIGH: High risk, explicit confirmation needed (e.g., modifying core logic)
-- CRITICAL: Never auto-execute (e.g., deleting data)
+INDUSTRY-SPECIFIC CONSIDERATIONS:
+{self._get_industry_specific_guidance(industry_type)}
 
-YOUR TASK:
-Create a comprehensive action plan that:
-1. Analyzes the current state
-2. Identifies specific actions to take
-3. Estimates risk and duration for each action
-4. Provides clear reasoning for each decision
-5. Orders actions optimally
+COMPLIANCE REQUIREMENTS:
+{self._get_compliance_guidance(compliance_requirements)}
+
+AVAILABLE SECURITY TOOLS:
+{self._format_tool_descriptions(context.available_tools)}
+
+RISK ASSESSMENT FRAMEWORK:
+- SAFE: Read-only analysis, reporting, no system changes
+- LOW: Configuration changes with easy rollback (headers, logging)
+- MEDIUM: Authentication/authorization changes requiring approval
+- HIGH: Core business logic modifications
+- CRITICAL: Data deletion, irreversible changes (NEVER auto-execute)
+
+ENTERPRISE DECISION CRITERIA:
+1. Regulatory Compliance: Ensure actions align with {', '.join(compliance_requirements) if compliance_requirements else 'security standards'}
+2. Business Continuity: Minimize disruption to operations
+3. Risk Mitigation: Address highest-severity vulnerabilities first
+4. Audit Trail: Ensure all actions are logged and traceable
+5. Rollback Capability: Prefer reversible changes
+
+YOUR TASK: Create a {decision_type.value} that demonstrates enterprise-grade security analysis with specific focus on {industry_type} industry requirements.
 
 RESPONSE FORMAT (JSON):
 {{
-  "reasoning": "Your overall strategy and reasoning",
+  "reasoning": "Comprehensive analysis strategy focusing on [specific vulnerabilities expected for this endpoint type]",
   "confidence_score": 0.85,
-  "risk_assessment": "LOW",
-  "requires_approval": false,
+  "risk_assessment": "[SAFE|LOW|MEDIUM|HIGH]",
+  "requires_approval": [true|false],
+  "compliance_notes": "Specific compliance considerations for {', '.join(compliance_requirements) if compliance_requirements else 'general standards'}",
   "actions": [
     {{
       "action_id": "action_1",
-      "tool_name": "security_vulnerability_scan",
-      "parameters": {{"target": "authentication", "depth": "comprehensive"}},
+      "tool_name": "[specific tool from available tools]",
+      "parameters": {{"focus": "[OWASP category]", "compliance": "{compliance_requirements[0] if compliance_requirements else 'general'}"}},
       "risk_level": "SAFE",
-      "reasoning": "Initial security scan to identify vulnerabilities",
-      "expected_outcome": "List of security issues found",
+      "reasoning": "Addresses OWASP API[X]:2023 - [specific vulnerability pattern]",
+      "expected_outcome": "Detection of [specific vulnerability types] with compliance validation",
       "estimated_duration": 30,
       "depends_on": null
     }}
@@ -218,17 +246,123 @@ RESPONSE FORMAT (JSON):
 
         # Add specific context based on decision type
         if decision_type == DecisionType.ANALYSIS_PLAN:
-            base_prompt += """
-SPECIFIC FOCUS: Create a comprehensive analysis plan to understand the current state before taking any actions.
-Priority: Discovery and assessment over immediate fixes.
+            base_prompt += f"""
+ANALYSIS FOCUS: Create comprehensive security assessment plan
+- Start with highest-risk OWASP categories for {industry_type}
+- Include compliance validation steps
+- Prioritize discovery over remediation
+- Plan for thorough documentation and reporting
 """
         elif decision_type == DecisionType.ACTION_SEQUENCE:
-            base_prompt += """
-SPECIFIC FOCUS: Create an action sequence to fix identified issues automatically.
-Priority: Safe automated fixes that improve security/performance.
+            base_prompt += f"""
+REMEDIATION FOCUS: Create secure, compliant action sequence
+- Address critical vulnerabilities first
+- Ensure {', '.join(compliance_requirements) if compliance_requirements else 'security'} compliance
+- Plan rollback strategies for each action
+- Prioritize safe, automated fixes with user approval for risky changes
 """
 
         return base_prompt
+
+    def _identify_industry(self, context: DecisionContext) -> str:
+        """Identify industry type from context"""
+        business_context = (context.business_context or "").lower()
+        endpoint_path = str(context.endpoint_data.get('path', '') or '').lower()
+
+        if any(term in business_context + endpoint_path for term in ['payment', 'fintech', 'financial', 'banking', 'card', 'transaction']):
+            return "Financial Services"
+        elif any(term in business_context + endpoint_path for term in ['patient', 'healthcare', 'medical', 'health', 'hipaa']):
+            return "Healthcare"
+        elif any(term in business_context + endpoint_path for term in ['ecommerce', 'commerce', 'retail', 'shopping', 'order']):
+            return "E-commerce"
+        elif any(term in business_context + endpoint_path for term in ['iot', 'device', 'sensor', 'machine']):
+            return "IoT/Manufacturing"
+        else:
+            return "General Enterprise"
+
+    def _identify_compliance_requirements(self, context: DecisionContext) -> List[str]:
+        """Identify compliance requirements from context"""
+        business_context = (context.business_context or "").lower()
+        endpoint_path = str(context.endpoint_data.get('path', '') or '').lower()
+        requirements = []
+
+        if any(term in business_context + endpoint_path for term in ['payment', 'fintech', 'financial', 'banking', 'card']):
+            requirements.extend(['PCI-DSS', 'SOX'])
+        if any(term in business_context + endpoint_path for term in ['patient', 'healthcare', 'medical', 'health']):
+            requirements.append('HIPAA')
+        if any(term in business_context + endpoint_path for term in ['eu', 'european', 'gdpr', 'privacy']):
+            requirements.append('GDPR')
+        if any(term in business_context + endpoint_path for term in ['soc2', 'enterprise', 'audit']):
+            requirements.append('SOC2')
+
+        return list(set(requirements)) or ['OWASP']
+
+    def _get_industry_specific_guidance(self, industry: str) -> str:
+        """Get industry-specific security guidance"""
+        guidance = {
+            "Financial Services": """
+- Payment data protection (PCI-DSS compliance)
+- Strong authentication and authorization
+- Transaction integrity and non-repudiation
+- Fraud detection and prevention
+- Regulatory reporting and audit trails
+- API rate limiting for financial operations
+""",
+            "Healthcare": """
+- Protected Health Information (PHI) security
+- Patient data access controls (minimum necessary principle)
+- HIPAA compliance for data handling
+- Audit logging for all patient data access
+- Encryption at rest and in transit
+- Business Associate Agreement considerations
+""",
+            "E-commerce": """
+- Customer PII protection
+- Payment processing security
+- GDPR compliance for EU customers
+- Session management and authentication
+- Shopping cart and order security
+- Customer data breach notification requirements
+""",
+            "IoT/Manufacturing": """
+- Device authentication and authorization
+- Command injection prevention
+- Firmware security validation
+- Network segmentation considerations
+- Device lifecycle management
+- Industrial control system protection
+""",
+            "General Enterprise": """
+- Standard OWASP API security practices
+- Authentication and authorization
+- Input validation and output encoding
+- Security logging and monitoring
+- Configuration management
+- Dependency security management
+"""
+        }
+        return guidance.get(industry, guidance["General Enterprise"])
+
+    def _get_compliance_guidance(self, requirements: List[str]) -> str:
+        """Get compliance-specific guidance"""
+        guidance_map = {
+            "PCI-DSS": "Protect cardholder data, implement strong access controls, maintain secure networks",
+            "HIPAA": "Protect PHI, implement minimum necessary access, maintain audit logs",
+            "GDPR": "Implement privacy by design, ensure data minimization, enable user rights",
+            "SOX": "Ensure financial reporting accuracy, implement internal controls",
+            "SOC2": "Implement security, availability, processing integrity controls",
+            "OWASP": "Follow OWASP API Security Top 10 guidelines"
+        }
+
+        return "; ".join([guidance_map.get(req, f"Follow {req} requirements") for req in requirements])
+
+    def _format_tool_descriptions(self, available_tools: List[str]) -> str:
+        """Format tool descriptions for the prompt"""
+        descriptions = []
+        for tool in available_tools:
+            if tool in self.tool_registry:
+                descriptions.append(f"- {tool}: {self.tool_registry[tool]}")
+        return "\n".join(descriptions)
 
     async def _call_llm(self, prompt: str) -> str:
         """Call the appropriate LLM with the prompt"""
@@ -302,28 +436,99 @@ Priority: Safe automated fixes that improve security/performance.
             return self._create_fallback_plan(context, decision_type)
 
     def _create_fallback_plan(self, context: DecisionContext, decision_type: DecisionType) -> DecisionPlan:
-        """Create a basic fallback plan when LLM is unavailable"""
-        basic_actions = [
-            AgentAction(
-                action_id="fallback_1",
-                tool_name="security_vulnerability_scan",
-                parameters={"target": "general", "depth": "basic"},
+        """Create an intelligent fallback plan when LLM is unavailable"""
+        endpoint = context.endpoint_data
+        business_context = context.business_context or ""
+
+        # Create smarter fallback actions based on endpoint analysis
+        actions = []
+
+        # Always start with basic security scan
+        actions.append(AgentAction(
+            action_id="fallback_security_scan",
+            tool_name="security_vulnerability_scan",
+            parameters={
+                "target": "comprehensive" if "payment" in str(endpoint.get("path", "") or "").lower() else "general",
+                "depth": "comprehensive"
+            },
+            risk_level=RiskLevel.SAFE,
+            reasoning="Comprehensive security vulnerability scan",
+            expected_outcome="Detailed security assessment with vulnerability identification",
+            estimated_duration=45
+        ))
+
+        # Add authentication analysis if endpoint has auth requirements
+        if endpoint.get("security"):
+            actions.append(AgentAction(
+                action_id="fallback_auth_analysis",
+                tool_name="auth_mechanism_analysis",
+                parameters={"focus": "authentication_strength"},
                 risk_level=RiskLevel.SAFE,
-                reasoning="Fallback basic security scan",
-                expected_outcome="Basic security assessment",
-                estimated_duration=60
-            )
-        ]
+                reasoning="Analyze authentication mechanisms and identify weaknesses",
+                expected_outcome="Authentication security assessment",
+                estimated_duration=30
+            ))
+        else:
+            # No authentication - critical issue
+            actions.append(AgentAction(
+                action_id="fallback_missing_auth",
+                tool_name="auth_mechanism_analysis",
+                parameters={"focus": "missing_authentication"},
+                risk_level=RiskLevel.SAFE,
+                reasoning="Identify missing authentication requirements",
+                expected_outcome="Authentication gap analysis",
+                estimated_duration=20
+            ))
+
+        # Add data exposure check for sensitive endpoints
+        sensitive_paths = ["payment", "user", "patient", "account", "profile", "personal"]
+        if any(sensitive in str(endpoint.get("path", "") or "").lower() for sensitive in sensitive_paths):
+            actions.append(AgentAction(
+                action_id="fallback_data_exposure",
+                tool_name="data_exposure_check",
+                parameters={"sensitivity_level": "high"},
+                risk_level=RiskLevel.SAFE,
+                reasoning="Check for sensitive data exposure in responses",
+                expected_outcome="Data exposure risk assessment",
+                estimated_duration=25
+            ))
+
+        # Add compliance check based on business context
+        compliance_standards = []
+        if "healthcare" in business_context.lower() or "patient" in str(endpoint.get("path", "") or "").lower():
+            compliance_standards.extend(["HIPAA", "GDPR"])
+        if "payment" in business_context.lower() or "fintech" in business_context.lower():
+            compliance_standards.extend(["PCI-DSS", "GDPR"])
+        if "banking" in business_context.lower():
+            compliance_standards.extend(["SOX", "PCI-DSS", "GDPR"])
+
+        if compliance_standards:
+            actions.append(AgentAction(
+                action_id="fallback_compliance",
+                tool_name="compliance_check",
+                parameters={"standards": compliance_standards},
+                risk_level=RiskLevel.SAFE,
+                reasoning=f"Check compliance with {', '.join(compliance_standards)} standards",
+                expected_outcome="Compliance assessment report",
+                estimated_duration=40
+            ))
+
+        # Determine risk level based on context
+        risk_level = RiskLevel.SAFE
+        if "critical" in business_context.lower() or "healthcare" in business_context.lower() or "banking" in business_context.lower():
+            risk_level = RiskLevel.MEDIUM
+
+        total_duration = sum(action.estimated_duration for action in actions)
 
         return DecisionPlan(
-            plan_id=f"fallback_plan_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            plan_id=f"enhanced_fallback_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
             decision_type=decision_type,
-            actions=basic_actions,
-            total_estimated_duration=60,
-            confidence_score=0.5,
-            reasoning="Fallback plan due to LLM unavailability",
-            risk_assessment=RiskLevel.SAFE,
-            requires_approval=True,
+            actions=actions,
+            total_estimated_duration=total_duration,
+            confidence_score=0.7,  # Higher confidence with smarter fallback
+            reasoning=f"Enhanced fallback analysis for {endpoint.get('method', 'UNKNOWN')} {endpoint.get('path', 'unknown')} endpoint with {len(actions)} security checks",
+            risk_assessment=risk_level,
+            requires_approval=risk_level != RiskLevel.SAFE,
             created_at=datetime.now()
         )
 

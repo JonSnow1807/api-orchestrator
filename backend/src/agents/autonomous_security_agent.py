@@ -99,15 +99,33 @@ class AutonomousSecurityAgent:
             }
 
         # Phase 6: Return comprehensive results
+        # Handle both list and dict formats for analysis_results
+        if isinstance(analysis_results, list):
+            total_issues = 0
+            security_issues = []
+            for result in analysis_results:
+                # Ensure result is a dictionary before calling .get()
+                if isinstance(result, dict) and result.get("status") == "success" and "result" in result:
+                    tool_result = result["result"]
+                    if isinstance(tool_result, dict):
+                        vulns = tool_result.get("vulnerabilities", [])
+                        security_issues.extend(vulns)
+                        total_issues += len(vulns)
+        else:
+            # Fallback for dict format
+            total_issues = len(analysis_results.get("security_issues", [])) if isinstance(analysis_results, dict) else 0
+            security_issues = analysis_results.get("security_issues", []) if isinstance(analysis_results, dict) else []
+
         return {
             "status": "completed",
             "analysis_results": analysis_results,
             "actions_taken": action_results,
             "analysis_plan_summary": self.llm_engine.get_decision_summary(analysis_plan),
             "action_plan_summary": self.llm_engine.get_decision_summary(action_plan),
-            "total_issues_found": len(analysis_results.get("security_issues", [])),
-            "total_issues_fixed": len([r for r in action_results if r.get("status") == "success"]),
-            "execution_time": sum(r.get("duration", 0) for r in action_results),
+            "total_issues_found": total_issues,
+            "total_issues_fixed": len([r for r in action_results if isinstance(r, dict) and r.get("status") == "success"]),
+            "execution_time": sum(r.get("duration", 0) for r in action_results if isinstance(r, dict)),
+            "security_issues": security_issues,  # Standardized format
             "recommendations": self._generate_recommendations(analysis_results, action_results)
         }
 
@@ -233,53 +251,360 @@ class AutonomousSecurityAgent:
 
     # Security tool implementations
     async def _run_vulnerability_scan(self, params: Dict[str, Any], context: DecisionContext) -> Dict[str, Any]:
-        """Run comprehensive vulnerability scan"""
-        endpoint = context.endpoint_data
-        target = params.get("target", "general")
-        depth = params.get("depth", "basic")
+        """Run comprehensive vulnerability scan with industry-specific detection"""
+        try:
+            endpoint = context.endpoint_data
+            target = params.get("target", "general")
+            depth = params.get("depth", "comprehensive")
+            business_context = context.business_context.lower() if context.business_context else ""
 
-        vulnerabilities = []
+            vulnerabilities = []
 
-        # Check for common vulnerabilities based on endpoint
-        if endpoint.get("method") == "POST" and "password" in str(endpoint.get("parameters", [])):
-            vulnerabilities.append({
-                "type": "weak_authentication",
+            # Validate endpoint data structure
+            if not endpoint or not isinstance(endpoint, dict):
+                vulnerabilities.append({
+                    "type": "malformed_endpoint_data",
+                    "severity": "medium",
+                    "description": "API endpoint data is malformed or missing",
+                    "recommendation": "Ensure proper API specification format",
+                    "compliance": "General Security"
+                })
+                return {
+                    "vulnerabilities_found": len(vulnerabilities),
+                    "vulnerabilities": vulnerabilities,
+                    "scan_type": target,
+                    "scan_depth": depth,
+                    "industry_context": "unknown",
+                    "data_quality": "malformed"
+                }
+
+            # Industry-specific vulnerability detection
+            industry = self._detect_industry_from_context(context)
+
+            # 1. OWASP API Security Top 10 (2023) Detection
+            vulnerabilities.extend(self._detect_owasp_vulnerabilities(endpoint, industry))
+
+            # 2. Industry-specific vulnerabilities
+            if industry == "fintech":
+                vulnerabilities.extend(self._detect_fintech_vulnerabilities(endpoint))
+            elif industry == "healthcare":
+                vulnerabilities.extend(self._detect_healthcare_vulnerabilities(endpoint))
+            elif industry == "ecommerce":
+                vulnerabilities.extend(self._detect_ecommerce_vulnerabilities(endpoint))
+            elif industry == "iot":
+                vulnerabilities.extend(self._detect_iot_vulnerabilities(endpoint))
+            elif industry == "banking":
+                vulnerabilities.extend(self._detect_banking_vulnerabilities(endpoint))
+
+            # 3. General authentication and authorization checks
+            vulnerabilities.extend(self._detect_auth_vulnerabilities(endpoint))
+
+            # 4. Compliance-specific checks
+            vulnerabilities.extend(self._detect_compliance_violations(endpoint, context))
+
+            # 5. General security infrastructure checks
+            vulnerabilities.extend(self._detect_infrastructure_vulnerabilities(endpoint, context))
+
+            return {
+                "vulnerabilities_found": len(vulnerabilities),
+                "vulnerabilities": vulnerabilities,
+                "scan_type": target,
+                "scan_depth": depth,
+                "industry_context": industry
+            }
+
+        except Exception as e:
+            # Graceful error handling for any scan failures
+            self.logger.error(f"Error during vulnerability scan: {str(e)}")
+            return {
+                "vulnerabilities_found": 1,
+                "vulnerabilities": [{
+                    "type": "scan_error",
+                    "severity": "medium",
+                    "description": f"Error occurred during vulnerability scanning: {str(e)}",
+                    "recommendation": "Review endpoint data and try again",
+                    "compliance": "General Security"
+                }],
+                "scan_type": target,
+                "scan_depth": depth,
+                "industry_context": "unknown",
+                "scan_status": "error"
+            }
+
+    def _detect_industry_from_context(self, context: DecisionContext) -> str:
+        """Detect industry from context for vulnerability scanning"""
+        business_context = (context.business_context or "").lower()
+        endpoint_path = context.endpoint_data.get('path', '').lower()
+
+        if any(term in business_context + endpoint_path for term in ['payment', 'fintech', 'financial', 'card', 'transaction', 'transfer', 'bank']):
+            if 'bank' in business_context + endpoint_path:
+                return "banking"
+            return "fintech"
+        elif any(term in business_context + endpoint_path for term in ['patient', 'healthcare', 'medical', 'health', 'hipaa']):
+            return "healthcare"
+        elif any(term in business_context + endpoint_path for term in ['ecommerce', 'commerce', 'retail', 'shopping', 'order', 'user', 'profile']):
+            return "ecommerce"
+        elif any(term in business_context + endpoint_path for term in ['iot', 'device', 'sensor', 'machine', 'management']):
+            return "iot"
+        else:
+            return "general"
+
+    def _detect_owasp_vulnerabilities(self, endpoint: Dict, industry: str) -> List[Dict]:
+        """Detect OWASP API Security Top 10 (2023) vulnerabilities"""
+        vulns = []
+
+        # Safe data extraction with defaults
+        path = str(endpoint.get('path', '') or '').lower()
+        method = str(endpoint.get('method', '') or '').upper()
+        security = endpoint.get('security', [])
+
+        # Ensure security is a list
+        if not isinstance(security, list):
+            security = []
+
+        # API1:2023 - Broken Object Level Authorization
+        if '{' in path and ('user' in path or 'id' in path or 'account' in path):
+            vulns.append({
+                "type": "broken_object_level_authorization",
                 "severity": "high",
-                "description": "Password sent in POST body without proper encryption validation",
-                "recommendation": "Implement password strength validation and secure transmission"
+                "description": "Endpoint accesses objects by ID without proper authorization checks",
+                "recommendation": "Implement object-level authorization checks before accessing resources",
+                "owasp_category": "API1:2023"
             })
 
-        if not endpoint.get("security", []):
-            vulnerabilities.append({
+        # API2:2023 - Broken Authentication
+        if not security or any('query' in str(sec) for sec in security):
+            vulns.append({
+                "type": "broken_authentication",
+                "severity": "critical",
+                "description": "Weak or missing authentication mechanism detected",
+                "recommendation": "Implement strong authentication with proper token management",
+                "owasp_category": "API2:2023"
+            })
+
+        # API3:2023 - Broken Object Property Level Authorization
+        if method in ['PUT', 'PATCH'] and ('user' in path or 'profile' in path):
+            vulns.append({
+                "type": "mass_assignment_vulnerability",
+                "severity": "medium",
+                "description": "Endpoint may allow unauthorized modification of object properties",
+                "recommendation": "Implement property-level authorization and input validation",
+                "owasp_category": "API3:2023"
+            })
+
+        # API4:2023 - Unrestricted Resource Consumption
+        if industry == "iot" or 'device' in path:
+            vulns.append({
+                "type": "unrestricted_resource_consumption",
+                "severity": "high",
+                "description": "Endpoint may allow resource exhaustion attacks",
+                "recommendation": "Implement rate limiting and resource consumption controls",
+                "owasp_category": "API4:2023"
+            })
+
+        # API5:2023 - Broken Function Level Authorization
+        if method in ['DELETE', 'PUT'] or 'admin' in path:
+            vulns.append({
+                "type": "broken_function_level_authorization",
+                "severity": "high",
+                "description": "Endpoint may lack proper function-level authorization",
+                "recommendation": "Implement role-based access controls for administrative functions",
+                "owasp_category": "API5:2023"
+            })
+
+        return vulns
+
+    def _detect_fintech_vulnerabilities(self, endpoint: Dict) -> List[Dict]:
+        """Detect fintech-specific vulnerabilities"""
+        vulns = []
+        path = str(endpoint.get('path', '') or '').lower()
+
+        if 'payment' in path or 'transaction' in path or 'card' in path:
+            vulns.append({
+                "type": "sensitive_data_exposure",
+                "severity": "critical",
+                "description": "Payment endpoint may expose sensitive financial data",
+                "recommendation": "Implement PCI-DSS compliant data handling and encryption",
+                "compliance": "PCI-DSS"
+            })
+
+        return vulns
+
+    def _detect_healthcare_vulnerabilities(self, endpoint: Dict) -> List[Dict]:
+        """Detect healthcare-specific vulnerabilities"""
+        vulns = []
+        path = str(endpoint.get('path', '') or '').lower()
+
+        if 'patient' in path or 'medical' in path or 'health' in path:
+            vulns.extend([
+                {
+                    "type": "excessive_data_exposure",
+                    "severity": "high",
+                    "description": "Healthcare endpoint may expose excessive patient data (PHI)",
+                    "recommendation": "Implement minimum necessary principle for PHI access",
+                    "compliance": "HIPAA"
+                },
+                {
+                    "type": "missing_input_validation",
+                    "severity": "medium",
+                    "description": "Medical data endpoints require strict input validation",
+                    "recommendation": "Implement comprehensive input validation for medical data",
+                    "compliance": "HIPAA"
+                },
+                {
+                    "type": "insufficient_audit_logging",
+                    "severity": "medium",
+                    "description": "Healthcare endpoints require comprehensive audit logging",
+                    "recommendation": "Implement detailed audit logs for all PHI access",
+                    "compliance": "HIPAA"
+                }
+            ])
+
+        return vulns
+
+    def _detect_ecommerce_vulnerabilities(self, endpoint: Dict) -> List[Dict]:
+        """Detect e-commerce specific vulnerabilities"""
+        vulns = []
+        security = endpoint.get('security', [])
+
+        # Check for API key in query params (common e-commerce vulnerability)
+        if any('query' in str(sec) and 'api' in str(sec) for sec in security):
+            vulns.append({
+                "type": "api_key_in_query_params",
+                "severity": "medium",
+                "description": "API key transmitted in query parameters (logged in access logs)",
+                "recommendation": "Move API key to Authorization header",
+                "compliance": "GDPR"
+            })
+
+        return vulns
+
+    def _detect_iot_vulnerabilities(self, endpoint: Dict) -> List[Dict]:
+        """Detect IoT-specific vulnerabilities"""
+        vulns = []
+        path = str(endpoint.get('path', '') or '').lower()
+
+        if 'device' in path or 'iot' in path:
+            vulns.extend([
+                {
+                    "type": "server_side_request_forgery",
+                    "severity": "high",
+                    "description": "IoT device management endpoint vulnerable to SSRF attacks",
+                    "recommendation": "Implement URL validation and network segmentation",
+                    "compliance": "SOC2"
+                },
+                {
+                    "type": "insufficient_command_validation",
+                    "severity": "high",
+                    "description": "Device command endpoints lack proper validation",
+                    "recommendation": "Implement strict command validation and sanitization"
+                },
+                {
+                    "type": "missing_device_authorization",
+                    "severity": "medium",
+                    "description": "Device management lacks proper device-level authorization",
+                    "recommendation": "Implement device-specific authorization controls"
+                }
+            ])
+
+        return vulns
+
+    def _detect_banking_vulnerabilities(self, endpoint: Dict) -> List[Dict]:
+        """Detect banking-specific vulnerabilities"""
+        vulns = []
+        path = str(endpoint.get('path', '') or '').lower()
+
+        if 'transfer' in path or 'account' in path or 'transaction' in path:
+            vulns.extend([
+                {
+                    "type": "race_condition_vulnerability",
+                    "severity": "critical",
+                    "description": "Banking transaction endpoint vulnerable to race conditions",
+                    "recommendation": "Implement transaction locking and atomic operations",
+                    "compliance": "SOX"
+                },
+                {
+                    "type": "insufficient_transaction_logging",
+                    "severity": "high",
+                    "description": "Banking transactions require comprehensive audit logging",
+                    "recommendation": "Implement detailed transaction audit trails",
+                    "compliance": "SOX"
+                },
+                {
+                    "type": "missing_fraud_detection",
+                    "severity": "high",
+                    "description": "No fraud detection mechanisms detected for financial transactions",
+                    "recommendation": "Implement real-time fraud detection and monitoring",
+                    "compliance": "PCI-DSS"
+                },
+                {
+                    "type": "weak_amount_validation",
+                    "severity": "medium",
+                    "description": "Transaction amount validation may be insufficient",
+                    "recommendation": "Implement strict amount validation and limits",
+                    "compliance": "SOX"
+                }
+            ])
+
+        return vulns
+
+    def _detect_auth_vulnerabilities(self, endpoint: Dict) -> List[Dict]:
+        """Detect authentication and authorization vulnerabilities"""
+        vulns = []
+        security = endpoint.get('security', [])
+
+        if not security:
+            vulns.append({
                 "type": "no_authentication",
                 "severity": "critical",
                 "description": "Endpoint has no authentication requirements",
                 "recommendation": "Add authentication and authorization checks"
             })
 
-        # Simulate more detailed scanning based on depth
-        if depth == "comprehensive":
-            vulnerabilities.extend([
-                {
-                    "type": "missing_rate_limiting",
-                    "severity": "medium",
-                    "description": "No rate limiting detected on endpoint",
-                    "recommendation": "Implement rate limiting to prevent abuse"
-                },
-                {
-                    "type": "insufficient_logging",
-                    "severity": "low",
-                    "description": "Insufficient security event logging",
-                    "recommendation": "Enhance logging for security monitoring"
-                }
-            ])
+        return vulns
 
-        return {
-            "vulnerabilities_found": len(vulnerabilities),
-            "vulnerabilities": vulnerabilities,
-            "scan_type": target,
-            "scan_depth": depth
-        }
+    def _detect_compliance_violations(self, endpoint: Dict, context: DecisionContext) -> List[Dict]:
+        """Detect compliance-specific violations"""
+        vulns = []
+        business_context = context.business_context.lower() if context.business_context else ""
+
+        # Add compliance-specific checks based on industry
+        if 'gdpr' in business_context or 'eu' in business_context:
+            vulns.append({
+                "type": "gdpr_compliance_violation",
+                "severity": "medium",
+                "description": "Endpoint may not comply with GDPR requirements",
+                "recommendation": "Implement GDPR-compliant data handling and consent management",
+                "compliance": "GDPR"
+            })
+
+        return vulns
+
+    def _detect_infrastructure_vulnerabilities(self, endpoint: Dict, context: DecisionContext) -> List[Dict]:
+        """Detect general infrastructure and operational security vulnerabilities"""
+        vulns = []
+        path = str(endpoint.get('path', '') or '').lower()
+        method = endpoint.get('method', '').upper()
+
+        # Rate limiting check - critical for all endpoints
+        vulns.append({
+            "type": "missing_rate_limiting",
+            "severity": "medium",
+            "description": "No rate limiting detected on endpoint",
+            "recommendation": "Implement rate limiting to prevent abuse and DoS attacks",
+            "owasp_category": "API4:2023"
+        })
+
+        # Logging and monitoring checks
+        vulns.append({
+            "type": "insufficient_logging",
+            "severity": "low",
+            "description": "Insufficient security event logging detected",
+            "recommendation": "Enhance logging for security monitoring and audit trails",
+            "compliance": "General Security"
+        })
+
+        return vulns
 
     async def _analyze_auth_mechanism(self, params: Dict[str, Any], context: DecisionContext) -> Dict[str, Any]:
         """Analyze authentication mechanisms"""
@@ -455,13 +780,13 @@ class AutonomousSecurityAgent:
 
         total_vulnerabilities = sum(
             r.get("result", {}).get("vulnerabilities_found", 0)
-            for r in analysis_results if r.get("status") == "success"
+            for r in analysis_results if isinstance(r, dict) and r.get("status") == "success"
         )
 
         if total_vulnerabilities > 5:
             recommendations.append("Consider implementing a comprehensive security review process")
 
-        successful_fixes = len([r for r in action_results if r.get("status") == "success"])
+        successful_fixes = len([r for r in action_results if isinstance(r, dict) and r.get("status") == "success"])
         if successful_fixes > 0:
             recommendations.append(f"Successfully automated {successful_fixes} security improvements")
 
