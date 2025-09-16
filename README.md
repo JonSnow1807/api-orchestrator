@@ -471,4 +471,4 @@ make dev
 
 ---
 
-*Built with ❤️ by [Chinmay Shrivastava](https://github.com/JonSnow1807) and the open source community*
+*Built with ❤️ by [Chinmay Shrivastava](https://github.com/JonSnow1807)*
