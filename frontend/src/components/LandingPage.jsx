@@ -69,7 +69,7 @@ const LandingPage = () => {
     { name: "FastAPI", category: "Backend" },
     { name: "React", category: "Frontend" },
     { name: "PostgreSQL", category: "Database" },
-    { name: "Claude AI", category: "AI Engine" },
+    { name: "AI Intelligence", category: "AI Engine" },
     { name: "Docker", category: "Container" },
     { name: "Railway", category: "Deployment" }
   ];
@@ -340,9 +340,9 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-gray-800">
         <div className="max-w-7xl mx-auto text-center text-gray-400">
-          <p>© 2025 API Orchestrator. Built with ❤️ using Claude AI</p>
+          <p>© 2025 API Orchestrator. Built with ❤️ by Chinmay Shrivastava</p>
           <p className="mt-2 text-sm">
-            Powered by FastAPI, React, and Claude Opus 4.1
+            Powered by FastAPI, React, and cutting-edge AI
           </p>
         </div>
       </footer>
