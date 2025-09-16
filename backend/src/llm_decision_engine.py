@@ -548,7 +548,7 @@ Ensure your response includes specific, actionable recommendations that a securi
         """Call the appropriate LLM with the prompt"""
         if self.anthropic_client:
             response = await self.anthropic_client.messages.create(
-                model="claude-3-sonnet-20240229",
+                model="claude-3-haiku-20240307",
                 max_tokens=2000,
                 messages=[{
                     "role": "user",
@@ -588,7 +588,7 @@ Ensure your response includes specific, actionable recommendations that a securi
                     action_id=action_data["action_id"],
                     tool_name=action_data["tool_name"],
                     parameters=action_data["parameters"],
-                    risk_level=RiskLevel(action_data["risk_level"]),
+                    risk_level=RiskLevel(action_data["risk_level"].lower()),
                     reasoning=action_data["reasoning"],
                     expected_outcome=action_data["expected_outcome"],
                     estimated_duration=action_data["estimated_duration"],
@@ -604,7 +604,7 @@ Ensure your response includes specific, actionable recommendations that a securi
                 total_estimated_duration=sum(a.estimated_duration for a in actions),
                 confidence_score=data.get("confidence_score", 0.7),
                 reasoning=data.get("reasoning", "No reasoning provided"),
-                risk_assessment=RiskLevel(data.get("risk_assessment", "MEDIUM")),
+                risk_assessment=RiskLevel(data.get("risk_assessment", "medium").lower()),
                 requires_approval=data.get("requires_approval", True),
                 created_at=datetime.now()
             )
@@ -718,19 +718,83 @@ Ensure your response includes specific, actionable recommendations that a securi
 
     async def execute_action(self, action: AgentAction, context: DecisionContext) -> Dict[str, Any]:
         """
-        Execute a single action (to be implemented by specific agents)
-        This is a template method that specific agents should override
+        Execute a single action with real autonomous capabilities
         """
-        self.logger.info(f"Executing action {action.action_id}: {action.tool_name}")
+        self.logger.info(f"🤖 Autonomously executing action {action.action_id}: {action.tool_name}")
 
-        # This would be implemented by the specific agent
-        # For now, return a placeholder result
-        return {
-            "action_id": action.action_id,
-            "status": "simulated",
-            "result": f"Simulated execution of {action.tool_name}",
-            "timestamp": datetime.now().isoformat()
-        }
+        try:
+            # Import autonomous security tools
+            import sys
+            import os
+
+            # Add the backend/src directory to path if not already there
+            backend_src_path = os.path.join(os.path.dirname(__file__), '.')
+            if backend_src_path not in sys.path:
+                sys.path.insert(0, backend_src_path)
+
+            from autonomous_security_tools import SecurityToolExecutor
+
+            # Create tool executor
+            executor = SecurityToolExecutor()
+
+            # Execute based on tool type
+            if action.tool_name == "security_vulnerability_scan":
+                result = await executor.execute_security_vulnerability_scan(
+                    action.parameters,
+                    context.endpoint_data
+                )
+            elif action.tool_name == "auth_mechanism_analysis":
+                result = await executor.execute_auth_mechanism_analysis(
+                    action.parameters,
+                    context.endpoint_data
+                )
+            elif action.tool_name == "compliance_check":
+                result = await executor.execute_compliance_check(
+                    action.parameters,
+                    context.endpoint_data,
+                    context.business_context
+                )
+            elif action.tool_name == "auto_fix_security_headers":
+                result = await executor.execute_auto_fix_security_headers(
+                    action.parameters,
+                    context.endpoint_data
+                )
+            elif action.tool_name == "advanced_remediation":
+                result = await executor.execute_advanced_remediation(
+                    action.parameters,
+                    context.endpoint_data,
+                    context.business_context
+                )
+            else:
+                # Fallback for unknown tools
+                result = {
+                    "action_id": action.action_id,
+                    "status": "unsupported",
+                    "result": f"Tool {action.tool_name} not implemented",
+                    "timestamp": datetime.now().isoformat()
+                }
+
+            self.logger.info(f"✅ Action executed successfully: {result.get('status')}")
+            return result
+
+        except ImportError as e:
+            self.logger.error(f"❌ Failed to import autonomous tools: {str(e)}")
+            return {
+                "action_id": action.action_id,
+                "status": "failed",
+                "error": f"Module import failed: {str(e)}",
+                "result": f"Failed to import autonomous tools for {action.tool_name}",
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            self.logger.error(f"❌ Action execution failed: {str(e)}")
+            return {
+                "action_id": action.action_id,
+                "status": "failed",
+                "error": str(e),
+                "result": f"Failed to execute {action.tool_name}: {str(e)}",
+                "timestamp": datetime.now().isoformat()
+            }
 
     def learn_from_feedback(self, plan_id: str, user_feedback: Dict[str, Any]):
         """
