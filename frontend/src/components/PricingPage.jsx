@@ -72,14 +72,35 @@ const PricingPage = () => {
       popular: false,
     },
     {
+      name: 'AI Workforce',
+      price: '$299',
+      period: '/month',
+      description: 'Autonomous AI agents for your APIs',
+      features: [
+        'Everything in Growth',
+        '🤖 Autonomous AI Agents',
+        '🔧 Auto-fix Security Issues',
+        '⚡ Auto-generate & Run Tests',
+        '🎯 Predictive Optimization',
+        '🛠️ AI Code Generation',
+        '📊 24/7 AI Monitoring',
+        '🔄 Cross-agent Coordination',
+        'Priority AI Support',
+      ],
+      limitations: [],
+      cta: 'Start AI Beta',
+      popular: true,
+      badge: '🚀 NEW',
+      highlight: true,
+    },
+    {
       name: 'Enterprise',
       price: 'Custom',
       period: '',
       description: 'For large organizations',
       features: [
+        'Everything in AI Workforce',
         'Unlimited API calls',
-        'Unlimited Projects',
-        'Unlimited Mock Servers',
         'Custom AI Models',
         'Dedicated Support',
         'SSO & SAML',
@@ -99,6 +120,8 @@ const PricingPage = () => {
         navigate('/register');
       } else if (plan.name === 'Enterprise') {
         window.location.href = 'mailto:sales@streamapi.dev?subject=Enterprise Plan Inquiry';
+      } else if (plan.name === 'AI Workforce') {
+        window.location.href = 'mailto:sales@streamapi.dev?subject=AI Workforce Beta Access Request';
       } else {
         // For paid plans, save the plan and redirect to register
         navigate('/register', { state: { selectedPlan: plan.name, redirectToBilling: true } });
@@ -182,7 +205,7 @@ const PricingPage = () => {
               {plan.popular && (
                 <div className="absolute -top-5 left-0 right-0 flex justify-center z-10">
                   <div className="px-4 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs font-bold rounded-full shadow-lg">
-                    MOST POPULAR
+                    {plan.badge || 'MOST POPULAR'}
                   </div>
                 </div>
               )}
@@ -190,9 +213,11 @@ const PricingPage = () => {
               {/* Card */}
               <div className={`
                 relative h-full rounded-2xl p-6
-                ${plan.popular 
-                  ? 'bg-gradient-to-b from-purple-900/30 to-gray-800/50 border-2 border-purple-500 shadow-2xl shadow-purple-500/20' 
-                  : 'bg-gray-800/50 border border-gray-700 hover:border-gray-600'
+                ${plan.highlight
+                  ? 'bg-gradient-to-b from-blue-900/40 to-purple-900/40 border-2 border-blue-400 shadow-2xl shadow-blue-500/25'
+                  : plan.popular
+                    ? 'bg-gradient-to-b from-purple-900/30 to-gray-800/50 border-2 border-purple-500 shadow-2xl shadow-purple-500/20'
+                    : 'bg-gray-800/50 border border-gray-700 hover:border-gray-600'
                 }
                 backdrop-blur-lg transition-all duration-300
                 hover:transform hover:scale-[1.02]

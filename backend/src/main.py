@@ -214,6 +214,8 @@ from src.routes.request_chains import router as request_chains_router
 from src.routes.graphql import router as graphql_router
 # Import multi-protocol routes
 from src.routes.multi_protocol import router as multi_protocol_router
+# Import ultra premium routes
+from src.routes.ultra_premium import router as ultra_premium_router
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -246,6 +248,8 @@ app.include_router(request_chains_router)
 app.include_router(graphql_router)
 # Include multi-protocol routes
 app.include_router(multi_protocol_router)
+# Include ultra premium routes
+app.include_router(ultra_premium_router)
 # Include load testing routes
 from src.routes.load_testing import router as load_testing_router
 app.include_router(load_testing_router)

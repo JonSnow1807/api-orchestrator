@@ -291,14 +291,31 @@ SUBSCRIPTION_TIERS = {
         "projects": 50,
         "mock_servers": 10,
         "export_formats": ["json", "yaml", "postman", "openapi"],
-        "ai_analysis": True
+        "ai_analysis": True,
+        "ai_workforce": False
+    },
+    "ai_workforce": {
+        "api_calls": 50000,
+        "projects": 100,
+        "mock_servers": 25,
+        "export_formats": ["all"],
+        "ai_analysis": True,
+        "ai_workforce": True,
+        "autonomous_agents": True,
+        "llm_decisions": True,
+        "premium_analytics": True
     },
     "enterprise": {
         "api_calls": -1,  # Unlimited
         "projects": -1,
         "mock_servers": -1,
         "export_formats": ["all"],
-        "ai_analysis": True
+        "ai_analysis": True,
+        "ai_workforce": True,
+        "autonomous_agents": True,
+        "llm_decisions": True,
+        "premium_analytics": True,
+        "custom_models": True
     }
 }
 
