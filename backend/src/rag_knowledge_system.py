@@ -63,6 +63,30 @@ class RAGKnowledgeSystem:
                 "content": "Digital asset security requires multi-signature wallets, cold storage, and regulatory compliance. Key risks include private key management, smart contract vulnerabilities, and regulatory changes.",
                 "domain": "cryptocurrency",
                 "frameworks": ["AML", "KYC", "FATF"]
+            },
+            {
+                "title": "GDPR Data Protection",
+                "content": "General Data Protection Regulation requires explicit consent, data minimization, purpose limitation, and individual rights (access, rectification, erasure). Technical measures include encryption, pseudonymization, and privacy by design.",
+                "domain": "privacy",
+                "frameworks": ["GDPR", "ePrivacy", "CCPA"]
+            },
+            {
+                "title": "SOC2 Security Controls",
+                "content": "SOC2 Type II focuses on security, availability, processing integrity, confidentiality, and privacy. Key controls include access management, change management, monitoring, and incident response procedures.",
+                "domain": "security",
+                "frameworks": ["SOC2", "ISO27001", "NIST"]
+            },
+            {
+                "title": "Cloud Security Architecture",
+                "content": "Cloud security requires shared responsibility model understanding, identity federation, network segmentation, data encryption in transit and at rest, and continuous monitoring of cloud resources.",
+                "domain": "cloud",
+                "frameworks": ["CSA", "NIST", "ISO27017"]
+            },
+            {
+                "title": "DevSecOps Integration",
+                "content": "DevSecOps integrates security throughout development lifecycle with automated security testing, container security, infrastructure as code scanning, and continuous compliance monitoring.",
+                "domain": "devsecops",
+                "frameworks": ["NIST", "OWASP", "CIS"]
             }
         ]
 
@@ -104,6 +128,12 @@ class RAGKnowledgeSystem:
             return "Financial Services"
         elif any(term in context_lower + path_lower for term in ['crypto', 'blockchain', 'bitcoin']):
             return "Cryptocurrency"
+        elif any(term in context_lower + path_lower for term in ['gdpr', 'privacy', 'personal data', 'consent']):
+            return "Privacy"
+        elif any(term in context_lower + path_lower for term in ['cloud', 'aws', 'azure', 'gcp', 'kubernetes']):
+            return "Cloud"
+        elif any(term in context_lower + path_lower for term in ['devops', 'ci/cd', 'pipeline', 'deployment']):
+            return "DevSecOps"
         else:
             return "General"
 

@@ -765,6 +765,12 @@ Ensure your response includes specific, actionable recommendations that a securi
                     context.endpoint_data,
                     context.business_context
                 )
+            elif action.tool_name == "smart_code_refactoring":
+                result = await executor.execute_smart_code_refactoring(
+                    action.parameters,
+                    context.endpoint_data,
+                    context.business_context
+                )
             else:
                 # Fallback for unknown tools
                 result = {
