@@ -726,6 +726,20 @@ class Environment(Base):
 
 def init_db():
     """Initialize database - create all tables"""
+    # Import all models to ensure they're registered with SQLAlchemy
+    # This is crucial for proper table creation order and foreign key resolution
+    try:
+        from src.models.workspace import (
+            Workspace, WorkspaceInvitation, WorkspaceActivity,
+            WorkspaceWebhook, ResourcePermission
+        )
+        from src.models.ai_keys import AIKey, AIKeyUsage
+        from src.models.webhook import Webhook, WebhookDelivery
+        logger.info("✅ All models imported successfully")
+    except ImportError as e:
+        logger.warning(f"⚠️  Some models could not be imported: {e}")
+        # Continue anyway to create available tables
+
     Base.metadata.create_all(bind=engine)
     print("✅ Database initialized successfully!")
 

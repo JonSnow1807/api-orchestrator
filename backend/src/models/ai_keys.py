@@ -12,7 +12,8 @@ from src.database import Base
 class AIKey(Base):
     """Custom AI model keys for workspaces"""
     __tablename__ = "ai_keys"
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, index=True)
     workspace_id = Column(Integer, ForeignKey('workspaces.id', ondelete='CASCADE'))
     provider = Column(String(50), nullable=False)
@@ -39,7 +40,8 @@ class AIKey(Base):
 class AIKeyUsage(Base):
     """Track usage of AI keys"""
     __tablename__ = "ai_key_usage"
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, index=True)
     key_id = Column(Integer, ForeignKey('ai_keys.id', ondelete='CASCADE'))
     date = Column(DateTime, nullable=False, index=True)

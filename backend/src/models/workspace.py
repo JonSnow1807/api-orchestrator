@@ -26,7 +26,8 @@ workspace_members = Table(
     Column('role', String(50), default='developer'),
     Column('joined_at', DateTime, default=datetime.utcnow),
     Column('invited_by', Integer, ForeignKey('users.id')),
-    UniqueConstraint('workspace_id', 'user_id', name='unique_workspace_member')
+    UniqueConstraint('workspace_id', 'user_id', name='unique_workspace_member'),
+    extend_existing=True  # Allow redefinition if already exists
 )
 
 # Enum for member roles
@@ -46,7 +47,8 @@ class ResourceType(enum.Enum):
 class Workspace(Base):
     """Workspace/Organization model for team collaboration"""
     __tablename__ = "workspaces"
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     slug = Column(String(100), unique=True, index=True)
@@ -126,7 +128,8 @@ class Workspace(Base):
 class WorkspaceInvitation(Base):
     """Invitations to join a workspace"""
     __tablename__ = "workspace_invitations"
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, index=True)
     workspace_id = Column(Integer, ForeignKey('workspaces.id', ondelete='CASCADE'))
     
@@ -169,7 +172,8 @@ class WorkspaceInvitation(Base):
 class WorkspaceActivity(Base):
     """Activity log for workspace actions"""
     __tablename__ = "workspace_activity"
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, index=True)
     workspace_id = Column(Integer, ForeignKey('workspaces.id', ondelete='CASCADE'))
     
@@ -195,7 +199,8 @@ class WorkspaceActivity(Base):
 class WorkspaceWebhook(Base):
     """Webhooks for workspace events"""
     __tablename__ = "workspace_webhooks"
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, index=True)
     workspace_id = Column(Integer, ForeignKey('workspaces.id', ondelete='CASCADE'))
     
@@ -225,7 +230,7 @@ class WorkspaceWebhook(Base):
 class ResourcePermission(Base):
     """Granular permissions for resources within a workspace"""
     __tablename__ = "resource_permissions"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     workspace_id = Column(Integer, ForeignKey('workspaces.id', ondelete='CASCADE'))
     
@@ -249,8 +254,9 @@ class ResourcePermission(Base):
     
     # Constraints
     __table_args__ = (
-        UniqueConstraint('workspace_id', 'resource_type', 'resource_id', 'user_id', 'role', 
+        UniqueConstraint('workspace_id', 'resource_type', 'resource_id', 'user_id', 'role',
                         name='unique_resource_permission'),
+        {'extend_existing': True}
     )
 
 # Update existing models to support workspaces

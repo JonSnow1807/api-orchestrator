@@ -54,7 +54,18 @@ class SecurityToolExecutor:
 
     def __init__(self):
         self.execution_log = []
-        self.safe_mode = True  # RE-ENABLED AFTER TESTING - Enable real autonomous actions
+        # Safe mode can be overridden by environment variable for production
+        # Default to safe mode unless explicitly disabled
+        self.safe_mode = os.getenv('AUTONOMOUS_SAFE_MODE', 'true').lower() != 'false'
+
+        # Additional safeguards
+        self.max_file_modifications = int(os.getenv('MAX_FILE_MODIFICATIONS', '5'))
+        self.modifications_made = 0
+        self.backup_enabled = os.getenv('ENABLE_BACKUPS', 'true').lower() == 'true'
+        self.allowed_extensions = ['.py', '.js', '.jsx', '.ts', '.tsx', '.json', '.yaml', '.yml', '.env.example']
+
+        if not self.safe_mode:
+            print("⚠️  AUTONOMOUS MODE ENABLED - Files will be modified automatically")
 
         # Initialize RAG system if available
         if RAG_AVAILABLE:
@@ -1062,11 +1073,31 @@ class SecurityToolExecutor:
                                     print(f"      ✅ Added warning for unsafe {pattern}")
                                     break
 
-                    # Write the modified file back
+                    # Write the modified file back with safeguards
                     if file_modified:
+                        # Check if we've exceeded modification limit
+                        if self.modifications_made >= self.max_file_modifications:
+                            print(f"      ⚠️  Reached max file modification limit ({self.max_file_modifications})")
+                            return fixes
+
+                        # Check file extension is allowed
+                        file_ext = os.path.splitext(target_file)[1]
+                        if file_ext not in self.allowed_extensions:
+                            print(f"      ⚠️  File extension {file_ext} not in allowed list")
+                            return fixes
+
+                        # Create backup if enabled
+                        if self.backup_enabled:
+                            backup_file = f"{target_file}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                            with open(backup_file, 'w') as f:
+                                f.write(original_content)
+                            print(f"      💾 Created backup: {backup_file}")
+
+                        # Write the modified file
                         with open(target_file, 'w') as f:
                             f.write(modified_content)
-                        print(f"      📝 Modified original file: {target_file}")
+                        self.modifications_made += 1
+                        print(f"      📝 Modified original file: {target_file} (modification {self.modifications_made}/{self.max_file_modifications})")
 
                 except Exception as e:
                     print(f"      ⚠️  Could not modify target file: {str(e)}")

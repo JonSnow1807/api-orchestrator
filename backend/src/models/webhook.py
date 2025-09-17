@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
 import uuid
-from .base import Base
+from src.database import Base
 
 class WebhookEvent(enum.Enum):
     """Events that can trigger webhooks"""
@@ -31,6 +31,7 @@ class WebhookStatus(enum.Enum):
 class Webhook(Base):
     """Webhook configuration model"""
     __tablename__ = "webhooks"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True)
     workspace_id = Column(Integer, ForeignKey('workspaces.id'), nullable=False)
@@ -69,6 +70,7 @@ class Webhook(Base):
 class WebhookDelivery(Base):
     """Record of webhook delivery attempts"""
     __tablename__ = "webhook_deliveries"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True)
     webhook_id = Column(Integer, ForeignKey('webhooks.id'), nullable=False)
