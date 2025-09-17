@@ -5,6 +5,7 @@ import { getApiUrl, getWebSocketURL } from '../config';
 import axios from 'axios';
 import AIAnalysis from './AIAnalysis';
 import MockServerManager from './MockServerManager';
+import AutonomousSecurityPanel from './AutonomousSecurityPanel';
 import { 
   ArrowLeft,
   Folder,
@@ -389,7 +390,7 @@ const ProjectDetails = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="border-b border-gray-700">
           <nav className="-mb-px flex space-x-8">
-            {['overview', 'agents', 'ai-analysis', 'mock-server', 'console', 'artifacts'].map((tab) => (
+            {['overview', 'agents', 'ai-analysis', 'security', 'mock-server', 'console', 'artifacts'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -591,6 +592,19 @@ const ProjectDetails = () => {
               AI Analysis Results
             </h2>
             <AIAnalysis projectId={id} />
+          </div>
+        )}
+
+        {activeTab === 'security' && (
+          <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700 p-6">
+            <h2 className="text-lg font-semibold text-white mb-6 flex items-center">
+              <Shield className="w-6 h-6 mr-2 text-purple-400" />
+              Autonomous Security Analysis
+            </h2>
+            <AutonomousSecurityPanel
+              projectId={id}
+              endpoint={project?.apis?.[0] || { path: '/api/test', method: 'GET' }}
+            />
           </div>
         )}
 
