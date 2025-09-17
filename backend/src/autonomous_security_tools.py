@@ -21,6 +21,13 @@ try:
 except ImportError:
     REFACTORING_AVAILABLE = False
 
+# Import multi-language remediation
+try:
+    from multilang_remediation import MultiLanguageRemediationEngine
+    MULTILANG_AVAILABLE = True
+except ImportError:
+    MULTILANG_AVAILABLE = False
+
 # Import specialized agents
 try:
     from specialized_agents import DevOpsSecurityAgent, DatabaseSecurityAgent
@@ -34,6 +41,13 @@ try:
     RAG_AVAILABLE = True
 except ImportError:
     RAG_AVAILABLE = False
+
+# Import learning engine
+try:
+    from learning_engine import LearningEngine, SecurityContext
+    LEARNING_AVAILABLE = True
+except ImportError:
+    LEARNING_AVAILABLE = False
 
 class SecurityToolExecutor:
     """Real security tool execution for autonomous AI"""
@@ -52,6 +66,17 @@ class SecurityToolExecutor:
                 print(f"⚠️  RAG system failed to initialize: {e}")
         else:
             self.rag_system = None
+
+        # Initialize learning engine if available
+        if LEARNING_AVAILABLE:
+            try:
+                self.learning_engine = LearningEngine()
+                print("✅ Learning Engine initialized")
+            except Exception as e:
+                self.learning_engine = None
+                print(f"⚠️  Learning engine failed to initialize: {e}")
+        else:
+            self.learning_engine = None
             print("⚠️  RAG system not available, using fallback knowledge")
 
     async def execute_security_vulnerability_scan(self, parameters: Dict[str, Any], endpoint_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -264,9 +289,27 @@ class SecurityToolExecutor:
         require_approval = 0
 
         if not self.safe_mode:
-            # Real remediation actions - enhanced with target file modification
+            # Real remediation actions - enhanced with multi-language support
             target_file = parameters.get('target_file')
-            fixes_applied = self._apply_automated_fixes_enhanced(vuln_scan, auth_analysis, compliance_check, target_file)
+
+            # Try multi-language remediation first
+            multilang_fixes = 0
+            if MULTILANG_AVAILABLE and target_file:
+                multilang_engine = MultiLanguageRemediationEngine()
+                multilang_engine.safe_mode = self.safe_mode
+
+                # Extract vulnerabilities from scan results
+                all_vulnerabilities = vuln_scan.get('vulnerabilities', [])
+
+                multilang_result = await multilang_engine.apply_multilang_fixes(target_file, all_vulnerabilities)
+                multilang_fixes = multilang_result.get('fixes_applied', 0)
+
+                if multilang_fixes > 0:
+                    print(f"      🌐 Multi-language fixes applied: {multilang_fixes}")
+
+            # Apply additional fixes
+            additional_fixes = self._apply_automated_fixes_enhanced(vuln_scan, auth_analysis, compliance_check, target_file)
+            fixes_applied = multilang_fixes + additional_fixes
             require_approval = self._identify_manual_fixes(vuln_scan, auth_analysis, compliance_check)
 
         execution_time = (datetime.now() - start_time).total_seconds()
@@ -538,7 +581,7 @@ class SecurityToolExecutor:
             # Check for SQL injection vulnerabilities
             sql_injection_patterns = [
                 r'\.format\([^)]*%s',  # String formatting with %s
-                r'f".*\{.*\}".*SELECT|INSERT|UPDATE|DELETE',  # F-strings in SQL
+                r'f".*SELECT.*\{.*\}',  # F-strings with SQL and variables (fixed pattern)
                 r'".*\+.*".*SELECT|INSERT|UPDATE|DELETE',  # String concatenation in SQL
                 r'request\.(form|args|json)\[.*\].*SELECT|INSERT|UPDATE|DELETE'  # Direct user input in SQL
             ]
@@ -589,7 +632,10 @@ class SecurityToolExecutor:
                 r'password\s*=\s*["\'][^"\']{8,}',
                 r'api_key\s*=\s*["\'][^"\']{20,}',
                 r'secret\s*=\s*["\'][^"\']{16,}',
-                r'token\s*=\s*["\'][^"\']{32,}'
+                r'token\s*=\s*["\'][^"\']{32,}',
+                r'SECRET_KEY\s*=\s*["\'][^"\']{8,}',  # Added uppercase SECRET_KEY
+                r'API_KEY\s*=\s*["\'][^"\']{8,}',     # Added uppercase API_KEY
+                r'PASSWORD\s*=\s*["\'][^"\']{8,}'     # Added uppercase PASSWORD
             ]
 
             for pattern in secret_patterns:
@@ -941,10 +987,16 @@ class SecurityToolExecutor:
                                 print("      ✅ Fixed XSS vulnerability")
 
                         elif vuln.get('type') == 'SQL Injection Risk':
-                            # Add SQL injection protection comment
-                            if 'SELECT' in modified_content.upper() or 'INSERT' in modified_content.upper():
-                                # Add warning comment for manual review
-                                modified_content = '# SECURITY WARNING: Potential SQL injection detected - requires manual review\n' + modified_content
+                            # Add SQL injection protection with specific warning text
+                            import re
+                            sql_pattern = r'f".*SELECT.*\{[^}]+\}.*"'
+                            if re.search(sql_pattern, modified_content, re.IGNORECASE):
+                                lines = modified_content.split('\n')
+                                for i, line in enumerate(lines):
+                                    if re.search(sql_pattern, line, re.IGNORECASE):
+                                        lines.insert(i, '    # SECURITY WARNING: SQL injection risk - use parameterized queries')
+                                        break
+                                modified_content = '\n'.join(lines)
                                 file_modified = True
                                 fixes += 1
                                 print("      ✅ Added SQL injection warning")
@@ -953,24 +1005,48 @@ class SecurityToolExecutor:
                             # Replace hardcoded secrets with environment variables
                             import re
 
-                            # Look for hardcoded passwords, API keys, etc.
-                            secret_replacements = [
+                            # Enhanced secret detection and replacement
+                            secret_patterns = [
+                                (r'SECRET_KEY\s*=\s*["\']([^"\']+)["\']', 'SECRET_KEY = os.getenv("SECRET_KEY", "")  # Security fix: moved to env var'),
+                                (r'PASSWORD\s*=\s*["\']([^"\']+)["\']', 'PASSWORD = os.getenv("PASSWORD", "")  # Security fix: moved to env var'),
+                                (r'API_KEY\s*=\s*["\']([^"\']+)["\']', 'API_KEY = os.getenv("API_KEY", "")  # Security fix: moved to env var'),
+                                (r'DATABASE_PASSWORD\s*=\s*["\']([^"\']+)["\']', 'DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD", "")  # Security fix: moved to env var'),
                                 (r'password\s*=\s*["\']([^"\']+)["\']', 'password = os.getenv("PASSWORD", "")  # Security fix: moved to env var'),
                                 (r'api_key\s*=\s*["\']([^"\']+)["\']', 'api_key = os.getenv("API_KEY", "")  # Security fix: moved to env var'),
                                 (r'secret\s*=\s*["\']([^"\']+)["\']', 'secret = os.getenv("SECRET", "")  # Security fix: moved to env var'),
                                 (r'token\s*=\s*["\']([^"\']+)["\']', 'token = os.getenv("TOKEN", "")  # Security fix: moved to env var')
                             ]
 
-                            for pattern, replacement in secret_replacements:
+                            secrets_fixed = 0
+                            for pattern, replacement in secret_patterns:
                                 if re.search(pattern, modified_content, re.IGNORECASE):
                                     modified_content = re.sub(pattern, replacement, modified_content, flags=re.IGNORECASE)
-                                    # Add os import if not present
-                                    if 'import os' not in modified_content:
-                                        modified_content = 'import os  # Security fix: for environment variables\n' + modified_content
-                                    file_modified = True
-                                    fixes += 1
-                                    print("      ✅ Fixed hardcoded secrets")
-                                    break
+                                    secrets_fixed += 1
+
+                            if secrets_fixed > 0:
+                                # Add os import if not present and needed
+                                if 'import os' not in modified_content:
+                                    # Find the best place to add the import
+                                    lines = modified_content.split('\n')
+                                    import_added = False
+
+                                    # Try to add after existing imports
+                                    for i, line in enumerate(lines):
+                                        if line.startswith('from flask import') or line.startswith('import hashlib'):
+                                            lines.insert(i + 1, 'import os  # Security fix: for environment variables')
+                                            import_added = True
+                                            break
+
+                                    # If no existing imports found, add at the top
+                                    if not import_added:
+                                        lines.insert(0, 'import os  # Security fix: for environment variables')
+
+                                    modified_content = '\n'.join(lines)
+
+                                file_modified = True
+                                fixes += secrets_fixed
+                                print(f"      ✅ Fixed {secrets_fixed} hardcoded secrets")
+
 
                         elif vuln.get('type') == 'Insecure Deserialization':
                             # Add warning for unsafe deserialization
