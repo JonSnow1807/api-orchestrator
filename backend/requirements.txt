@@ -48,6 +48,16 @@ websocket-client==1.7.0
 # Optional vault integrations
 hvac==2.0.0  # HashiCorp Vault
 # boto3 already included for AWS
+
+# Kill Shot Features Dependencies
+pandas==2.1.4
+numpy==1.26.2
+scikit-learn==1.3.2
+beautifulsoup4==4.12.2
+dnspython==2.4.2
+requests==2.31.0
+matplotlib==3.8.2
+seaborn==0.13.0
 # azure-keyvault-secrets==4.7.0  # Azure Key Vault (optional)
 # azure-identity==1.15.0  # Azure auth (optional)
 

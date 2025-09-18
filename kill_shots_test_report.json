@@ -1,0 +1,39 @@
+{
+  "api_time_machine": {
+    "status": "FAILED",
+    "works": false,
+    "details": [
+      "\u2705 Can capture snapshots",
+      "\u2705 Detects breaking changes",
+      "\u274c Error: No snapshot found before 2025-09-17 14:48:56.095269"
+    ]
+  },
+  "telepathic_discovery": {
+    "status": "FAILED",
+    "works": false,
+    "details": [
+      "\u274c Error: No module named 'nmap'"
+    ]
+  },
+  "quantum_test_generation": {
+    "status": "PARTIAL",
+    "works": false,
+    "details": [
+      "\u2705 Generated 0 tests",
+      "\u26a0\ufe0f Limited strategy diversity",
+      "\u2705 Can convert to classical tests",
+      "\u274c No security tests found"
+    ]
+  },
+  "predictive_failure": {
+    "status": "WORKING",
+    "works": true,
+    "details": [
+      "\u2705 Predicted 4 failures",
+      "\u2705 Predictions include details",
+      "\u2705 Provides preventive actions",
+      "\u2705 Can detect memory leaks",
+      "\u2705 Can detect performance issues"
+    ]
+  }
+}
