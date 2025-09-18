@@ -192,6 +192,8 @@ class GeneratedCode:
     tests: Optional[str] = None
     documentation: Optional[str] = None
     dependencies: List[str] = None
+    complexity_analysis: Dict[str, Any] = None  # Added for API compatibility
+    framework: Optional[str] = None  # Added for API compatibility
 
 
 class CodeGenerationAgent:
@@ -292,13 +294,18 @@ class FeatureImplementation:
 
         file_path = f"{class_name.lower()}.{file_extensions.get(language, 'txt')}"
 
+        # Analyze API patterns for complexity
+        pattern_analysis = self._analyze_api_patterns(api_spec)
+
         result = GeneratedCode(
             language=language,
             code=code,
             file_path=file_path,
             tests=tests,
             documentation=docs,
-            dependencies=self._get_dependencies(language)
+            dependencies=self._get_dependencies(language),
+            complexity_analysis=pattern_analysis,
+            framework="requests" if language == "python" else None
         )
 
         self.generation_history.append(result)

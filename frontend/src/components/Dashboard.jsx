@@ -48,6 +48,7 @@ import MockServerManager from './MockServerManager';
 import APIRequestBuilder from './APIRequestBuilder';
 import AIAssistant from './AIAssistant';
 import APIDocumentation from './APIDocumentation';
+import AIEmployee from './AIEmployee';
 import RequestHistory from './RequestHistory';
 import MonitoringDashboard from './MonitoringDashboard';
 import CodeGenerator from './CodeGenerator/CodeGenerator';
@@ -258,10 +259,22 @@ const Dashboard = () => {
         <div className="mb-8 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
           <nav className="flex gap-1 bg-gray-800/50 backdrop-blur rounded-lg p-1 min-w-fit">
             <button
+              onClick={() => setActiveTab('ai-employee')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition relative ${
+                activeTab === 'ai-employee'
+                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              <Brain className="w-5 h-5" />
+              <span>AI Employee</span>
+              <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-green-500 text-white text-xs rounded-full animate-pulse">100%</span>
+            </button>
+            <button
               onClick={() => setActiveTab('ai-agents')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition relative ${
-                activeTab === 'ai-agents' 
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' 
+                activeTab === 'ai-agents'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
@@ -535,6 +548,10 @@ const Dashboard = () => {
         </div>
 
         {/* Content based on active tab */}
+        {activeTab === 'ai-employee' && (
+          <AIEmployee />
+        )}
+
         {activeTab === 'ai-agents' && (
           <AIAgentBuilder />
         )}

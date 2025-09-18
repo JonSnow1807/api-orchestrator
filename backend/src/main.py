@@ -300,6 +300,14 @@ try:
 except ImportError as e:
     print(f"⚠️ AI Agent Builder not available: {e}")
 
+# Include AI Employee System routes - AUTONOMOUS ENGINEERING
+try:
+    from src.routes.ai_employee import router as ai_employee_router
+    app.include_router(ai_employee_router)
+    print("✅ AI Employee System loaded - 100% Production Ready!")
+except ImportError as e:
+    print(f"⚠️ AI Employee System not available: {e}")
+
 # Add request logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):

@@ -59,6 +59,22 @@ class PredictedIssue:
     suggested_solutions: List[str]
     confidence: float
     based_on_patterns: List[str]
+    description: str = ""  # Added for API compatibility
+    priority: str = "medium"  # Added for API compatibility
+    suggested_fixes: List[str] = None  # Added for API compatibility
+
+    def __post_init__(self):
+        if not self.description:
+            self.description = f"{self.issue_type} issue with {self.estimated_impact} impact"
+        if self.suggested_fixes is None:
+            self.suggested_fixes = self.suggested_solutions
+        # Set priority based on probability
+        if self.probability > 0.7:
+            self.priority = "high"
+        elif self.probability > 0.4:
+            self.priority = "medium"
+        else:
+            self.priority = "low"
 
 
 class SelfLearningSystem:
@@ -103,6 +119,9 @@ class SelfLearningSystem:
         # Additional attributes for API learning
         self.api_patterns = []
         self.knowledge_base = {}
+
+        # Track patterns learned for reporting
+        self.patterns_learned = len(self.learned_patterns) + len(self.vulnerability_patterns)
 
         print("🧠 SELF-LEARNING SYSTEM INITIALIZED")
         print(f"   Knowledge Base: {len(self.vulnerability_patterns)} vulnerability patterns")
