@@ -47,7 +47,7 @@ import {
   FaRocket,
   FaChartLine
 } from 'react-icons/fa';
-import api from '../services/api';
+import api from '../config/api';
 
 const AIEmployee = () => {
   const [naturalLanguageRequest, setNaturalLanguageRequest] = useState('');
