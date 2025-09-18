@@ -395,4 +395,3 @@ async def list_capabilities(
         "production_ready": True,
         "version": "2.0.0"
     }
-}
