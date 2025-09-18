@@ -1,6 +1,6 @@
 # Multi-stage build for frontend and backend
 # Stage 1: Build frontend
-FROM node:18-slim as frontend-builder
+FROM node:20-slim as frontend-builder
 
 # Accept build args for frontend environment variables
 ARG VITE_STRIPE_PUBLISHABLE_KEY
