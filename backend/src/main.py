@@ -2442,13 +2442,34 @@ async def create_or_update_subscription(
     db: Session = Depends(get_db)
 ):
     """Create or update user subscription"""
+    from src.demo_protection import is_demo_account, validate_demo_subscription
+
+    # Special handling for demo accounts
+    if is_demo_account(current_user.email):
+        validation = validate_demo_subscription(
+            current_user.email,
+            subscription.tier,
+            payment_required=bool(subscription.payment_method_id)
+        )
+
+        if not validation["allowed"]:
+            # Return demo-friendly response instead of error
+            return SubscriptionResponse(
+                subscription_id=f"demo_{subscription.tier}_{current_user.id}",
+                tier=subscription.tier if subscription.tier in ["free", "starter", "professional"] else "professional",
+                status="active",
+                current_period_end=datetime.utcnow() + timedelta(days=365),
+                client_secret=None,
+                message=validation.get("message", "Demo account - all features unlocked for testing")
+            )
+
     billing = BillingManager(db)
     result = billing.create_subscription(
         user_id=current_user.id,
         tier=subscription.tier,
         payment_method_id=subscription.payment_method_id
     )
-    
+
     return SubscriptionResponse(**result)
 
 @app.delete("/api/billing/subscription")
@@ -2493,16 +2514,21 @@ async def add_payment_method(
     db: Session = Depends(get_db)
 ):
     """Add a payment method to user account"""
+    from src.demo_protection import protect_demo_account
+
+    # Protect demo accounts from adding payment methods
+    protect_demo_account(current_user.email, "add payment method")
+
     billing = BillingManager(db)
-    
+
     if not current_user.stripe_customer_id:
         billing.create_customer(current_user.id, current_user.email, current_user.full_name)
-    
+
     stripe.PaymentMethod.attach(
         payment_method.payment_method_id,
         customer=current_user.stripe_customer_id
     )
-    
+
     return {"message": "Payment method added successfully"}
 
 @app.post("/api/billing/webhook")

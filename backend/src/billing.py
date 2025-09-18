@@ -13,6 +13,7 @@ from fastapi import HTTPException, status
 from pydantic import BaseModel, Field
 import logging
 import uuid
+from src.demo_protection import is_demo_account, protect_demo_account, validate_demo_subscription
 
 logger = logging.getLogger(__name__)
 
@@ -130,33 +131,48 @@ class BillingManager:
             )
     
     def create_checkout_session(
-        self, 
-        user_id: int, 
+        self,
+        user_id: int,
         tier: str,
         success_url: str = None,
         cancel_url: str = None
     ) -> Dict[str, Any]:
         """Create a Stripe Checkout session for subscription"""
-        
+
         if tier not in PRICING_TIERS:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid subscription tier: {tier}"
             )
-        
+
         tier_config = PRICING_TIERS[tier]
-        
+
         # Free tier doesn't need Stripe
         if tier == "free":
             return self._set_free_tier(user_id)
-        
+
+        from src.database import User
+        user = self.db.query(User).filter(User.id == user_id).first()
+
+        # Check if this is a demo account
+        if user and is_demo_account(user.email):
+            # Demo accounts get automatic access without payment
+            logger.info(f"Demo account {user.email} - granting {tier} tier without payment")
+            validation = validate_demo_subscription(user.email, tier, payment_required=True)
+
+            if not validation["allowed"]:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=validation["message"]
+                )
+
+            # Grant demo access without payment
+            return self._set_demo_subscription(user_id, tier)
+
         # For demo/testing without Stripe configuration
         if not STRIPE_SECRET_KEY or not tier_config.get("stripe_price_id"):
             logger.info(f"Demo mode: Setting user to {tier} tier without Stripe")
             return self._set_demo_subscription(user_id, tier)
-        
-        from src.database import User
-        user = self.db.query(User).filter(User.id == user_id).first()
         
         if not user:
             raise HTTPException(
@@ -233,14 +249,28 @@ class BillingManager:
         # Free tier doesn't need Stripe
         if tier == "free":
             return self._set_free_tier(user_id)
-        
+
+        from src.database import User
+        user = self.db.query(User).filter(User.id == user_id).first()
+
+        # Check if this is a demo account trying to make payment
+        if user and is_demo_account(user.email) and payment_method_id:
+            # Block payment attempts from demo accounts
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Demo accounts cannot make payments. All professional features are already unlocked for testing. "
+                       "To make actual payments, please create a real account."
+            )
+
+        # Demo accounts without payment method get automatic access
+        if user and is_demo_account(user.email):
+            logger.info(f"Demo account {user.email} - granting {tier} tier without payment")
+            return self._set_demo_subscription(user_id, tier)
+
         # For demo/testing without Stripe configuration
         if not STRIPE_SECRET_KEY or not tier_config.get("stripe_price_id"):
             logger.info(f"Demo mode: Setting user to {tier} tier without Stripe")
             return self._set_demo_subscription(user_id, tier)
-        
-        from src.database import User
-        user = self.db.query(User).filter(User.id == user_id).first()
         
         if not user:
             raise HTTPException(
