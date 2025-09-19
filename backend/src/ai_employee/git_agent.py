@@ -66,14 +66,25 @@ class GitAgent:
 
     def __init__(self, repo_path: str = ".", github_token: Optional[str] = None):
         self.repo_path = Path(repo_path)
-        self.repo = git.Repo(self.repo_path)
+
+        # Try to find the git repository
+        try:
+            self.repo = git.Repo(self.repo_path, search_parent_directories=True)
+        except git.exc.InvalidGitRepositoryError:
+            # If not a git repo, initialize it
+            self.repo = git.Repo.init(self.repo_path)
+            print(f"   Initialized new Git repository at: {self.repo_path}")
+
         self.github_client = Github(github_token) if github_token else None
         self.commit_patterns = self._load_commit_patterns()
         self.merge_strategies = self._load_merge_strategies()
 
         print("🔀 GIT AGENT INITIALIZED")
         print(f"   Repository: {self.repo_path}")
-        print(f"   Current branch: {self.repo.active_branch}")
+        try:
+            print(f"   Current branch: {self.repo.active_branch}")
+        except TypeError:
+            print(f"   Current branch: No branch yet (empty repository)")
 
     async def create_feature_branch(
         self,
