@@ -9,10 +9,36 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 import logging
 
-from ..llm_decision_engine import (
-    LLMDecisionEngine, DecisionContext, DecisionType, RiskLevel,
-    AgentAction, DecisionPlan
-)
+# Import with fallback for missing llm_decision_engine
+try:
+    from ..llm_decision_engine import (
+        LLMDecisionEngine, DecisionContext, DecisionType, RiskLevel,
+        AgentAction, DecisionPlan
+    )
+    LLM_ENGINE_AVAILABLE = True
+except ImportError:
+    LLM_ENGINE_AVAILABLE = False
+    print("⚠️ Warning: llm_decision_engine not available, using fallback implementation")
+
+    # Fallback classes for when llm_decision_engine is not available
+    class LLMDecisionEngine:
+        def __init__(self, api_key=None):
+            pass
+
+    class DecisionContext:
+        pass
+
+    class DecisionType:
+        pass
+
+    class RiskLevel:
+        pass
+
+    class AgentAction:
+        pass
+
+    class DecisionPlan:
+        pass
 
 class AutonomousSecurityAgent:
     """

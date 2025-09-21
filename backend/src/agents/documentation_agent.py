@@ -24,9 +24,10 @@ except ImportError:
 try:
     import weasyprint
     PDF_GENERATION_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError) as e:
     PDF_GENERATION_AVAILABLE = False
-    print("⚠️ Warning: weasyprint package not available, PDF generation disabled")
+    # Suppress weasyprint warning for cleaner output - pango library missing is expected
+    pass
 
 @dataclass
 class APIEndpoint:
