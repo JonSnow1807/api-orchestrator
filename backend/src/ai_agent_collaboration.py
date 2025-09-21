@@ -325,6 +325,19 @@ class RealTimeCollaborationEngine:
 
         self.logger.info("✅ Background tasks started")
 
+    async def shutdown(self):
+        """Gracefully shutdown the collaboration system"""
+        self.logger.info("🛑 Shutting down collaboration system...")
+
+        # Cancel all background tasks
+        for task in self._background_tasks:
+            task.cancel()
+
+        # Wait for all tasks to be cancelled
+        await asyncio.gather(*self._background_tasks, return_exceptions=True)
+
+        self.logger.info("✅ Collaboration system shutdown complete")
+
     async def _message_router(self):
         """Route messages between agents in real-time"""
         while True:
