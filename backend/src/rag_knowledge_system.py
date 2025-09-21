@@ -458,20 +458,24 @@ class EnhancedRAGKnowledgeSystem:
         return embedding
 
     def _calculate_similarity(self, embedding1: np.ndarray, embedding2: np.ndarray) -> float:
-        """Calculate optimized cosine similarity between embeddings"""
+        """Calculate cosine similarity between embeddings"""
         try:
-            # Normalize embeddings once for multiple comparisons
-            if not hasattr(embedding1, '_normalized'):
-                embedding1 = embedding1 / np.linalg.norm(embedding1)
-                embedding1._normalized = True
-            if not hasattr(embedding2, '_normalized'):
-                embedding2 = embedding2 / np.linalg.norm(embedding2)
-                embedding2._normalized = True
+            # Normalize embeddings for cosine similarity
+            norm1 = np.linalg.norm(embedding1)
+            norm2 = np.linalg.norm(embedding2)
 
-            # Use vectorized dot product for normalized embeddings
-            similarity = float(np.dot(embedding1, embedding2))
-            return max(0.0, min(1.0, similarity))  # Clamp to [0, 1]
-        except Exception:
+            if norm1 == 0 or norm2 == 0:
+                return 0.0
+
+            # Calculate cosine similarity
+            similarity = float(np.dot(embedding1, embedding2) / (norm1 * norm2))
+
+            # Convert from [-1, 1] to [0, 1] range for consistency
+            similarity = (similarity + 1.0) / 2.0
+
+            return max(0.0, min(1.0, similarity))
+        except Exception as e:
+            print(f"Error calculating similarity: {e}")
             return 0.0
 
     def _calculate_similarities_batch(self, query_embedding: np.ndarray, doc_embeddings: List[np.ndarray]) -> List[float]:
