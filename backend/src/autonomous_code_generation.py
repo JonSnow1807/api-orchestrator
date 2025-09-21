@@ -776,7 +776,9 @@ async def integrate_with_external_service(data):
             'format', 'clear', 'rm -rf', 'shred', 'truncate',
             'password', 'credential', 'key', 'token', 'secret',
             'hack', 'exploit', 'inject', 'bypass', 'crack',
-            'harvest', 'steal', 'extract', 'breach', 'compromise'
+            'harvest', 'steal', 'extract', 'breach', 'compromise',
+            'subprocess', '__import__', 'exec', 'eval', 'compile',
+            'globals', 'locals', 'getattr', 'setattr', 'delattr'
         ]
 
         description_lower = request.description.lower()
@@ -790,8 +792,8 @@ async def integrate_with_external_service(data):
                         raise ValueError(f"Security violation: Request contains credential theft keyword '{keyword}'. Code generation blocked.")
                     else:
                         self.logger.warning(f"Security concern: Request involves sensitive data '{keyword}'. Extra validation will be applied.")
-                elif keyword in ['hack', 'exploit', 'inject', 'bypass', 'crack', 'harvest', 'steal', 'extract', 'breach', 'compromise']:
-                    raise ValueError(f"Security violation: Request contains malicious intent keyword '{keyword}'. Code generation blocked.")
+                elif keyword in ['hack', 'exploit', 'inject', 'bypass', 'crack', 'harvest', 'steal', 'extract', 'breach', 'compromise', 'subprocess', '__import__', 'exec', 'eval', 'compile', 'globals', 'locals', 'getattr', 'setattr', 'delattr']:
+                    raise ValueError(f"Security violation: Request contains dangerous keyword '{keyword}'. Code generation blocked.")
 
         # Additional validation for file system operations
         file_operations = ['file', 'directory', 'folder', 'path']
@@ -995,7 +997,16 @@ class TestGeneratedCode:
             ("shutil.rmtree", "Directory deletion operations are restricted"),
             ("rm -rf", "Shell commands for deletion are restricted"),
             ("subprocess.call", "Subprocess calls may be dangerous"),
+            ("subprocess.run", "Subprocess calls may be dangerous"),
+            ("subprocess.Popen", "Subprocess calls may be dangerous"),
             ("os.system", "Direct system calls are dangerous"),
+            ("__import__", "Dynamic imports are dangerous"),
+            ("compile(", "Code compilation is dangerous"),
+            ("globals(", "Global access is dangerous"),
+            ("locals(", "Local access is dangerous"),
+            ("getattr(", "Attribute access is dangerous"),
+            ("setattr(", "Attribute modification is dangerous"),
+            ("delattr(", "Attribute deletion is dangerous"),
             # Removed "print(" as it's too broad and not always a security issue
         ]
 
@@ -1005,7 +1016,7 @@ class TestGeneratedCode:
                 self.logger.warning(f"Security issue detected: {description}")
 
                 # Mark critical security issues
-                if issue in ["eval(", "exec(", "shell=True", "os.remove", "os.unlink", "shutil.rmtree", "rm -rf", "os.system"]:
+                if issue in ["eval(", "exec(", "shell=True", "os.remove", "os.unlink", "shutil.rmtree", "rm -rf", "os.system", "subprocess.call", "subprocess.run", "subprocess.Popen", "__import__", "compile(", "globals(", "locals("]:
                     has_critical_issues = True
 
         # Block code with critical security issues
