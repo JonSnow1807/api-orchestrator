@@ -243,7 +243,13 @@ class EnhancedRAGKnowledgeSystem:
 
             # Sort by similarity and return top_k results above threshold
             doc_similarities.sort(key=lambda x: x[1], reverse=True)
-            results = [doc for doc, similarity in doc_similarities[:top_k] if similarity > self.similarity_threshold]
+            results = []
+            for doc, similarity in doc_similarities[:top_k]:
+                if similarity > self.similarity_threshold:
+                    # Add relevance_score to the document
+                    result_doc = doc.copy()
+                    result_doc['relevance_score'] = similarity
+                    results.append(result_doc)
 
             print(f"✅ Semantic retrieval found {len(results)} relevant documents (threshold: {self.similarity_threshold})")
             return results

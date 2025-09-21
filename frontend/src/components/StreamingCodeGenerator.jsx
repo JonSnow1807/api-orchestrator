@@ -34,10 +34,12 @@ import {
   DocumentTextIcon,
   BeakerIcon
 } from '@heroicons/react/24/outline';
+import { useToast } from '@chakra-ui/react';
 
 const StreamingCodeGenerator = () => {
   const { user } = useAuth();
   const { currentTheme } = useTheme();
+  const toast = useToast();
   const wsRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
 
@@ -144,6 +146,13 @@ const StreamingCodeGenerator = () => {
     switch (message.type) {
       case 'connection_established':
         console.log('✅ Code generation WebSocket ready');
+        toast({
+          title: "Connected",
+          description: "Ready to generate code",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
         break;
 
       case 'code_generation_started':
@@ -152,6 +161,13 @@ const StreamingCodeGenerator = () => {
         setCurrentStep('Starting code generation...');
         setError('');
         clearResults();
+        toast({
+          title: "Generation Started",
+          description: "Your code is being generated",
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
         break;
 
       case 'code_generation_progress':
@@ -236,14 +252,25 @@ const StreamingCodeGenerator = () => {
       minH="100vh"
       bg={currentTheme.colors.background}
       color={currentTheme.colors.text}
-      p={6}
+      p={{ base: 4, md: 6 }}
     >
-      <VStack spacing={6} maxW="6xl" mx="auto">
+      <VStack spacing={{ base: 4, md: 6 }} maxW="6xl" mx="auto" px={{ base: 2, sm: 4 }}>
         {/* Header */}
-        <Flex align="center" gap={3}>
-          <SparklesIcon className="w-8 h-8" />
-          <Heading size="lg">Streaming Code Generator</Heading>
-          <Badge colorScheme={isConnected ? 'green' : 'red'}>
+        <Flex
+          align="center"
+          gap={3}
+          role="banner"
+          direction={{ base: "column", sm: "row" }}
+          textAlign={{ base: "center", sm: "left" }}
+        >
+          <SparklesIcon className="w-8 h-8" aria-hidden="true" />
+          <Heading size={{ base: "md", lg: "lg" }} as="h1">
+            Streaming Code Generator
+          </Heading>
+          <Badge
+            colorScheme={isConnected ? 'green' : 'red'}
+            aria-label={`Connection status: ${isConnected ? 'Connected' : 'Disconnected'}`}
+          >
             {isConnected ? 'Connected' : 'Disconnected'}
           </Badge>
         </Flex>
@@ -257,9 +284,9 @@ const StreamingCodeGenerator = () => {
         )}
 
         {/* Input Form */}
-        <Card w="full">
+        <Card w="full" as="section" role="form" aria-labelledby="form-heading">
           <CardHeader>
-            <Heading size="md">Code Generation Request</Heading>
+            <Heading size="md" as="h2" id="form-heading">Code Generation Request</Heading>
           </CardHeader>
           <CardBody>
             <VStack spacing={4}>
@@ -270,12 +297,30 @@ const StreamingCodeGenerator = () => {
                 size="lg"
                 minH="120px"
                 resize="vertical"
+                aria-label="Code description"
+                aria-describedby="description-help"
+                required
               />
+              <Text id="description-help" fontSize="sm" color="gray.600" sr-only>
+                Provide a detailed description of the code you want to generate
+              </Text>
 
-              <HStack w="full" spacing={4}>
-                <Box flex={1}>
-                  <Text mb={2} fontWeight="semibold">Language</Text>
-                  <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
+              <VStack
+                spacing={4}
+                w="full"
+                direction={{ base: "column", md: "row" }}
+                as={HStack}
+              >
+                <Box flex={1} w="full">
+                  <Text mb={2} fontWeight="semibold" as="label" htmlFor="language-select">
+                    Language
+                  </Text>
+                  <Select
+                    id="language-select"
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    aria-label="Select programming language"
+                  >
                     {languages.map(lang => (
                       <option key={lang.value} value={lang.value}>
                         {lang.label}
@@ -284,9 +329,16 @@ const StreamingCodeGenerator = () => {
                   </Select>
                 </Box>
 
-                <Box flex={1}>
-                  <Text mb={2} fontWeight="semibold">Code Type</Text>
-                  <Select value={codeType} onChange={(e) => setCodeType(e.target.value)}>
+                <Box flex={1} w="full">
+                  <Text mb={2} fontWeight="semibold" as="label" htmlFor="code-type-select">
+                    Code Type
+                  </Text>
+                  <Select
+                    id="code-type-select"
+                    value={codeType}
+                    onChange={(e) => setCodeType(e.target.value)}
+                    aria-label="Select code type"
+                  >
                     {codeTypes.map(type => (
                       <option key={type.value} value={type.value}>
                         {type.label}
@@ -294,45 +346,75 @@ const StreamingCodeGenerator = () => {
                     ))}
                   </Select>
                 </Box>
-              </HStack>
+              </VStack>
 
               <HStack>
                 <Button
-                  leftIcon={<PlayIcon className="w-4 h-4" />}
+                  leftIcon={<PlayIcon className="w-4 h-4" aria-hidden="true" />}
                   colorScheme="blue"
                   onClick={handleGenerateCode}
                   disabled={!isConnected || isGenerating || !description.trim()}
                   isLoading={isGenerating}
                   loadingText="Generating..."
+                  aria-label="Generate code based on description"
+                  aria-describedby={!isConnected ? "connection-error" : undefined}
                 >
                   Generate Code
                 </Button>
 
                 {isGenerating && (
                   <Button
-                    leftIcon={<StopIcon className="w-4 h-4" />}
+                    leftIcon={<StopIcon className="w-4 h-4" aria-hidden="true" />}
                     colorScheme="red"
                     variant="outline"
                     onClick={handleStopGeneration}
+                    aria-label="Stop code generation"
                   >
                     Stop
                   </Button>
                 )}
               </HStack>
+
+              {!isConnected && (
+                <Text id="connection-error" fontSize="sm" color="red.500" sr-only>
+                  Connection required to generate code
+                </Text>
+              )}
             </VStack>
           </CardBody>
         </Card>
 
         {/* Progress */}
         {isGenerating && (
-          <Card w="full">
+          <Card w="full" role="status" aria-live="polite" aria-label="Code generation progress">
             <CardBody>
               <VStack spacing={3}>
-                <Text fontWeight="semibold">{currentStep}</Text>
-                <Progress value={progress} w="full" colorScheme="blue" hasStripe isAnimated />
-                <Text fontSize="sm" color={currentTheme.colors.textSecondary}>
-                  {progress}% complete
-                </Text>
+                <HStack w="full" justify="space-between" align="center">
+                  <Text fontWeight="semibold" aria-describedby="progress-bar">
+                    {currentStep}
+                  </Text>
+                  <Text fontSize="sm" fontWeight="medium" color="blue.500">
+                    {progress}%
+                  </Text>
+                </HStack>
+                <Progress
+                  id="progress-bar"
+                  value={progress}
+                  w="full"
+                  colorScheme="blue"
+                  hasStripe
+                  isAnimated
+                  size="lg"
+                  aria-label={`Code generation ${progress}% complete`}
+                />
+                <HStack w="full" justify="space-between" align="center">
+                  <Text fontSize="sm" color={currentTheme.colors.textSecondary}>
+                    Generating your code...
+                  </Text>
+                  <Text fontSize="xs" color={currentTheme.colors.textSecondary}>
+                    {Math.ceil((100 - progress) / 20)} steps remaining
+                  </Text>
+                </HStack>
               </VStack>
             </CardBody>
           </Card>
