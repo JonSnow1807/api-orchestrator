@@ -23,8 +23,7 @@ import {
   CardHeader,
   CardBody,
   Heading,
-  Code,
-  Pre
+  Code
 } from '@chakra-ui/react';
 import {
   PlayIcon,
@@ -403,7 +402,8 @@ const StreamingCodeGenerator = () => {
                 </HStack>
               </CardHeader>
               <CardBody>
-                <Pre
+                <Box
+                  as="pre"
                   bg={currentTheme.colors.surface}
                   p={4}
                   borderRadius="md"
@@ -413,7 +413,7 @@ const StreamingCodeGenerator = () => {
                   fontFamily="monospace"
                 >
                   <Code>{generatedCode}</Code>
-                </Pre>
+                </Box>
               </CardBody>
             </Card>
 
@@ -437,7 +437,8 @@ const StreamingCodeGenerator = () => {
                   </HStack>
                 </CardHeader>
                 <CardBody>
-                  <Pre
+                  <Box
+                    as="pre"
                     bg={currentTheme.colors.surface}
                     p={4}
                     borderRadius="md"
@@ -447,7 +448,7 @@ const StreamingCodeGenerator = () => {
                     whiteSpace="pre-wrap"
                   >
                     {documentation}
-                  </Pre>
+                  </Box>
                 </CardBody>
               </Card>
             )}
@@ -472,7 +473,8 @@ const StreamingCodeGenerator = () => {
                   </HStack>
                 </CardHeader>
                 <CardBody>
-                  <Pre
+                  <Box
+                    as="pre"
                     bg={currentTheme.colors.surface}
                     p={4}
                     borderRadius="md"
@@ -482,7 +484,7 @@ const StreamingCodeGenerator = () => {
                     fontFamily="monospace"
                   >
                     <Code>{testCode}</Code>
-                  </Pre>
+                  </Box>
                 </CardBody>
               </Card>
             )}
