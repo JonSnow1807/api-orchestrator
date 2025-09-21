@@ -1255,4 +1255,4 @@ def secure_password_hash(password):
             "X-Content-Type-Options": "MIME type confusion attacks",
             "Strict-Transport-Security": "Man-in-the-middle attacks"
         }
-        return impacts.get(header, "Security vulnerability")
+        return impacts.get(header, "Security vulnerability")# Test review
