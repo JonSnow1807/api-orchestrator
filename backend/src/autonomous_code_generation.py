@@ -118,6 +118,40 @@ class AutonomousCodeGenerator:
             }
         }
 
+        # Enhanced LLM integration
+        self.llm_client = None
+        self.anthropic_client = None
+        self.llm_cache = {}
+        self._initialize_llm_clients()
+
+    def _initialize_llm_clients(self):
+        """Initialize LLM clients for enhanced code generation"""
+        import os
+
+        # Initialize OpenAI client
+        if OPENAI_AVAILABLE:
+            api_key = os.getenv("OPENAI_API_KEY")
+            if api_key:
+                try:
+                    self.llm_client = openai.OpenAI(api_key=api_key)
+                    self.logger.info("✅ OpenAI client initialized successfully")
+                except Exception as e:
+                    self.logger.warning(f"⚠️ Failed to initialize OpenAI client: {e}")
+            else:
+                self.logger.warning("⚠️ OPENAI_API_KEY not found in environment")
+
+        # Initialize Anthropic client
+        if ANTHROPIC_AVAILABLE:
+            api_key = os.getenv("ANTHROPIC_API_KEY")
+            if api_key:
+                try:
+                    self.anthropic_client = anthropic.Anthropic(api_key=api_key)
+                    self.logger.info("✅ Anthropic client initialized successfully")
+                except Exception as e:
+                    self.logger.warning(f"⚠️ Failed to initialize Anthropic client: {e}")
+            else:
+                self.logger.warning("⚠️ ANTHROPIC_API_KEY not found in environment")
+
     def _load_code_templates(self) -> Dict[str, str]:
         """Load code templates for different types"""
         return {
@@ -435,12 +469,35 @@ class Test{test_class_name}:
             dependencies=self._extract_dependencies(enhanced_code),
             validation_results={},
             generation_time=0.0,
-            model_used="autonomous_generator"
+            model_used=self._get_active_model()
         )
 
     async def _generate_initial_structure(self, request: CodeGenerationRequest) -> str:
-        """Generate initial code structure"""
+        """Generate initial code structure using LLM or templates"""
 
+        # Try LLM generation first for more sophisticated results
+        if self.llm_client or self.anthropic_client:
+            llm_prompt = f"""
+Generate the initial code structure for:
+- Description: {request.description}
+- Language: {request.language.value}
+- Code Type: {request.code_type.value}
+- Quality Level: {request.quality_level.value}
+
+Requirements:
+{chr(10).join('- ' + req for req in request.requirements)}
+
+Constraints:
+{chr(10).join('- ' + constraint for constraint in request.constraints)}
+
+Generate clean, professional code with proper structure, imports, and placeholders for business logic.
+Include comprehensive docstrings and type hints where applicable.
+"""
+            llm_result = await self._generate_with_llm(llm_prompt)
+            if llm_result and len(llm_result.strip()) > 50:  # Ensure meaningful response
+                return llm_result
+
+        # Fallback to template-based generation
         template = self.templates.get(f"{request.language.value}_{request.code_type.value}")
 
         if request.code_type == CodeType.API_ENDPOINT and request.language == CodeLanguage.PYTHON:
@@ -539,9 +596,36 @@ if __name__ == "__main__":
 '''
 
     async def _generate_business_logic(self, request: CodeGenerationRequest, initial_code: str) -> str:
-        """Generate business logic based on requirements"""
+        """Generate business logic using LLM or pattern-based approach"""
 
-        # Analyze requirements and generate appropriate logic
+        # Try LLM generation for more sophisticated business logic
+        if self.llm_client or self.anthropic_client:
+            llm_prompt = f"""
+Enhance this code with comprehensive business logic:
+
+Description: {request.description}
+Requirements: {', '.join(request.requirements)}
+Constraints: {', '.join(request.constraints)}
+
+Current Code:
+```
+{initial_code}
+```
+
+Add sophisticated business logic that:
+1. Implements the core functionality described
+2. Handles edge cases and error conditions
+3. Follows security best practices
+4. Includes proper validation and sanitization
+5. Uses efficient algorithms and data structures
+
+Return the complete enhanced code with business logic implemented.
+"""
+            llm_result = await self._generate_with_llm(llm_prompt)
+            if llm_result and len(llm_result.strip()) > len(initial_code):
+                return llm_result
+
+        # Fallback to pattern-based generation
         logic_patterns = {
             "crud": self._generate_crud_logic,
             "validation": self._generate_validation_logic,
@@ -757,6 +841,117 @@ async def integrate_with_external_service(data):
         raise ConnectionError(f"Integration error: {e}")
 '''
         return code + "\n" + integration_logic
+
+    async def _generate_with_llm(self, prompt: str, use_cache: bool = True) -> str:
+        """Generate code using LLM with caching and fallback"""
+
+        # Check cache first
+        if use_cache and prompt in self.llm_cache:
+            self.logger.info("🎯 Using cached LLM response")
+            return self.llm_cache[prompt]
+
+        response = None
+
+        # Try OpenAI first
+        if self.llm_client:
+            try:
+                self.logger.info("🤖 Generating code with OpenAI GPT-4")
+                response = await self._generate_with_openai(prompt)
+                if response:
+                    self.logger.info("✅ OpenAI generation successful")
+            except Exception as e:
+                self.logger.warning(f"⚠️ OpenAI generation failed: {e}")
+
+        # Fallback to Anthropic
+        if not response and self.anthropic_client:
+            try:
+                self.logger.info("🤖 Generating code with Anthropic Claude")
+                response = await self._generate_with_anthropic(prompt)
+                if response:
+                    self.logger.info("✅ Anthropic generation successful")
+            except Exception as e:
+                self.logger.warning(f"⚠️ Anthropic generation failed: {e}")
+
+        # Cache the response
+        if response and use_cache:
+            self.llm_cache[prompt] = response
+
+        return response or ""
+
+    async def _generate_with_openai(self, prompt: str) -> str:
+        """Generate code using OpenAI GPT-4"""
+        try:
+            completion = self.llm_client.chat.completions.create(
+                model=self.llm_configs["openai"]["model"],
+                messages=[
+                    {"role": "system", "content": "You are an expert software engineer. Generate high-quality, production-ready code with proper error handling, documentation, and security practices."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=self.llm_configs["openai"]["temperature"],
+                max_tokens=self.llm_configs["openai"]["max_tokens"]
+            )
+            return completion.choices[0].message.content
+        except Exception as e:
+            self.logger.error(f"OpenAI generation error: {e}")
+            return None
+
+    async def _generate_with_anthropic(self, prompt: str) -> str:
+        """Generate code using Anthropic Claude"""
+        try:
+            message = self.anthropic_client.messages.create(
+                model=self.llm_configs["anthropic"]["model"],
+                max_tokens=self.llm_configs["anthropic"]["max_tokens"],
+                temperature=self.llm_configs["anthropic"]["temperature"],
+                system="You are an expert software engineer. Generate high-quality, production-ready code with proper error handling, documentation, and security practices.",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            return message.content[0].text
+        except Exception as e:
+            self.logger.error(f"Anthropic generation error: {e}")
+            return None
+
+    async def _stream_generate_with_llm(self, prompt: str) -> str:
+        """Generate code with streaming support for real-time feedback"""
+
+        if self.llm_client:
+            try:
+                self.logger.info("🔄 Streaming code generation with OpenAI")
+                stream = self.llm_client.chat.completions.create(
+                    model=self.llm_configs["openai"]["model"],
+                    messages=[
+                        {"role": "system", "content": "You are an expert software engineer. Generate high-quality, production-ready code with proper error handling, documentation, and security practices."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=self.llm_configs["openai"]["temperature"],
+                    max_tokens=self.llm_configs["openai"]["max_tokens"],
+                    stream=True
+                )
+
+                full_response = ""
+                for chunk in stream:
+                    if chunk.choices[0].delta.content is not None:
+                        content = chunk.choices[0].delta.content
+                        full_response += content
+                        # Here you could emit real-time updates to a WebSocket or callback
+
+                return full_response
+
+            except Exception as e:
+                self.logger.error(f"Streaming generation error: {e}")
+
+        # Fallback to non-streaming
+        return await self._generate_with_llm(prompt, use_cache=False)
+
+    def _get_active_model(self) -> str:
+        """Get the currently active LLM model"""
+        if self.llm_client:
+            return f"openai_{self.llm_configs['openai']['model']}"
+        elif self.anthropic_client:
+            return f"anthropic_{self.llm_configs['anthropic']['model']}"
+        else:
+            return "template_based_generator"
 
     def _get_pattern_keywords(self, pattern_type: str) -> List[str]:
         """Get keywords for different pattern types"""

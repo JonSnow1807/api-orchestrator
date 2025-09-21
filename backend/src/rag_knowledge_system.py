@@ -7,8 +7,12 @@ Provides intelligent industry-specific security knowledge
 import asyncio
 import json
 import os
-from typing import Dict, Any, List, Optional
+import numpy as np
+from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
+from sklearn.metrics.pairwise import cosine_similarity
+import pickle
+from pathlib import Path
 
 # Import OpenAI for embeddings
 try:
@@ -17,19 +21,48 @@ try:
 except ImportError:
     OPENAI_AVAILABLE = False
 
-class RAGKnowledgeSystem:
-    """Production RAG system for security intelligence"""
+try:
+    import faiss
+    FAISS_AVAILABLE = True
+except ImportError:
+    FAISS_AVAILABLE = False
+    print("⚠️ FAISS not available, using basic numpy similarity")
 
-    def __init__(self):
+class EnhancedRAGKnowledgeSystem:
+    """Enhanced RAG system with vector embeddings and semantic search"""
+
+    def __init__(self, knowledge_base_path: str = "knowledge_base"):
+        self.knowledge_base_path = Path(knowledge_base_path)
+        self.knowledge_base_path.mkdir(exist_ok=True)
+
+        # Load static knowledge base
         self.knowledge_base = self._load_knowledge_base()
-        self.openai_client = None
 
-        # Initialize OpenAI client if available
+        # Initialize vector components
+        self.embeddings_cache = {}
+        self.document_embeddings = {}
+        self.conversation_memory = {}
+        self.vector_store = None
+
+        # Initialize OpenAI client
+        self.openai_client = None
         if OPENAI_AVAILABLE:
             api_key = os.getenv('OPENAI_API_KEY')
             if api_key:
                 self.openai_client = openai.OpenAI(api_key=api_key)
                 print("✅ OpenAI client initialized for RAG embeddings")
+
+        # Initialize FAISS index
+        if FAISS_AVAILABLE:
+            self.embedding_dim = 1536  # OpenAI text-embedding-3-small dimension
+            self.vector_store = faiss.IndexFlatIP(self.embedding_dim)
+            print("✅ FAISS vector store initialized")
+
+        # Load existing embeddings
+        self._load_embeddings_cache()
+
+        # Pre-compute embeddings for knowledge base
+        asyncio.create_task(self._precompute_embeddings())
 
     def _load_knowledge_base(self) -> List[Dict[str, Any]]:
         """Load security knowledge base"""
@@ -90,14 +123,21 @@ class RAGKnowledgeSystem:
             }
         ]
 
-    async def get_industry_intelligence(self, business_context: str, endpoint_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Get industry-specific intelligence"""
+    async def get_industry_intelligence(self, business_context: str, endpoint_data: Dict[str, Any], user_id: str = None) -> Dict[str, Any]:
+        """Get industry-specific intelligence with conversation context"""
+
+        # Add conversation context if available
+        enhanced_context = self._enhance_with_conversation_context(business_context, user_id)
 
         # Determine industry from context
-        industry = self._classify_industry(business_context, endpoint_data)
+        industry = self._classify_industry(enhanced_context, endpoint_data)
 
-        # Find relevant knowledge
-        relevant_docs = self._retrieve_relevant_documents(business_context, industry)
+        # Find relevant knowledge using enhanced retrieval
+        relevant_docs = await self._retrieve_relevant_documents(enhanced_context, industry)
+
+        # Store conversation context
+        if user_id:
+            self._update_conversation_memory(user_id, business_context, industry, relevant_docs)
 
         # Generate industry intelligence
         intelligence = {
@@ -137,8 +177,44 @@ class RAGKnowledgeSystem:
         else:
             return "General"
 
-    def _retrieve_relevant_documents(self, business_context: str, industry: str) -> List[Dict[str, Any]]:
-        """Retrieve relevant documents from knowledge base"""
+    async def _retrieve_relevant_documents(self, business_context: str, industry: str) -> List[Dict[str, Any]]:
+        """Enhanced document retrieval with semantic search"""
+
+        # First try semantic search if available
+        if self.openai_client:
+            semantic_docs = await self._semantic_retrieval(business_context)
+            if semantic_docs:
+                return semantic_docs
+
+        # Fallback to keyword matching
+        return self._keyword_retrieval(business_context, industry)
+
+    async def _semantic_retrieval(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
+        """Semantic document retrieval using embeddings"""
+        try:
+            # Get query embedding
+            query_embedding = await self._get_embedding(query)
+            if query_embedding is None:
+                return []
+
+            # Calculate similarities with all documents
+            similarities = []
+            for i, doc in enumerate(self.knowledge_base):
+                doc_embedding = await self._get_document_embedding(doc)
+                if doc_embedding is not None:
+                    similarity = self._calculate_similarity(query_embedding, doc_embedding)
+                    similarities.append((doc, similarity, i))
+
+            # Sort by similarity and return top_k
+            similarities.sort(key=lambda x: x[1], reverse=True)
+            return [doc for doc, similarity, _ in similarities[:top_k] if similarity > 0.3]
+
+        except Exception as e:
+            print(f"⚠️ Semantic retrieval failed: {e}")
+            return []
+
+    def _keyword_retrieval(self, business_context: str, industry: str) -> List[Dict[str, Any]]:
+        """Fallback keyword-based retrieval"""
         relevant_docs = []
 
         for doc in self.knowledge_base:
@@ -217,3 +293,215 @@ class RAGKnowledgeSystem:
         confidence = min(1.0, len(documents) * 0.3)
 
         return confidence
+
+    async def _get_embedding(self, text: str) -> Optional[np.ndarray]:
+        """Get embedding for text using OpenAI API"""
+        if not self.openai_client:
+            return None
+
+        # Check cache first
+        text_hash = hash(text)
+        if text_hash in self.embeddings_cache:
+            return self.embeddings_cache[text_hash]
+
+        try:
+            response = await asyncio.to_thread(
+                self.openai_client.embeddings.create,
+                model="text-embedding-3-small",
+                input=text
+            )
+            embedding = np.array(response.data[0].embedding)
+
+            # Cache the embedding
+            self.embeddings_cache[text_hash] = embedding
+
+            return embedding
+        except Exception as e:
+            print(f"⚠️ Failed to get embedding: {e}")
+            return None
+
+    async def _get_document_embedding(self, doc: Dict[str, Any]) -> Optional[np.ndarray]:
+        """Get embedding for a document"""
+        doc_id = doc.get('title', '')
+
+        # Check if already computed
+        if doc_id in self.document_embeddings:
+            return self.document_embeddings[doc_id]
+
+        # Combine title and content for embedding
+        text = f"{doc.get('title', '')} {doc.get('content', '')}"
+        embedding = await self._get_embedding(text)
+
+        if embedding is not None:
+            self.document_embeddings[doc_id] = embedding
+
+        return embedding
+
+    def _calculate_similarity(self, embedding1: np.ndarray, embedding2: np.ndarray) -> float:
+        """Calculate cosine similarity between embeddings"""
+        try:
+            if FAISS_AVAILABLE:
+                # Use FAISS for efficient similarity calculation
+                similarity = np.dot(embedding1, embedding2) / (
+                    np.linalg.norm(embedding1) * np.linalg.norm(embedding2)
+                )
+                return float(similarity)
+            else:
+                # Use sklearn's cosine similarity
+                similarity = cosine_similarity([embedding1], [embedding2])[0][0]
+                return float(similarity)
+        except Exception:
+            return 0.0
+
+    async def _precompute_embeddings(self):
+        """Pre-compute embeddings for all documents in knowledge base"""
+        if not self.openai_client:
+            return
+
+        print("🔄 Pre-computing document embeddings...")
+        for doc in self.knowledge_base:
+            await self._get_document_embedding(doc)
+
+        # Save embeddings to disk
+        self._save_embeddings_cache()
+        print("✅ Document embeddings computed and cached")
+
+    def _load_embeddings_cache(self):
+        """Load embeddings cache from disk"""
+        embeddings_file = self.knowledge_base_path / "embeddings_cache.pkl"
+        document_embeddings_file = self.knowledge_base_path / "document_embeddings.pkl"
+
+        if embeddings_file.exists():
+            try:
+                with open(embeddings_file, 'rb') as f:
+                    self.embeddings_cache = pickle.load(f)
+                print(f"📚 Loaded {len(self.embeddings_cache)} cached embeddings")
+            except Exception as e:
+                print(f"⚠️ Failed to load embeddings cache: {e}")
+                self.embeddings_cache = {}
+
+        if document_embeddings_file.exists():
+            try:
+                with open(document_embeddings_file, 'rb') as f:
+                    self.document_embeddings = pickle.load(f)
+                print(f"📄 Loaded {len(self.document_embeddings)} document embeddings")
+            except Exception as e:
+                print(f"⚠️ Failed to load document embeddings: {e}")
+                self.document_embeddings = {}
+
+    def _save_embeddings_cache(self):
+        """Save embeddings cache to disk"""
+        try:
+            with open(self.knowledge_base_path / "embeddings_cache.pkl", 'wb') as f:
+                pickle.dump(self.embeddings_cache, f)
+
+            with open(self.knowledge_base_path / "document_embeddings.pkl", 'wb') as f:
+                pickle.dump(self.document_embeddings, f)
+        except Exception as e:
+            print(f"⚠️ Failed to save embeddings cache: {e}")
+
+    def _enhance_with_conversation_context(self, business_context: str, user_id: str) -> str:
+        """Enhance query with conversation context"""
+        if not user_id or user_id not in self.conversation_memory:
+            return business_context
+
+        memory = self.conversation_memory[user_id]
+        recent_context = memory.get('recent_topics', [])[-3:]  # Last 3 topics
+
+        if recent_context:
+            context_str = " ".join(recent_context)
+            return f"Previous context: {context_str}\n\nCurrent query: {business_context}"
+
+        return business_context
+
+    def _update_conversation_memory(self, user_id: str, query: str, industry: str, documents: List[Dict]):
+        """Update conversation memory for a user"""
+        if user_id not in self.conversation_memory:
+            self.conversation_memory[user_id] = {
+                'recent_topics': [],
+                'industries': [],
+                'timestamp': datetime.now()
+            }
+
+        memory = self.conversation_memory[user_id]
+        memory['recent_topics'].append(f"{industry}: {query[:100]}")
+        memory['industries'].append(industry)
+        memory['timestamp'] = datetime.now()
+
+        # Keep only last 10 topics
+        if len(memory['recent_topics']) > 10:
+            memory['recent_topics'] = memory['recent_topics'][-10:]
+
+        if len(memory['industries']) > 10:
+            memory['industries'] = memory['industries'][-10:]
+
+    async def ingest_documents(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Ingest new documents into the knowledge base"""
+        ingested = 0
+        errors = []
+
+        for doc in documents:
+            try:
+                # Validate document structure
+                if not all(key in doc for key in ['title', 'content', 'domain']):
+                    errors.append(f"Invalid document structure: {doc.get('title', 'Unknown')}")
+                    continue
+
+                # Add to knowledge base
+                self.knowledge_base.append(doc)
+
+                # Pre-compute embedding
+                await self._get_document_embedding(doc)
+
+                ingested += 1
+
+            except Exception as e:
+                errors.append(f"Failed to ingest {doc.get('title', 'Unknown')}: {str(e)}")
+
+        # Save updated knowledge base and embeddings
+        self._save_knowledge_base()
+        self._save_embeddings_cache()
+
+        return {
+            "ingested": ingested,
+            "errors": errors,
+            "total_documents": len(self.knowledge_base)
+        }
+
+    def _save_knowledge_base(self):
+        """Save knowledge base to disk"""
+        try:
+            with open(self.knowledge_base_path / "knowledge_base.json", 'w') as f:
+                json.dump(self.knowledge_base, f, indent=2, default=str)
+        except Exception as e:
+            print(f"⚠️ Failed to save knowledge base: {e}")
+
+    async def get_conversation_insights(self, user_id: str) -> Dict[str, Any]:
+        """Get insights from user's conversation history"""
+        if user_id not in self.conversation_memory:
+            return {"insights": "No conversation history found"}
+
+        memory = self.conversation_memory[user_id]
+
+        # Analyze conversation patterns
+        industries = memory.get('industries', [])
+        industry_counts = {}
+        for industry in industries:
+            industry_counts[industry] = industry_counts.get(industry, 0) + 1
+
+        primary_industry = max(industry_counts.keys(), key=industry_counts.get) if industry_counts else "Unknown"
+
+        return {
+            "primary_industry": primary_industry,
+            "industry_distribution": industry_counts,
+            "total_queries": len(memory.get('recent_topics', [])),
+            "last_activity": memory.get('timestamp'),
+            "insights": f"User primarily works with {primary_industry} systems"
+        }
+
+
+# Backward compatibility
+class RAGKnowledgeSystem(EnhancedRAGKnowledgeSystem):
+    """Backward compatibility wrapper"""
+    def __init__(self):
+        super().__init__()
