@@ -466,11 +466,20 @@ class RealTimeCollaborationEngine:
                           self.agent_capabilities[agent_id].current_load < 1.0]
 
         if not available_agents:
-            self.logger.warning(f"No available agents found for task type: {task_type}")
-            # Fallback to any available agent
-            available_agents = [aid for aid in self.agents.keys()
-                              if aid in self.agent_capabilities and
-                              self.agent_capabilities[aid].current_load < 1.0][:3]
+            self.logger.warning(f"No idle agents available for task type: {task_type}")
+            # Fallback to least loaded agents from all available agents
+            all_agents = [(aid, self.agent_capabilities[aid].current_load)
+                         for aid in self.agents.keys()
+                         if aid in self.agent_capabilities]
+
+            if all_agents:
+                # Sort by load and take the least loaded agents
+                all_agents.sort(key=lambda x: x[1])
+                available_agents = [aid for aid, _ in all_agents[:3]]
+                self.logger.warning(f"Using least loaded agents: {available_agents}")
+            else:
+                self.logger.error("No agents available at all - system may be misconfigured")
+                return []
 
         return available_agents[:8]  # Limit to 8 agents for efficiency
 

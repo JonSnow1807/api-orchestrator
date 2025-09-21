@@ -168,7 +168,7 @@ const useKeyboardShortcuts = (actions = {}) => {
     };
   }, [shortcuts]);
 
-  const sequenceHandler = sequenceHandler = useCallback(keySequence(), [keySequence]);
+  const sequenceHandler = useCallback(keySequence(), [keySequence]);
 
   useEffect(() => {
     // Add both handlers

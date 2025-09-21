@@ -48,6 +48,7 @@ if settings.SENTRY_ENABLED and settings.SENTRY_DSN:
 
 # Import our orchestrator components
 from src.core.orchestrator import APIOrchestrator, AgentType
+from src.websocket_manager import websocket_manager
 from src.agents.discovery_agent import DiscoveryAgent
 from src.agents.spec_agent import SpecGeneratorAgent
 from src.agents.test_agent import TestGeneratorAgent
@@ -769,6 +770,38 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         print(f"WebSocket error: {e}")
         manager.disconnect(websocket)
+
+# Enhanced WebSocket endpoint for AI interactions
+@app.websocket("/ws/ai")
+async def ai_websocket_endpoint(websocket: WebSocket, user_id: str = "anonymous"):
+    """Enhanced WebSocket endpoint for real-time AI interactions"""
+    connection_id = None
+    try:
+        # Connect using enhanced WebSocket manager
+        connection_id = await websocket_manager.connect(websocket, user_id)
+
+        # Keep connection alive and handle messages
+        while True:
+            # Receive message from client
+            data = await websocket.receive_text()
+            message = json.loads(data)
+
+            # Handle message using enhanced manager
+            await websocket_manager.handle_message(connection_id, message)
+
+    except WebSocketDisconnect:
+        if connection_id:
+            await websocket_manager.disconnect(connection_id)
+    except Exception as e:
+        print(f"Enhanced WebSocket error: {e}")
+        if connection_id:
+            await websocket_manager.disconnect(connection_id)
+
+# WebSocket stats endpoint
+@app.get("/api/websocket/stats")
+async def get_websocket_stats(current_user: User = Depends(get_current_user)):
+    """Get WebSocket connection statistics"""
+    return websocket_manager.get_connection_stats()
 
 # API Discovery endpoint
 @app.get("/api/discover")

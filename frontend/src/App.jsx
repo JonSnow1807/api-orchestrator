@@ -1,7 +1,9 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ChakraProvider, ColorModeScript } from '@chakra-ui/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import PrivateRoute from './components/PrivateRoute';
@@ -16,15 +18,20 @@ const ProjectDetails = lazy(() => import('./components/ProjectDetails'));
 const UserProfile = lazy(() => import('./components/UserProfile'));
 const Billing = lazy(() => import('./components/Billing'));
 const PricingPage = lazy(() => import('./components/PricingPage'));
+const StreamingCodeGenerator = lazy(() => import('./components/StreamingCodeGenerator'));
 
 function App() {
   return (
-    <ErrorBoundary>
-      <Router>
-        <AuthProvider>
-          <ToastProvider>
-            <Suspense fallback={<LoadingSkeleton />}>
-              <Routes>
+    <>
+      <ColorModeScript initialColorMode="system" />
+      <ErrorBoundary>
+        <ChakraProvider>
+          <Router>
+            <AuthProvider>
+              <ThemeProvider>
+                <ToastProvider>
+                  <Suspense fallback={<LoadingSkeleton />}>
+                    <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -59,7 +66,13 @@ function App() {
               <Billing />
             </PrivateRoute>
           } />
-          
+
+          <Route path="/code-generator" element={
+            <PrivateRoute>
+              <StreamingCodeGenerator />
+            </PrivateRoute>
+          } />
+
           {/* Pricing route - shows public pricing page */}
           <Route path="/pricing" element={<PricingPage />} />
           
@@ -68,12 +81,15 @@ function App() {
           
           {/* Catch all - redirect to landing */}
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-            </Suspense>
-          </ToastProvider>
-        </AuthProvider>
-      </Router>
-    </ErrorBoundary>
+                    </Routes>
+                  </Suspense>
+                </ToastProvider>
+              </ThemeProvider>
+            </AuthProvider>
+          </Router>
+        </ChakraProvider>
+      </ErrorBoundary>
+    </>
   );
 }
 
