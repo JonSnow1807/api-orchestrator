@@ -64,7 +64,7 @@ class CodeGenerationRequest:
     requirements: List[str]
     constraints: List[str]
     context: Dict[str, Any]
-    examples: List[str] = None
+    examples: Optional[List[str]] = None
     deadline: Optional[datetime] = None
 
 @dataclass
@@ -171,7 +171,7 @@ async def {function_name}({parameters}):
         # Response
         return JSONResponse(
             status_code=200,
-            content={{"message": "Success", "data": result}}
+            content={"message": "Success", "data": result}
         )
     except Exception as e:
         logger.error(f"Error in {function_name}: {e}")
@@ -1383,20 +1383,24 @@ class TestGeneratedCode:
             name = "_".join(relevant_words[:3])  # Use first 3 relevant words
 
             # Ensure it starts with a letter and is a valid identifier
-            if not name[0].isalpha():
+            if not name or not name[0].isalpha():
                 name = "func_" + name
 
             # Remove any remaining invalid characters
             name = re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
+            # Ensure no consecutive underscores or trailing underscores
+            name = re.sub(r'_+', '_', name).strip('_')
+
             # Check if it's a Python keyword
             if keyword.iskeyword(name):
                 name = name + "_func"
 
-            # Validate it's a proper identifier
-            if name.isidentifier():
+            # Validate it's a proper identifier and not empty
+            if name and name.isidentifier() and not name.startswith('_'):
                 return name
 
+        # Fallback to guaranteed valid name
         return "generated_function"
 
     def _generate_parameters(self, description: str) -> str:
@@ -1463,7 +1467,7 @@ class TestGeneratedCode:
 ```json
 {{
     "success": true,
-    "data": {{}}
+    "data": {}
 }}
 ```
 

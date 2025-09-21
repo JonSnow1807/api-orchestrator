@@ -138,27 +138,43 @@ class RealTimeCollaborationEngine:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
 
-        # Initialize all agents
-        self.agents = self._initialize_agents()
-        if not self.agents:
-            raise RuntimeError("Failed to initialize any agents")
-        self.agent_capabilities = self._register_agent_capabilities()
+        try:
+            # Initialize all agents with enhanced error handling
+            self.agents = self._initialize_agents()
+            if not self.agents:
+                self.logger.error("No agents were successfully initialized")
+                raise RuntimeError("Failed to initialize any agents - system cannot operate")
 
-        # Background task management
-        self._background_tasks: List[asyncio.Task] = []
+            self.logger.info(f"Successfully initialized {len(self.agents)} agents")
+            self.agent_capabilities = self._register_agent_capabilities()
 
-        # Collaboration state
-        self.active_tasks: Dict[str, CollaborationTask] = {}
-        self.message_queue: asyncio.Queue = asyncio.Queue()
-        self.agent_statuses: Dict[str, Dict] = {}
-        self.collaboration_history: List[Dict] = []
+            # Background task management
+            self._background_tasks: List[asyncio.Task] = []
 
-        # Initialize agent statuses immediately
-        self._initialize_agent_statuses()
+            # Collaboration state
+            self.active_tasks: Dict[str, CollaborationTask] = {}
+            self.message_queue: asyncio.Queue = asyncio.Queue()
+            self.agent_statuses: Dict[str, Dict] = {}
+            self.collaboration_history: List[Dict] = []
 
-        # Real-time communication
-        self.communication_channels: Dict[str, asyncio.Queue] = {}
-        self.broadcast_channel: asyncio.Queue = asyncio.Queue()
+            # Initialize agent statuses immediately
+            self._initialize_agent_statuses()
+
+            # Real-time communication
+            self.communication_channels: Dict[str, asyncio.Queue] = {}
+            self.broadcast_channel: asyncio.Queue = asyncio.Queue()
+
+        except Exception as e:
+            self.logger.error(f"Critical error during collaboration engine initialization: {e}")
+            # Ensure we have at least minimal state to prevent further errors
+            self.agents = {}
+            self.agent_capabilities = {}
+            self.active_tasks = {}
+            self._background_tasks = []
+            self.agent_statuses = {}
+            self.collaboration_history = []
+            self.communication_channels = {}
+            raise RuntimeError(f"Collaboration engine initialization failed: {e}") from e
 
         # Performance metrics
         self.collaboration_metrics = {
@@ -331,10 +347,12 @@ class RealTimeCollaborationEngine:
 
         # Cancel all background tasks
         for task in self._background_tasks:
-            task.cancel()
+            if not task.done():
+                task.cancel()
 
-        # Wait for all tasks to be cancelled
-        await asyncio.gather(*self._background_tasks, return_exceptions=True)
+        # Wait for all tasks to be cancelled (only if there are tasks)
+        if self._background_tasks:
+            await asyncio.gather(*self._background_tasks, return_exceptions=True)
 
         self.logger.info("✅ Collaboration system shutdown complete")
 
