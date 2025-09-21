@@ -9,6 +9,7 @@ def check_autonomous_features():
         "backend/src/agents/autonomous_security_agent.py",
         "backend/src/ai_employee/self_learning_system.py",
         "backend/src/ai_employee/ai_employee_orchestrator.py",
+        "backend/src/kill_shots/predictive_failure_analysis.py",
         "backend/src/learning_engine.py"
     ]
     

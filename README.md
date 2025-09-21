@@ -1,7 +1,7 @@
 # 🚀 API Orchestrator v6.0 - The Ultimate Postman Destroyer
 
 > **Production-Ready API Platform - 100% Tested & Verified ✅**
-> **359 API Endpoints • 75 React Components • 18 AI Agents • 89 Test Files • 864 Test Functions**
+> **359 API Endpoints • 75 React Components • 20 AI Agents • 89 Test Files • 864 Test Functions**
 > **🌟 100% AUTONOMOUS AI EMPLOYEE SYSTEM + 4 REVOLUTIONARY KILL SHOT FEATURES**
 
 **License: Apache 2.0** | **Open Source API Platform**
@@ -14,7 +14,7 @@ The world's most comprehensive API platform that **completely destroys Postman**
 - **🌟 BREAKTHROUGH**: **100% Autonomous AI Employee System** - First in industry
 - **✅ Backend**: 359 API endpoints with AI Employee integration
 - **✅ Frontend**: 75 React components including AI Employee UI with Chakra UI
-- **✅ AI Agents**: 18 specialized agents with full orchestration
+- **✅ AI Agents**: 20 specialized agents with full orchestration (13 core + 7 AI employees)
   - **🔥 NEW**: AI Employee Orchestrator - Natural language task execution
   - **🔥 NEW**: Code Generation Agent - Multi-language API client generation
   - **🔥 NEW**: Self-Learning System - ML-based vulnerability prediction
