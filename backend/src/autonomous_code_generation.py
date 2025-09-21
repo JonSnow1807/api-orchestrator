@@ -140,7 +140,7 @@ async def {function_name}({parameters}):
             content={{"message": "Success", "data": result}}
         )
     except Exception as e:
-        logger.error(f"Error in {function_name}: {{e}}")
+        logger.error(f"Error in {function_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 ''',
             "python_model": '''
@@ -265,6 +265,9 @@ class Test{test_class_name}:
             constraints=self._extract_constraints(description),
             context=self._analyze_context(description)
         )
+
+        # Pre-generation security validation
+        await self._validate_request_security(request)
 
         start_time = asyncio.get_event_loop().time()
 
@@ -725,6 +728,81 @@ def handle_errors(func):
 
         return code
 
+    async def _generate_calculation_logic(self, request: CodeGenerationRequest, code: str) -> str:
+        """Generate calculation-specific logic"""
+        calculation_logic = '''
+# Calculation logic
+def calculate_result(input_data):
+    """Perform calculations on input data"""
+    try:
+        # Add calculation implementation here
+        result = input_data * 2  # Example calculation
+        return result
+    except Exception as e:
+        raise ValueError(f"Calculation error: {e}")
+'''
+        return code + "\n" + calculation_logic
+
+    async def _generate_integration_logic(self, request: CodeGenerationRequest, code: str) -> str:
+        """Generate integration-specific logic"""
+        integration_logic = '''
+# Integration logic
+async def integrate_with_external_service(data):
+    """Integrate with external services"""
+    try:
+        # Add integration implementation here
+        # Example: API calls, database connections, etc.
+        return {"status": "success", "data": data}
+    except Exception as e:
+        raise ConnectionError(f"Integration error: {e}")
+'''
+        return code + "\n" + integration_logic
+
+    def _get_pattern_keywords(self, pattern_type: str) -> List[str]:
+        """Get keywords for different pattern types"""
+        keyword_map = {
+            "crud": ["create", "read", "update", "delete", "database", "store", "retrieve"],
+            "validation": ["validate", "check", "verify", "sanitize", "clean"],
+            "calculation": ["calculate", "compute", "math", "formula", "algorithm"],
+            "integration": ["api", "service", "connect", "integrate", "external", "third-party"]
+        }
+        return keyword_map.get(pattern_type, [])
+
+    async def _validate_request_security(self, request: CodeGenerationRequest) -> None:
+        """Validate request for security concerns before code generation"""
+
+        dangerous_keywords = [
+            'delete', 'remove', 'unlink', 'destroy', 'erase', 'wipe',
+            'format', 'clear', 'rm -rf', 'shred', 'truncate',
+            'password', 'credential', 'key', 'token', 'secret',
+            'hack', 'exploit', 'inject', 'bypass', 'crack',
+            'harvest', 'steal', 'extract', 'breach', 'compromise'
+        ]
+
+        description_lower = request.description.lower()
+
+        for keyword in dangerous_keywords:
+            if keyword in description_lower:
+                if keyword in ['delete', 'remove', 'unlink', 'destroy', 'erase', 'wipe', 'format', 'clear', 'rm -rf', 'shred', 'truncate']:
+                    raise ValueError(f"Security violation: Request contains dangerous file operation keyword '{keyword}'. Code generation blocked for safety.")
+                elif keyword in ['password', 'credential', 'key', 'token', 'secret']:
+                    if keyword in ['harvest', 'steal', 'extract', 'breach', 'compromise']:
+                        raise ValueError(f"Security violation: Request contains credential theft keyword '{keyword}'. Code generation blocked.")
+                    else:
+                        self.logger.warning(f"Security concern: Request involves sensitive data '{keyword}'. Extra validation will be applied.")
+                elif keyword in ['hack', 'exploit', 'inject', 'bypass', 'crack', 'harvest', 'steal', 'extract', 'breach', 'compromise']:
+                    raise ValueError(f"Security violation: Request contains malicious intent keyword '{keyword}'. Code generation blocked.")
+
+        # Additional validation for file system operations
+        file_operations = ['file', 'directory', 'folder', 'path']
+        destruction_words = ['all', 'everything', 'entire', 'complete']
+
+        has_file_op = any(op in description_lower for op in file_operations)
+        has_destruction = any(word in description_lower for word in destruction_words)
+
+        if has_file_op and has_destruction:
+            raise ValueError("Security violation: Request appears to involve mass file operations. Code generation blocked for safety.")
+
     async def _generate_documentation(self, request: CodeGenerationRequest, code: str) -> str:
         """Generate comprehensive documentation"""
 
@@ -736,7 +814,7 @@ This code was automatically generated from the natural language description:
 "{request.description}"
 
 ## Features
-{chr(10).join(f"- {req}" for req in request.requirements)}
+{chr(10).join("- " + str(req) for req in request.requirements)}
 
 ## Requirements
 - Python 3.8+
@@ -789,7 +867,7 @@ This code was generated automatically. For modifications:
         """Generate comprehensive test suite"""
 
         if request.language == CodeLanguage.PYTHON:
-            return f'''
+            return '''
 import pytest
 import asyncio
 from unittest.mock import Mock, patch, AsyncMock
@@ -912,6 +990,12 @@ class TestGeneratedCode:
             ("exec(", "Use of exec() is dangerous"),
             ("shell=True", "Shell injection risk"),
             ("md5", "MD5 is cryptographically weak"),
+            ("os.remove", "File deletion operations are restricted"),
+            ("os.unlink", "File deletion operations are restricted"),
+            ("shutil.rmtree", "Directory deletion operations are restricted"),
+            ("rm -rf", "Shell commands for deletion are restricted"),
+            ("subprocess.call", "Subprocess calls may be dangerous"),
+            ("os.system", "Direct system calls are dangerous"),
             # Removed "print(" as it's too broad and not always a security issue
         ]
 
@@ -921,7 +1005,7 @@ class TestGeneratedCode:
                 self.logger.warning(f"Security issue detected: {description}")
 
                 # Mark critical security issues
-                if issue in ["eval(", "exec(", "shell=True"]:
+                if issue in ["eval(", "exec(", "shell=True", "os.remove", "os.unlink", "shutil.rmtree", "rm -rf", "os.system"]:
                     has_critical_issues = True
 
         # Block code with critical security issues
