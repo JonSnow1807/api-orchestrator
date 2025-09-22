@@ -4,26 +4,27 @@ Advanced API governance and compliance checking system
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Body
-from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 import json
 import yaml
 import re
 from datetime import datetime
-from pathlib import Path
 
-from ..database import get_db, User
+from ..database import User
 from ..auth import get_current_user
 from ..utils.logger import logger
 
 router = APIRouter(prefix="/api/governance", tags=["API Governance"])
 
+
 # Governance Models
 class GovernanceRule(BaseModel):
     id: Optional[str] = None
     name: str = Field(..., description="Rule name")
-    category: str = Field(..., description="Category: security, naming, performance, documentation")
+    category: str = Field(
+        ..., description="Category: security, naming, performance, documentation"
+    )
     severity: str = Field(..., description="Severity: error, warning, info")
     description: str = Field(..., description="Rule description")
     rule_type: str = Field(..., description="Rule type: spectral, custom, pattern")
@@ -31,6 +32,7 @@ class GovernanceRule(BaseModel):
     enabled: bool = True
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
 
 class GovernanceViolation(BaseModel):
     rule_id: str
@@ -43,6 +45,7 @@ class GovernanceViolation(BaseModel):
     column: Optional[int] = None
     suggested_fix: Optional[str] = None
 
+
 class GovernanceReport(BaseModel):
     spec_name: str
     total_rules: int
@@ -54,11 +57,13 @@ class GovernanceReport(BaseModel):
     timestamp: datetime
     summary: Dict[str, Any]
 
+
 class GovernanceRuleset(BaseModel):
     name: str
     description: str
     rules: List[str]  # Rule IDs
     extends: Optional[str] = None  # Base ruleset to extend
+
 
 # Built-in rule definitions
 BUILTIN_RULES = {
@@ -71,8 +76,8 @@ BUILTIN_RULES = {
         "rule_definition": {
             "pattern": r"http://",
             "field": "servers.url",
-            "message": "Use HTTPS instead of HTTP for security"
-        }
+            "message": "Use HTTPS instead of HTTP for security",
+        },
     },
     "security-api-key-header": {
         "name": "API Key in Header",
@@ -85,11 +90,9 @@ BUILTIN_RULES = {
             "then": {
                 "field": "in",
                 "function": "pattern",
-                "functionOptions": {
-                    "notMatch": "query"
-                }
-            }
-        }
+                "functionOptions": {"notMatch": "query"},
+            },
+        },
     },
     "naming-camel-case-params": {
         "name": "Parameter Naming Convention",
@@ -100,8 +103,8 @@ BUILTIN_RULES = {
         "rule_definition": {
             "pattern": r"^[a-z][a-zA-Z0-9]*$",
             "field": "parameters.name",
-            "message": "Parameter names should be camelCase"
-        }
+            "message": "Parameter names should be camelCase",
+        },
     },
     "naming-kebab-case-paths": {
         "name": "Path Naming Convention",
@@ -112,8 +115,8 @@ BUILTIN_RULES = {
         "rule_definition": {
             "pattern": r"^/([a-z0-9]+(-[a-z0-9]+)*/?)*$",
             "field": "paths",
-            "message": "Paths should use kebab-case"
-        }
+            "message": "Paths should use kebab-case",
+        },
     },
     "documentation-operation-summary": {
         "name": "Operation Summary Required",
@@ -123,11 +126,8 @@ BUILTIN_RULES = {
         "rule_type": "spectral",
         "rule_definition": {
             "given": "$.paths.*.*",
-            "then": {
-                "field": "summary",
-                "function": "truthy"
-            }
-        }
+            "then": {"field": "summary", "function": "truthy"},
+        },
     },
     "documentation-operation-description": {
         "name": "Operation Description Required",
@@ -137,11 +137,8 @@ BUILTIN_RULES = {
         "rule_type": "spectral",
         "rule_definition": {
             "given": "$.paths.*.*",
-            "then": {
-                "field": "description",
-                "function": "truthy"
-            }
-        }
+            "then": {"field": "description", "function": "truthy"},
+        },
     },
     "performance-response-time": {
         "name": "Response Time SLA",
@@ -151,8 +148,8 @@ BUILTIN_RULES = {
         "rule_type": "custom",
         "rule_definition": {
             "function": "check_response_time_sla",
-            "message": "Consider adding response time SLA documentation"
-        }
+            "message": "Consider adding response time SLA documentation",
+        },
     },
     "versioning-consistent": {
         "name": "Consistent API Versioning",
@@ -162,9 +159,9 @@ BUILTIN_RULES = {
         "rule_type": "custom",
         "rule_definition": {
             "function": "check_version_consistency",
-            "message": "API version should be consistent across paths"
-        }
-    }
+            "message": "API version should be consistent across paths",
+        },
+    },
 }
 
 # Predefined rulesets
@@ -172,24 +169,28 @@ PREDEFINED_RULESETS = {
     "security-focused": {
         "name": "Security Focused",
         "description": "Rules focused on API security best practices",
-        "rules": ["security-no-http", "security-api-key-header"]
+        "rules": ["security-no-http", "security-api-key-header"],
     },
     "naming-conventions": {
         "name": "Naming Conventions",
         "description": "Enforce consistent naming conventions",
-        "rules": ["naming-camel-case-params", "naming-kebab-case-paths"]
+        "rules": ["naming-camel-case-params", "naming-kebab-case-paths"],
     },
     "documentation-complete": {
         "name": "Complete Documentation",
         "description": "Ensure comprehensive API documentation",
-        "rules": ["documentation-operation-summary", "documentation-operation-description"]
+        "rules": [
+            "documentation-operation-summary",
+            "documentation-operation-description",
+        ],
     },
     "enterprise-standards": {
         "name": "Enterprise Standards",
         "description": "Complete enterprise governance ruleset",
-        "rules": list(BUILTIN_RULES.keys())
-    }
+        "rules": list(BUILTIN_RULES.keys()),
+    },
 }
+
 
 class GovernanceEngine:
     """API Governance checking engine"""
@@ -207,17 +208,21 @@ class GovernanceEngine:
             "severity": rule.severity,
             "description": rule.description,
             "rule_type": rule.rule_type,
-            "rule_definition": rule.rule_definition
+            "rule_definition": rule.rule_definition,
         }
         return rule_id
 
-    def validate_openapi_spec(self, spec: Dict[str, Any], ruleset_name: str = "enterprise-standards") -> GovernanceReport:
+    def validate_openapi_spec(
+        self, spec: Dict[str, Any], ruleset_name: str = "enterprise-standards"
+    ) -> GovernanceReport:
         """Validate OpenAPI spec against governance rules"""
         violations = []
 
         # Get rules to apply
         ruleset = self.rulesets.get(ruleset_name, {"rules": list(self.rules.keys())})
-        rules_to_apply = [self.rules[rule_id] for rule_id in ruleset["rules"] if rule_id in self.rules]
+        rules_to_apply = [
+            self.rules[rule_id] for rule_id in ruleset["rules"] if rule_id in self.rules
+        ]
 
         # Apply each rule
         for rule_id in ruleset["rules"]:
@@ -249,11 +254,17 @@ class GovernanceEngine:
                 "total_violations": len(violations),
                 "categories": self._categorize_violations(violations),
                 "most_common_issues": self._get_common_issues(violations),
-                "compliance_level": "High" if score >= 80 else "Medium" if score >= 60 else "Low"
-            }
+                "compliance_level": "High"
+                if score >= 80
+                else "Medium"
+                if score >= 60
+                else "Low",
+            },
         )
 
-    def _apply_rule(self, spec: Dict[str, Any], rule_id: str, rule: Dict[str, Any]) -> List[GovernanceViolation]:
+    def _apply_rule(
+        self, spec: Dict[str, Any], rule_id: str, rule: Dict[str, Any]
+    ) -> List[GovernanceViolation]:
         """Apply a single rule to the spec"""
         violations = []
 
@@ -270,7 +281,9 @@ class GovernanceEngine:
 
         return violations
 
-    def _apply_pattern_rule(self, spec: Dict[str, Any], rule_id: str, rule: Dict[str, Any]) -> List[GovernanceViolation]:
+    def _apply_pattern_rule(
+        self, spec: Dict[str, Any], rule_id: str, rule: Dict[str, Any]
+    ) -> List[GovernanceViolation]:
         """Apply pattern-based rules"""
         violations = []
         definition = rule["rule_definition"]
@@ -278,14 +291,18 @@ class GovernanceEngine:
         field_path = definition["field"]
 
         # Navigate to the field and check pattern
-        violations.extend(self._check_pattern_in_path(spec, field_path, pattern, rule_id, rule))
+        violations.extend(
+            self._check_pattern_in_path(spec, field_path, pattern, rule_id, rule)
+        )
 
         return violations
 
-    def _apply_spectral_rule(self, spec: Dict[str, Any], rule_id: str, rule: Dict[str, Any]) -> List[GovernanceViolation]:
+    def _apply_spectral_rule(
+        self, spec: Dict[str, Any], rule_id: str, rule: Dict[str, Any]
+    ) -> List[GovernanceViolation]:
         """Apply Spectral-like JSONPath rules"""
         violations = []
-        definition = rule["rule_definition"]
+        rule["rule_definition"]
 
         # Simplified Spectral rule application
         # In production, you'd use the actual Spectral library
@@ -294,35 +311,50 @@ class GovernanceEngine:
             security_schemes = spec.get("components", {}).get("securitySchemes", {})
             for scheme_name, scheme in security_schemes.items():
                 if scheme.get("type") == "apiKey" and scheme.get("in") == "query":
-                    violations.append(GovernanceViolation(
-                        rule_id=rule_id,
-                        rule_name=rule["name"],
-                        severity=rule["severity"],
-                        category=rule["category"],
-                        message="API key should be in header, not query parameter",
-                        path=f"components.securitySchemes.{scheme_name}",
-                        suggested_fix="Change 'in' field from 'query' to 'header'"
-                    ))
+                    violations.append(
+                        GovernanceViolation(
+                            rule_id=rule_id,
+                            rule_name=rule["name"],
+                            severity=rule["severity"],
+                            category=rule["category"],
+                            message="API key should be in header, not query parameter",
+                            path=f"components.securitySchemes.{scheme_name}",
+                            suggested_fix="Change 'in' field from 'query' to 'header'",
+                        )
+                    )
 
         elif rule_id == "documentation-operation-summary":
             paths = spec.get("paths", {})
             for path_name, path_obj in paths.items():
                 for method, operation in path_obj.items():
-                    if method in ["get", "post", "put", "delete", "patch", "options", "head", "trace"]:
+                    if method in [
+                        "get",
+                        "post",
+                        "put",
+                        "delete",
+                        "patch",
+                        "options",
+                        "head",
+                        "trace",
+                    ]:
                         if not operation.get("summary"):
-                            violations.append(GovernanceViolation(
-                                rule_id=rule_id,
-                                rule_name=rule["name"],
-                                severity=rule["severity"],
-                                category=rule["category"],
-                                message="Operation is missing required summary",
-                                path=f"paths.{path_name}.{method}",
-                                suggested_fix="Add a 'summary' field describing this operation"
-                            ))
+                            violations.append(
+                                GovernanceViolation(
+                                    rule_id=rule_id,
+                                    rule_name=rule["name"],
+                                    severity=rule["severity"],
+                                    category=rule["category"],
+                                    message="Operation is missing required summary",
+                                    path=f"paths.{path_name}.{method}",
+                                    suggested_fix="Add a 'summary' field describing this operation",
+                                )
+                            )
 
         return violations
 
-    def _apply_custom_rule(self, spec: Dict[str, Any], rule_id: str, rule: Dict[str, Any]) -> List[GovernanceViolation]:
+    def _apply_custom_rule(
+        self, spec: Dict[str, Any], rule_id: str, rule: Dict[str, Any]
+    ) -> List[GovernanceViolation]:
         """Apply custom business logic rules"""
         violations = []
         definition = rule["rule_definition"]
@@ -335,7 +367,9 @@ class GovernanceEngine:
 
         return violations
 
-    def _check_pattern_in_path(self, obj: Any, path: str, pattern: str, rule_id: str, rule: Dict[str, Any]) -> List[GovernanceViolation]:
+    def _check_pattern_in_path(
+        self, obj: Any, path: str, pattern: str, rule_id: str, rule: Dict[str, Any]
+    ) -> List[GovernanceViolation]:
         """Check pattern in nested object path"""
         violations = []
 
@@ -344,33 +378,39 @@ class GovernanceEngine:
             for i, server in enumerate(servers):
                 url = server.get("url", "")
                 if re.search(pattern, url):
-                    violations.append(GovernanceViolation(
-                        rule_id=rule_id,
-                        rule_name=rule["name"],
-                        severity=rule["severity"],
-                        category=rule["category"],
-                        message=rule["rule_definition"]["message"],
-                        path=f"servers[{i}].url",
-                        suggested_fix="Use HTTPS instead of HTTP"
-                    ))
+                    violations.append(
+                        GovernanceViolation(
+                            rule_id=rule_id,
+                            rule_name=rule["name"],
+                            severity=rule["severity"],
+                            category=rule["category"],
+                            message=rule["rule_definition"]["message"],
+                            path=f"servers[{i}].url",
+                            suggested_fix="Use HTTPS instead of HTTP",
+                        )
+                    )
 
         elif path == "paths":
             paths = obj.get("paths", {})
             for path_name in paths.keys():
                 if not re.match(pattern, path_name):
-                    violations.append(GovernanceViolation(
-                        rule_id=rule_id,
-                        rule_name=rule["name"],
-                        severity=rule["severity"],
-                        category=rule["category"],
-                        message=rule["rule_definition"]["message"],
-                        path=f"paths.{path_name}",
-                        suggested_fix="Use kebab-case for path names"
-                    ))
+                    violations.append(
+                        GovernanceViolation(
+                            rule_id=rule_id,
+                            rule_name=rule["name"],
+                            severity=rule["severity"],
+                            category=rule["category"],
+                            message=rule["rule_definition"]["message"],
+                            path=f"paths.{path_name}",
+                            suggested_fix="Use kebab-case for path names",
+                        )
+                    )
 
         return violations
 
-    def _check_version_consistency(self, spec: Dict[str, Any], rule_id: str, rule: Dict[str, Any]) -> List[GovernanceViolation]:
+    def _check_version_consistency(
+        self, spec: Dict[str, Any], rule_id: str, rule: Dict[str, Any]
+    ) -> List[GovernanceViolation]:
         """Check API version consistency"""
         violations = []
 
@@ -379,24 +419,28 @@ class GovernanceEngine:
         versions = set()
 
         for path in paths.keys():
-            version_match = re.search(r'/v(\d+)', path)
+            version_match = re.search(r"/v(\d+)", path)
             if version_match:
                 versions.add(version_match.group(1))
 
         if len(versions) > 1:
-            violations.append(GovernanceViolation(
-                rule_id=rule_id,
-                rule_name=rule["name"],
-                severity=rule["severity"],
-                category=rule["category"],
-                message=f"Multiple API versions detected: {', '.join(versions)}",
-                path="paths",
-                suggested_fix="Use consistent API versioning across all paths"
-            ))
+            violations.append(
+                GovernanceViolation(
+                    rule_id=rule_id,
+                    rule_name=rule["name"],
+                    severity=rule["severity"],
+                    category=rule["category"],
+                    message=f"Multiple API versions detected: {', '.join(versions)}",
+                    path="paths",
+                    suggested_fix="Use consistent API versioning across all paths",
+                )
+            )
 
         return violations
 
-    def _check_response_time_sla(self, spec: Dict[str, Any], rule_id: str, rule: Dict[str, Any]) -> List[GovernanceViolation]:
+    def _check_response_time_sla(
+        self, spec: Dict[str, Any], rule_id: str, rule: Dict[str, Any]
+    ) -> List[GovernanceViolation]:
         """Check for response time SLA documentation"""
         violations = []
 
@@ -410,23 +454,33 @@ class GovernanceEngine:
 
                     has_performance_info = any(
                         keyword in (description + summary).lower()
-                        for keyword in ["response time", "performance", "latency", "sla", "timeout"]
+                        for keyword in [
+                            "response time",
+                            "performance",
+                            "latency",
+                            "sla",
+                            "timeout",
+                        ]
                     )
 
                     if not has_performance_info:
-                        violations.append(GovernanceViolation(
-                            rule_id=rule_id,
-                            rule_name=rule["name"],
-                            severity=rule["severity"],
-                            category=rule["category"],
-                            message="No performance/SLA information provided",
-                            path=f"paths.{path_name}.{method}",
-                            suggested_fix="Add response time or performance expectations to the description"
-                        ))
+                        violations.append(
+                            GovernanceViolation(
+                                rule_id=rule_id,
+                                rule_name=rule["name"],
+                                severity=rule["severity"],
+                                category=rule["category"],
+                                message="No performance/SLA information provided",
+                                path=f"paths.{path_name}.{method}",
+                                suggested_fix="Add response time or performance expectations to the description",
+                            )
+                        )
 
         return violations
 
-    def _categorize_violations(self, violations: List[GovernanceViolation]) -> Dict[str, int]:
+    def _categorize_violations(
+        self, violations: List[GovernanceViolation]
+    ) -> Dict[str, int]:
         """Categorize violations by type"""
         categories = {}
         for violation in violations:
@@ -437,19 +491,25 @@ class GovernanceEngine:
         """Get most common issue types"""
         issue_counts = {}
         for violation in violations:
-            issue_counts[violation.rule_name] = issue_counts.get(violation.rule_name, 0) + 1
+            issue_counts[violation.rule_name] = (
+                issue_counts.get(violation.rule_name, 0) + 1
+            )
 
-        return sorted(issue_counts.keys(), key=lambda x: issue_counts[x], reverse=True)[:5]
+        return sorted(issue_counts.keys(), key=lambda x: issue_counts[x], reverse=True)[
+            :5
+        ]
+
 
 # Global governance engine
 governance_engine = GovernanceEngine()
 
 # Routes
 
+
 @router.get("/rules", response_model=Dict[str, Any])
 async def get_governance_rules(
     category: Optional[str] = Query(None, description="Filter by category"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Get all available governance rules"""
     rules = governance_engine.rules
@@ -460,38 +520,39 @@ async def get_governance_rules(
     return {
         "rules": rules,
         "total": len(rules),
-        "categories": list(set(rule["category"] for rule in governance_engine.rules.values()))
+        "categories": list(
+            set(rule["category"] for rule in governance_engine.rules.values())
+        ),
     }
+
 
 @router.get("/rulesets", response_model=Dict[str, Any])
 async def get_governance_rulesets(current_user: User = Depends(get_current_user)):
     """Get all available governance rulesets"""
     return {
         "rulesets": governance_engine.rulesets,
-        "total": len(governance_engine.rulesets)
+        "total": len(governance_engine.rulesets),
     }
+
 
 @router.post("/rules/custom", response_model=Dict[str, str])
 async def create_custom_rule(
-    rule: GovernanceRule,
-    current_user: User = Depends(get_current_user)
+    rule: GovernanceRule, current_user: User = Depends(get_current_user)
 ):
     """Create a custom governance rule"""
     try:
         rule_id = governance_engine.add_custom_rule(rule)
-        return {
-            "message": "Custom rule created successfully",
-            "rule_id": rule_id
-        }
+        return {"message": "Custom rule created successfully", "rule_id": rule_id}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.post("/validate", response_model=GovernanceReport)
 async def validate_api_spec(
     spec_content: str = Body(..., description="OpenAPI specification content"),
     format: str = Body("yaml", description="Specification format: yaml or json"),
     ruleset: str = Body("enterprise-standards", description="Ruleset to apply"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Validate API specification against governance rules"""
     try:
@@ -504,7 +565,9 @@ async def validate_api_spec(
         # Validate specification
         report = governance_engine.validate_openapi_spec(spec, ruleset)
 
-        logger.info(f"Governance validation completed for user {current_user.id}: {len(report.violations)} violations found")
+        logger.info(
+            f"Governance validation completed for user {current_user.id}: {len(report.violations)} violations found"
+        )
 
         return report
 
@@ -516,11 +579,12 @@ async def validate_api_spec(
         logger.error(f"Governance validation error: {e}")
         raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
+
 @router.post("/validate/url")
 async def validate_api_spec_from_url(
     url: str = Body(..., description="URL to OpenAPI specification"),
     ruleset: str = Body("enterprise-standards", description="Ruleset to apply"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Validate API specification from URL"""
     try:
@@ -539,28 +603,34 @@ async def validate_api_spec_from_url(
             # Validate specification
             report = governance_engine.validate_openapi_spec(spec, ruleset)
 
-            logger.info(f"Governance validation from URL completed: {len(report.violations)} violations found")
+            logger.info(
+                f"Governance validation from URL completed: {len(report.violations)} violations found"
+            )
 
             return report
 
     except httpx.HTTPError as e:
-        raise HTTPException(status_code=400, detail=f"Failed to fetch specification: {str(e)}")
+        raise HTTPException(
+            status_code=400, detail=f"Failed to fetch specification: {str(e)}"
+        )
     except Exception as e:
         logger.error(f"URL governance validation error: {e}")
         raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
+
 @router.get("/reports/history")
 async def get_validation_history(
     limit: int = Query(10, description="Number of reports to return"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Get governance validation history"""
     # In a real implementation, this would fetch from database
     return {
         "reports": [],
         "total": 0,
-        "message": "Validation history will be stored in future versions"
+        "message": "Validation history will be stored in future versions",
     }
+
 
 @router.get("/dashboard")
 async def get_governance_dashboard(current_user: User = Depends(get_current_user)):
@@ -569,38 +639,51 @@ async def get_governance_dashboard(current_user: User = Depends(get_current_user
         "overview": {
             "total_rules": len(governance_engine.rules),
             "total_rulesets": len(governance_engine.rulesets),
-            "categories": list(set(rule["category"] for rule in governance_engine.rules.values()))
+            "categories": list(
+                set(rule["category"] for rule in governance_engine.rules.values())
+            ),
         },
         "rule_distribution": {
-            category: sum(1 for rule in governance_engine.rules.values() if rule["category"] == category)
-            for category in set(rule["category"] for rule in governance_engine.rules.values())
+            category: sum(
+                1
+                for rule in governance_engine.rules.values()
+                if rule["category"] == category
+            )
+            for category in set(
+                rule["category"] for rule in governance_engine.rules.values()
+            )
         },
         "popular_rulesets": [
             {"name": "Enterprise Standards", "usage": 85},
             {"name": "Security Focused", "usage": 67},
             {"name": "Documentation Complete", "usage": 43},
-            {"name": "Naming Conventions", "usage": 38}
+            {"name": "Naming Conventions", "usage": 38},
         ],
-        "recent_validations": 0  # Would come from database
+        "recent_validations": 0,  # Would come from database
     }
+
 
 @router.get("/categories")
 async def get_rule_categories(current_user: User = Depends(get_current_user)):
     """Get all available rule categories"""
-    categories = list(set(rule["category"] for rule in governance_engine.rules.values()))
+    categories = list(
+        set(rule["category"] for rule in governance_engine.rules.values())
+    )
 
     category_details = {}
     for category in categories:
-        rules_in_category = [rule for rule in governance_engine.rules.values() if rule["category"] == category]
+        rules_in_category = [
+            rule
+            for rule in governance_engine.rules.values()
+            if rule["category"] == category
+        ]
         category_details[category] = {
             "count": len(rules_in_category),
-            "rules": [rule["name"] for rule in rules_in_category]
+            "rules": [rule["name"] for rule in rules_in_category],
         }
 
-    return {
-        "categories": category_details,
-        "total_categories": len(categories)
-    }
+    return {"categories": category_details, "total_categories": len(categories)}
+
 
 # CLI Integration endpoint
 @router.post("/cli/validate")
@@ -608,7 +691,7 @@ async def cli_validate_spec(
     spec_file: str = Body(..., description="Path to specification file"),
     ruleset: str = Body("enterprise-standards", description="Ruleset to apply"),
     format: str = Body("json", description="Output format"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """CLI endpoint for governance validation"""
     try:
@@ -628,8 +711,8 @@ async def cli_validate_spec(
                 "total_violations": 0,
                 "categories": {},
                 "most_common_issues": [],
-                "compliance_level": "High"
-            }
+                "compliance_level": "High",
+            },
         )
 
         if format == "json":
@@ -640,7 +723,7 @@ async def cli_validate_spec(
                 "status": "PASS",
                 "score": sample_report.score,
                 "violations": len(sample_report.violations),
-                "message": "API specification passed all governance checks"
+                "message": "API specification passed all governance checks",
             }
 
     except Exception as e:

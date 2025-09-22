@@ -5,8 +5,7 @@ Autonomous AI agents with LLM decision-making capabilities
 
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
-from typing import Dict, Any, List, Optional
-from datetime import datetime
+from typing import Dict, Any
 
 from ..database import get_db, User
 from ..auth import get_current_user, check_subscription_feature
@@ -18,6 +17,7 @@ router = APIRouter(prefix="/api/ultra-premium", tags=["Ultra Premium - AI Workfo
 # Initialize autonomous agents
 autonomous_security_agent = None
 
+
 def get_autonomous_security_agent():
     """Get or create autonomous security agent"""
     global autonomous_security_agent
@@ -25,11 +25,12 @@ def get_autonomous_security_agent():
         autonomous_security_agent = AutonomousSecurityAgent()
     return autonomous_security_agent
 
+
 @router.post("/autonomous-security-analysis")
 async def autonomous_security_analysis(
     request: Dict[str, Any] = Body(...),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Ultra Premium: Autonomous AI security analysis with auto-execution
@@ -38,7 +39,7 @@ async def autonomous_security_analysis(
     if not check_subscription_feature(current_user, "ai_workforce"):
         raise HTTPException(
             status_code=402,
-            detail="Ultra Premium subscription required for autonomous AI agents"
+            detail="Ultra Premium subscription required for autonomous AI agents",
         )
 
     try:
@@ -52,46 +53,48 @@ async def autonomous_security_analysis(
             "business_context": request.get("business_context"),
             "preferences": {
                 "auto_fix_low_risk": request.get("auto_fix_low_risk", True),
-                "require_approval_medium_risk": request.get("require_approval_medium_risk", True),
-                "never_auto_execute_high_risk": True
+                "require_approval_medium_risk": request.get(
+                    "require_approval_medium_risk", True
+                ),
+                "never_auto_execute_high_risk": True,
             },
-            "historical_data": []  # Could fetch from database
+            "historical_data": [],  # Could fetch from database
         }
 
         agent = get_autonomous_security_agent()
         result = await agent.autonomous_security_analysis(
             endpoint_data=endpoint_data,
             user_context=user_context,
-            auto_execute=auto_execute
+            auto_execute=auto_execute,
         )
 
         return {
             "success": True,
             "data": result,
             "agent_type": "autonomous_security",
-            "execution_mode": "auto" if auto_execute else "approval_required"
+            "execution_mode": "auto" if auto_execute else "approval_required",
         }
 
     except Exception as e:
         return {
             "success": False,
             "error": str(e),
-            "message": "Error in autonomous security analysis"
+            "message": "Error in autonomous security analysis",
         }
+
 
 @router.post("/execute-approved-plan")
 async def execute_approved_plan(
     request: Dict[str, Any] = Body(...),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Ultra Premium: Execute a previously approved autonomous action plan
     """
     if not check_subscription_feature(current_user, "ai_workforce"):
         raise HTTPException(
-            status_code=402,
-            detail="Ultra Premium subscription required"
+            status_code=402, detail="Ultra Premium subscription required"
         )
 
     try:
@@ -107,35 +110,28 @@ async def execute_approved_plan(
             historical_data=[],
             user_preferences=request.get("preferences", {}),
             available_tools=[],
-            current_findings={}
+            current_findings={},
         )
 
         agent = get_autonomous_security_agent()
         result = await agent.execute_approved_plan(plan_id, context)
 
-        return {
-            "success": True,
-            "data": result
-        }
+        return {"success": True, "data": result}
 
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 @router.get("/agent-analytics")
 async def get_agent_analytics(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """
     Ultra Premium: Get analytics on autonomous agent performance
     """
     if not check_subscription_feature(current_user, "ai_workforce"):
         raise HTTPException(
-            status_code=402,
-            detail="Ultra Premium subscription required"
+            status_code=402, detail="Ultra Premium subscription required"
         )
 
     try:
@@ -146,28 +142,25 @@ async def get_agent_analytics(
             "success": True,
             "data": analytics,
             "user_id": current_user.id,
-            "subscription_tier": "ultra_premium"
+            "subscription_tier": "ultra_premium",
         }
 
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 @router.post("/agent-feedback")
 async def submit_agent_feedback(
     request: Dict[str, Any] = Body(...),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Ultra Premium: Submit feedback on agent performance for learning
     """
     if not check_subscription_feature(current_user, "ai_workforce"):
         raise HTTPException(
-            status_code=402,
-            detail="Ultra Premium subscription required"
+            status_code=402, detail="Ultra Premium subscription required"
         )
 
     try:
@@ -179,26 +172,21 @@ async def submit_agent_feedback(
 
         return {
             "success": True,
-            "message": "Feedback received and will improve future decisions"
+            "message": "Feedback received and will improve future decisions",
         }
 
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 @router.get("/autonomous-capabilities")
-async def get_autonomous_capabilities(
-    current_user: User = Depends(get_current_user)
-):
+async def get_autonomous_capabilities(current_user: User = Depends(get_current_user)):
     """
     Ultra Premium: Get list of autonomous capabilities available
     """
     if not check_subscription_feature(current_user, "ai_workforce"):
         raise HTTPException(
-            status_code=402,
-            detail="Ultra Premium subscription required"
+            status_code=402, detail="Ultra Premium subscription required"
         )
 
     capabilities = {
@@ -212,40 +200,36 @@ async def get_autonomous_capabilities(
                 "Security header implementation",
                 "Compliance checking (GDPR, OWASP, HIPAA)",
                 "Rate limiting implementation",
-                "SSL/TLS configuration optimization"
+                "SSL/TLS configuration optimization",
             ],
             "risk_levels": ["SAFE", "LOW", "MEDIUM", "HIGH"],
-            "auto_execution": "Configurable based on risk level"
+            "auto_execution": "Configurable based on risk level",
         },
         "coming_soon": [
             {
                 "name": "Autonomous Performance Agent",
                 "description": "AI agent for automatic API performance optimization",
-                "eta": "Next release"
+                "eta": "Next release",
             },
             {
                 "name": "Autonomous Testing Agent",
                 "description": "AI agent that generates and runs comprehensive test suites",
-                "eta": "Next release"
+                "eta": "Next release",
             },
             {
                 "name": "Cross-Agent Orchestration",
                 "description": "Multiple AI agents working together on complex tasks",
-                "eta": "Coming soon"
-            }
-        ]
+                "eta": "Coming soon",
+            },
+        ],
     }
 
-    return {
-        "success": True,
-        "data": capabilities,
-        "user_tier": "ultra_premium"
-    }
+    return {"success": True, "data": capabilities, "user_tier": "ultra_premium"}
+
 
 @router.post("/simulate-autonomous-action")
 async def simulate_autonomous_action(
-    request: Dict[str, Any] = Body(...),
-    current_user: User = Depends(get_current_user)
+    request: Dict[str, Any] = Body(...), current_user: User = Depends(get_current_user)
 ):
     """
     Ultra Premium: Simulate what an autonomous agent would do (for demos)
@@ -254,7 +238,7 @@ async def simulate_autonomous_action(
         # For demo purposes, allow limited simulation
         pass
 
-    action_type = request.get("action_type", "security_scan")
+    request.get("action_type", "security_scan")
     endpoint_data = request.get("endpoint_data", {})
 
     # Generate a realistic simulation
@@ -265,30 +249,26 @@ async def simulate_autonomous_action(
                 "action": "Run comprehensive security scan",
                 "risk_level": "SAFE",
                 "estimated_duration": "30 seconds",
-                "auto_executable": True
+                "auto_executable": True,
             },
             {
                 "action": "Implement security headers",
                 "risk_level": "LOW",
                 "estimated_duration": "10 seconds",
-                "auto_executable": True
+                "auto_executable": True,
             },
             {
                 "action": "Add authentication validation",
                 "risk_level": "MEDIUM",
                 "estimated_duration": "60 seconds",
                 "auto_executable": False,
-                "requires_approval": True
-            }
+                "requires_approval": True,
+            },
         ],
         "estimated_total_time": "100 seconds",
         "confidence_score": 0.87,
         "potential_issues_prevented": 5,
-        "simulation_note": "This is a simulation - actual execution requires Ultra Premium subscription"
+        "simulation_note": "This is a simulation - actual execution requires Ultra Premium subscription",
     }
 
-    return {
-        "success": True,
-        "data": simulation,
-        "is_simulation": True
-    }
+    return {"success": True, "data": simulation, "is_simulation": True}

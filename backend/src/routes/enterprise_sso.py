@@ -4,7 +4,7 @@ Handles SAML 2.0 and OIDC authentication flows
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, Form
-from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
@@ -12,34 +12,42 @@ import logging
 
 from src.database import get_db, User
 from src.enterprise_sso import (
-    enterprise_auth, get_sso_user, check_enterprise_features,
-    get_sso_providers, is_sso_required_for_domain, SSOProvider
+    enterprise_auth,
+    get_sso_user,
+    check_enterprise_features,
+    get_sso_providers,
+    is_sso_required_for_domain,
+    SSOProvider,
 )
 from src.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth/sso", tags=["Enterprise SSO"])
 
+
 class SSODiscoveryRequest(BaseModel):
     email: EmailStr
+
 
 class SSODiscoveryResponse(BaseModel):
     sso_required: bool
     provider: Optional[SSOProvider] = None
     auth_url: Optional[str] = None
 
+
 class SSOProviderResponse(BaseModel):
     providers: List[SSOProvider]
+
 
 class EnterpriseStatusResponse(BaseModel):
     is_enterprise_user: bool
     sso_provider: Optional[str] = None
     features: dict
 
+
 @router.post("/discover", response_model=SSODiscoveryResponse)
 async def discover_sso_provider(
-    discovery_request: SSODiscoveryRequest,
-    request: Request
+    discovery_request: SSODiscoveryRequest, request: Request
 ):
     """
     Discover SSO provider for email domain
@@ -53,15 +61,15 @@ async def discover_sso_provider(
 
         if not provider:
             return SSODiscoveryResponse(
-                sso_required=False,
-                provider=None,
-                auth_url=None
+                sso_required=False, provider=None, auth_url=None
             )
 
         # Generate auth URL based on provider type
         auth_url = None
         if provider.type == "saml":
-            return_to = str(request.url_for("sso_saml_callback", provider_id=provider.id))
+            return_to = str(
+                request.url_for("sso_saml_callback", provider_id=provider.id)
+            )
             auth_url = enterprise_auth.get_saml_auth_url(provider.id, return_to)
         elif provider.type == "oidc":
             auth_url = enterprise_auth.get_oidc_auth_url(provider.id, request)
@@ -69,20 +77,19 @@ async def discover_sso_provider(
         return SSODiscoveryResponse(
             sso_required=is_sso_required_for_domain(email),
             provider=provider,
-            auth_url=auth_url
+            auth_url=auth_url,
         )
 
     except Exception as e:
         logger.error(f"SSO discovery error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to discover SSO provider"
+            detail="Failed to discover SSO provider",
         )
 
+
 @router.get("/providers", response_model=SSOProviderResponse)
-async def list_sso_providers(
-    current_user: User = Depends(get_current_user)
-):
+async def list_sso_providers(current_user: User = Depends(get_current_user)):
     """List all configured SSO providers"""
     try:
         providers = get_sso_providers()
@@ -91,14 +98,13 @@ async def list_sso_providers(
         logger.error(f"Failed to list SSO providers: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve SSO providers"
+            detail="Failed to retrieve SSO providers",
         )
+
 
 @router.get("/saml/{provider_id}/login")
 async def sso_saml_login(
-    provider_id: str,
-    request: Request,
-    return_to: Optional[str] = None
+    provider_id: str, request: Request, return_to: Optional[str] = None
 ):
     """Initiate SAML SSO login"""
     try:
@@ -110,8 +116,9 @@ async def sso_saml_login(
         logger.error(f"SAML login error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to initiate SAML login"
+            detail="Failed to initiate SAML login",
         )
+
 
 @router.post("/saml/{provider_id}/acs", name="sso_saml_callback")
 async def sso_saml_callback(
@@ -120,7 +127,7 @@ async def sso_saml_callback(
     response: Response,
     SAMLResponse: str = Form(...),
     RelayState: Optional[str] = Form(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Handle SAML Assertion Consumer Service (ACS) callback"""
     try:
@@ -140,7 +147,7 @@ async def sso_saml_callback(
             httponly=True,
             secure=True,
             samesite="lax",
-            max_age=86400  # 24 hours
+            max_age=86400,  # 24 hours
         )
 
         # Redirect to dashboard or RelayState URL
@@ -153,14 +160,13 @@ async def sso_saml_callback(
         logger.error(f"SAML callback error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="SAML authentication failed"
+            detail="SAML authentication failed",
         )
+
 
 @router.get("/oidc/{provider_id}/login")
 async def sso_oidc_login(
-    provider_id: str,
-    request: Request,
-    return_to: Optional[str] = None
+    provider_id: str, request: Request, return_to: Optional[str] = None
 ):
     """Initiate OIDC/OAuth2 login"""
     try:
@@ -172,8 +178,9 @@ async def sso_oidc_login(
         logger.error(f"OIDC login error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to initiate OIDC login"
+            detail="Failed to initiate OIDC login",
         )
+
 
 @router.get("/oidc/{provider_id}/callback", name="sso_oidc_callback")
 async def sso_oidc_callback(
@@ -182,7 +189,7 @@ async def sso_oidc_callback(
     response: Response,
     code: str,
     state: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Handle OIDC/OAuth2 callback"""
     try:
@@ -204,7 +211,7 @@ async def sso_oidc_callback(
             httponly=True,
             secure=True,
             samesite="lax",
-            max_age=86400  # 24 hours
+            max_age=86400,  # 24 hours
         )
 
         # Redirect to return_to URL or dashboard
@@ -217,35 +224,34 @@ async def sso_oidc_callback(
         logger.error(f"OIDC callback error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="OIDC authentication failed"
+            detail="OIDC authentication failed",
         )
 
+
 @router.get("/status", response_model=EnterpriseStatusResponse)
-async def get_enterprise_status(
-    current_user: User = Depends(get_current_user)
-):
+async def get_enterprise_status(current_user: User = Depends(get_current_user)):
     """Get current user's enterprise/SSO status"""
     try:
-        is_enterprise = hasattr(current_user, 'sso_provider') and current_user.sso_provider
+        is_enterprise = (
+            hasattr(current_user, "sso_provider") and current_user.sso_provider
+        )
         features = check_enterprise_features(current_user)
 
         return EnterpriseStatusResponse(
             is_enterprise_user=is_enterprise,
-            sso_provider=getattr(current_user, 'sso_provider', None),
-            features=features
+            sso_provider=getattr(current_user, "sso_provider", None),
+            features=features,
         )
     except Exception as e:
         logger.error(f"Enterprise status error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get enterprise status"
+            detail="Failed to get enterprise status",
         )
 
+
 @router.post("/logout")
-async def sso_logout(
-    response: Response,
-    current_user: User = Depends(get_sso_user)
-):
+async def sso_logout(response: Response, current_user: User = Depends(get_sso_user)):
     """Logout SSO user"""
     try:
         # Clear cookies
@@ -258,19 +264,16 @@ async def sso_logout(
     except Exception as e:
         logger.error(f"SSO logout error: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Logout failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Logout failed"
         )
+
 
 @router.get("/metadata/{provider_id}")
 async def get_saml_metadata(provider_id: str):
     """Get SAML metadata for SP configuration"""
     try:
         if provider_id not in enterprise_auth.saml_providers:
-            raise HTTPException(
-                status_code=404,
-                detail="SAML provider not found"
-            )
+            raise HTTPException(status_code=404, detail="SAML provider not found")
 
         config = enterprise_auth.saml_providers[provider_id]
 
@@ -289,7 +292,9 @@ async def get_saml_metadata(provider_id: str):
         return Response(
             content=metadata_xml,
             media_type="application/samlmetadata+xml",
-            headers={"Content-Disposition": f"attachment; filename={provider_id}-metadata.xml"}
+            headers={
+                "Content-Disposition": f"attachment; filename={provider_id}-metadata.xml"
+            },
         )
     except HTTPException:
         raise
@@ -297,5 +302,5 @@ async def get_saml_metadata(provider_id: str):
         logger.error(f"SAML metadata error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to generate SAML metadata"
+            detail="Failed to generate SAML metadata",
         )

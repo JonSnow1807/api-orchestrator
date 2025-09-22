@@ -4,25 +4,20 @@ Production-ready endpoints for the autonomous engineering system
 """
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from sqlalchemy.orm import Session
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
-import asyncio
 import sys
 import os
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.database import get_db
 from src.auth import get_current_user
 from src.ai_employee.ai_employee_orchestrator import AIEmployeeOrchestrator
 from src.ai_employee.code_generation_agent import CodeGenerationAgent
 from src.ai_employee.self_learning_system import SelfLearningSystem
 from src.ai_employee.database_agent import DatabaseAgent
-from src.ai_employee.git_agent import GitAgent
 from src.ai_employee.cloud_deployment_agent import CloudDeploymentAgent
-from src.ai_employee.devops_agent import DevOpsAgent
 
 router = APIRouter(prefix="/api/ai-employee", tags=["AI Employee System"])
 
@@ -30,61 +25,75 @@ router = APIRouter(prefix="/api/ai-employee", tags=["AI Employee System"])
 ai_employee_config = {
     "git_enabled": True,
     "cloud_provider": "AWS",
-    "db_connection_string": os.getenv("DATABASE_URL", "sqlite:///ai_employee.db")
+    "db_connection_string": os.getenv("DATABASE_URL", "sqlite:///ai_employee.db"),
 }
 ai_employee = AIEmployeeOrchestrator(ai_employee_config)
 
+
 class NaturalLanguageRequest(BaseModel):
     """Request model for natural language processing"""
+
     request: str
     context: Optional[Dict[str, Any]] = None
 
+
 class TaskRequest(BaseModel):
     """Request model for complex task execution"""
+
     task_description: str
     requirements: Optional[List[str]] = []
     auto_deploy: bool = False
 
+
 class CodeGenerationRequest(BaseModel):
     """Request model for code generation"""
+
     api_spec: Dict[str, Any]
     language: str = "python"
     framework: Optional[str] = None
 
+
 class CodeFixRequest(BaseModel):
     """Request model for code fixing"""
+
     broken_code: str
     error_message: str
     language: str = "python"
 
+
 class DatabaseOptimizationRequest(BaseModel):
     """Request model for database optimization"""
+
     query: str
     db_type: str = "postgresql"
 
+
 class VulnerabilityCheckRequest(BaseModel):
     """Request model for vulnerability checking"""
+
     api_spec: Dict[str, Any]
     historical_data: Optional[List[Dict[str, Any]]] = []
 
+
 class DeploymentRequest(BaseModel):
     """Request model for cloud deployment"""
+
     service_config: Dict[str, Any]
     provider: str = "AWS"
     optimize_cost: bool = True
+
 
 @router.post("/process-request")
 async def process_natural_language_request(
     request: NaturalLanguageRequest,
     background_tasks: BackgroundTasks,
-    current_user = Depends(get_current_user)
+    current_user=Depends(get_current_user),
 ):
     """Process a natural language request and execute appropriate action"""
 
     try:
         result = await ai_employee.process_request(
-            request.request,
-            context=request.context
+            request.request, context=request.context
         )
 
         return {
@@ -92,16 +101,17 @@ async def process_natural_language_request(
             "action": result.get("action"),
             "status": result.get("status"),
             "result": result.get("result"),
-            "execution_time": result.get("execution_time")
+            "execution_time": result.get("execution_time"),
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.post("/execute-task")
 async def execute_complex_task(
     request: TaskRequest,
     background_tasks: BackgroundTasks,
-    current_user = Depends(get_current_user)
+    current_user=Depends(get_current_user),
 ):
     """Execute a complex multi-step task"""
 
@@ -114,24 +124,22 @@ async def execute_complex_task(
             "subtasks": result.get("subtasks"),
             "status": result.get("status"),
             "results": result.get("results"),
-            "total_time": result.get("total_time")
+            "total_time": result.get("total_time"),
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.post("/generate-code")
 async def generate_api_client(
-    request: CodeGenerationRequest,
-    current_user = Depends(get_current_user)
+    request: CodeGenerationRequest, current_user=Depends(get_current_user)
 ):
     """Generate API client code with intelligent patterns"""
 
     try:
         agent = CodeGenerationAgent()
         result = await agent.generate_api_client(
-            request.api_spec,
-            request.language,
-            framework=request.framework
+            request.api_spec, request.language, framework=request.framework
         )
 
         return {
@@ -140,39 +148,37 @@ async def generate_api_client(
             "language": result.language,
             "framework": result.framework,
             "patterns_detected": result.complexity_analysis,
-            "lines_of_code": len(result.code.split('\n'))
+            "lines_of_code": len(result.code.split("\n")),
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.post("/fix-code")
 async def fix_broken_code(
-    request: CodeFixRequest,
-    current_user = Depends(get_current_user)
+    request: CodeFixRequest, current_user=Depends(get_current_user)
 ):
     """Fix broken code using AST analysis"""
 
     try:
         agent = CodeGenerationAgent()
         fixed_code = await agent.fix_broken_code(
-            request.broken_code,
-            request.error_message,
-            request.language
+            request.broken_code, request.error_message, request.language
         )
 
         return {
             "success": True,
             "fixed_code": fixed_code,
             "original_code": request.broken_code,
-            "changes_made": True
+            "changes_made": True,
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.post("/optimize-database")
 async def optimize_database_query(
-    request: DatabaseOptimizationRequest,
-    current_user = Depends(get_current_user)
+    request: DatabaseOptimizationRequest, current_user=Depends(get_current_user)
 ):
     """Optimize database query using real SQL optimization"""
 
@@ -185,23 +191,22 @@ async def optimize_database_query(
             "original_query": result.original_query,
             "optimized_query": result.optimized_query,
             "improvements": result.improvements,
-            "expected_performance_gain": result.expected_performance_gain
+            "expected_performance_gain": result.expected_performance_gain,
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.post("/predict-issues")
 async def predict_vulnerabilities(
-    request: VulnerabilityCheckRequest,
-    current_user = Depends(get_current_user)
+    request: VulnerabilityCheckRequest, current_user=Depends(get_current_user)
 ):
     """Predict potential issues using ML models"""
 
     try:
         system = SelfLearningSystem()
         predictions = await system.predict_issues(
-            request.api_spec,
-            request.historical_data
+            request.api_spec, request.historical_data
         )
 
         return {
@@ -212,21 +217,22 @@ async def predict_vulnerabilities(
                     "description": pred.description,
                     "probability": pred.probability,
                     "suggested_fixes": pred.suggested_fixes,
-                    "priority": pred.priority
+                    "priority": pred.priority,
                 }
                 for pred in predictions
             ],
             "total_issues": len(predictions),
-            "high_priority_count": sum(1 for p in predictions if p.priority == "high")
+            "high_priority_count": sum(1 for p in predictions if p.priority == "high"),
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.post("/deploy-service")
 async def deploy_to_cloud(
     request: DeploymentRequest,
     background_tasks: BackgroundTasks,
-    current_user = Depends(get_current_user)
+    current_user=Depends(get_current_user),
 ):
     """Deploy service to cloud with cost optimization"""
 
@@ -249,21 +255,20 @@ async def deploy_to_cloud(
             cost_optimization = await agent.optimize_costs()
             cost_savings = {
                 "total_savings": cost_optimization["total_savings"],
-                "recommendations": cost_optimization["recommendations"][:3]
+                "recommendations": cost_optimization["recommendations"][:3],
             }
 
         return {
             "success": True,
             "deployment": result,
-            "cost_optimization": cost_savings
+            "cost_optimization": cost_savings,
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.get("/status")
-async def get_ai_employee_status(
-    current_user = Depends(get_current_user)
-):
+async def get_ai_employee_status(current_user=Depends(get_current_user)):
     """Get current status of AI Employee system"""
 
     try:
@@ -276,15 +281,14 @@ async def get_ai_employee_status(
             "capabilities": status.get("capabilities", {}),
             "tasks_completed": status.get("tasks_completed", 0),
             "current_task": status.get("current_task"),
-            "system_health": "operational"
+            "system_health": "operational",
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.get("/intelligence-report")
-async def get_intelligence_report(
-    current_user = Depends(get_current_user)
-):
+async def get_intelligence_report(current_user=Depends(get_current_user)):
     """Get intelligence report showing learning progress"""
 
     try:
@@ -298,15 +302,15 @@ async def get_intelligence_report(
             "optimizations_applied": report.get("optimizations_applied"),
             "success_rate": report.get("success_rate"),
             "capabilities": report.get("capabilities"),
-            "recent_learnings": report.get("recent_learnings", [])[:5]
+            "recent_learnings": report.get("recent_learnings", [])[:5],
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.post("/learn")
 async def learn_from_interaction(
-    interaction: Dict[str, Any],
-    current_user = Depends(get_current_user)
+    interaction: Dict[str, Any], current_user=Depends(get_current_user)
 ):
     """Submit interaction data for learning"""
 
@@ -316,15 +320,14 @@ async def learn_from_interaction(
         return {
             "success": True,
             "message": "Learning data processed successfully",
-            "patterns_updated": True
+            "patterns_updated": True,
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.get("/capabilities")
-async def list_capabilities(
-    current_user = Depends(get_current_user)
-):
+async def list_capabilities(current_user=Depends(get_current_user)):
     """List all available AI Employee capabilities"""
 
     return {
@@ -337,8 +340,8 @@ async def list_capabilities(
                     "Multi-language support",
                     "Code fixing with AST",
                     "Microservice scaffolding",
-                    "Pattern recognition"
-                ]
+                    "Pattern recognition",
+                ],
             },
             "database_optimization": {
                 "enabled": True,
@@ -347,8 +350,8 @@ async def list_capabilities(
                     "Index recommendations",
                     "Performance monitoring",
                     "Anomaly detection",
-                    "Capacity planning"
-                ]
+                    "Capacity planning",
+                ],
             },
             "self_learning": {
                 "enabled": True,
@@ -357,8 +360,8 @@ async def list_capabilities(
                     "Pattern learning",
                     "Vulnerability detection",
                     "Performance prediction",
-                    "Adaptive improvements"
-                ]
+                    "Adaptive improvements",
+                ],
             },
             "cloud_deployment": {
                 "enabled": True,
@@ -367,8 +370,8 @@ async def list_capabilities(
                     "Cost optimization",
                     "Auto-scaling",
                     "Disaster recovery",
-                    "Resource monitoring"
-                ]
+                    "Resource monitoring",
+                ],
             },
             "devops_automation": {
                 "enabled": True,
@@ -377,8 +380,8 @@ async def list_capabilities(
                     "Container orchestration",
                     "Infrastructure as code",
                     "Monitoring setup",
-                    "Automated testing"
-                ]
+                    "Automated testing",
+                ],
             },
             "git_operations": {
                 "enabled": True,
@@ -387,11 +390,11 @@ async def list_capabilities(
                     "Branch management",
                     "Change analysis",
                     "Code review assistance",
-                    "Merge conflict resolution"
-                ]
-            }
+                    "Merge conflict resolution",
+                ],
+            },
         },
         "total_agents": 6,
         "production_ready": True,
-        "version": "2.0.0"
+        "version": "2.0.0",
     }
