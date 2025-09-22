@@ -6,32 +6,31 @@ Postman's basic test builder looks like a TOY compared to this!
 """
 
 import random
-import itertools
 import string
-import json
 import asyncio
-from typing import Dict, List, Any, Optional, Tuple, Set
+from typing import Dict, List, Any
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-import numpy as np
+from datetime import datetime
 from enum import Enum
 
 
 class TestStrategy(Enum):
     """Quantum-inspired testing strategies"""
+
     SUPERPOSITION = "superposition"  # Test all states simultaneously
-    ENTANGLEMENT = "entanglement"    # Linked parameter testing
-    TUNNELING = "tunneling"          # Bypass validation testing
-    INTERFERENCE = "interference"     # Conflict testing
-    MUTATION = "mutation"            # Evolutionary testing
-    CHAOS = "chaos"                  # Random chaos injection
-    FUZZING = "fuzzing"              # Smart fuzzing
-    PROPERTY = "property"            # Property-based testing
+    ENTANGLEMENT = "entanglement"  # Linked parameter testing
+    TUNNELING = "tunneling"  # Bypass validation testing
+    INTERFERENCE = "interference"  # Conflict testing
+    MUTATION = "mutation"  # Evolutionary testing
+    CHAOS = "chaos"  # Random chaos injection
+    FUZZING = "fuzzing"  # Smart fuzzing
+    PROPERTY = "property"  # Property-based testing
 
 
 @dataclass
 class QuantumTest:
     """A single quantum-generated test"""
+
     test_id: str
     strategy: TestStrategy
     endpoint: str
@@ -47,21 +46,21 @@ class QuantumTest:
     def collapse_to_classical(self) -> Dict:
         """Collapse quantum test to classical test case"""
         return {
-            'name': f"Quantum Test {self.test_id[:8]}",
-            'endpoint': self.endpoint,
-            'method': self.method,
-            'headers': self.headers,
-            'params': self.parameters,
-            'body': self.payload,
-            'assertions': self._generate_assertions()
+            "name": f"Quantum Test {self.test_id[:8]}",
+            "endpoint": self.endpoint,
+            "method": self.method,
+            "headers": self.headers,
+            "params": self.parameters,
+            "body": self.payload,
+            "assertions": self._generate_assertions(),
         }
 
     def _generate_assertions(self) -> List[Dict]:
         """Generate test assertions"""
         return [
-            {'type': 'status_code', 'expected': [200, 201, 400, 401, 403, 404, 500]},
-            {'type': 'response_time', 'max': 1000},
-            {'type': 'schema_validation', 'strict': True}
+            {"type": "status_code", "expected": [200, 201, 400, 401, 403, 404, 500]},
+            {"type": "response_time", "max": 1000},
+            {"type": "schema_validation", "strict": True},
         ]
 
 
@@ -83,7 +82,7 @@ class QuantumTestGenerator:
         self,
         api_spec: Dict,
         test_count: int = 1000000,  # ONE MILLION TESTS!
-        batch_mode: bool = True
+        batch_mode: bool = True,
     ) -> List[QuantumTest]:
         """Generate a quantum test suite - THIS IS INSANITY!"""
 
@@ -149,11 +148,11 @@ class QuantumTestGenerator:
     async def _generate_superposition_test(self, api_spec: Dict) -> QuantumTest:
         """Test all possible states simultaneously"""
 
-        endpoint = random.choice(list(api_spec.get('paths', {}).keys()))
+        endpoint = random.choice(list(api_spec.get("paths", {}).keys()))
 
         # Create superposition of all possible parameter values
         params = {}
-        for param_name, param_spec in api_spec.get('parameters', {}).items():
+        for param_name, param_spec in api_spec.get("parameters", {}).items():
             # Generate multiple possible values
             possible_values = self._generate_param_values(param_spec)
             params[param_name] = random.choice(possible_values)
@@ -162,14 +161,14 @@ class QuantumTestGenerator:
             test_id=self._generate_quantum_id(),
             strategy=TestStrategy.SUPERPOSITION,
             endpoint=endpoint,
-            method=random.choice(['GET', 'POST', 'PUT', 'DELETE']),
+            method=random.choice(["GET", "POST", "PUT", "DELETE"]),
             parameters=params,
             headers=self._generate_quantum_headers(),
             payload=self._generate_quantum_payload(),
             expected_behavior="superposition_collapse",
             chaos_level=random.random(),
             mutation_seed=random.randint(0, 999999),
-            quantum_state="|ψ⟩ = α|0⟩ + β|1⟩"
+            quantum_state="|ψ⟩ = α|0⟩ + β|1⟩",
         )
 
     async def _generate_entanglement_test(self, api_spec: Dict) -> QuantumTest:
@@ -177,11 +176,11 @@ class QuantumTestGenerator:
 
         # Find parameters that might be entangled
         entangled_pairs = [
-            ('user_id', 'auth_token'),
-            ('start_date', 'end_date'),
-            ('limit', 'offset'),
-            ('currency', 'amount'),
-            ('latitude', 'longitude')
+            ("user_id", "auth_token"),
+            ("start_date", "end_date"),
+            ("limit", "offset"),
+            ("currency", "amount"),
+            ("latitude", "longitude"),
         ]
 
         params = {}
@@ -204,7 +203,7 @@ class QuantumTestGenerator:
             expected_behavior="entanglement_correlation",
             chaos_level=0.3,
             mutation_seed=random.randint(0, 999999),
-            quantum_state="|Φ⁺⟩ = (|00⟩ + |11⟩)/√2"
+            quantum_state="|Φ⁺⟩ = (|00⟩ + |11⟩)/√2",
         )
 
     async def _generate_tunneling_test(self, api_spec: Dict) -> QuantumTest:
@@ -223,9 +222,9 @@ class QuantumTestGenerator:
         ]
 
         payload = {
-            'bypass_attempt': random.choice(bypass_values),
-            'normal_field': 'normal_value',
-            'injection_vector': random.choice(bypass_values)
+            "bypass_attempt": random.choice(bypass_values),
+            "normal_field": "normal_value",
+            "injection_vector": random.choice(bypass_values),
         }
 
         return QuantumTest(
@@ -233,13 +232,13 @@ class QuantumTestGenerator:
             strategy=TestStrategy.TUNNELING,
             endpoint="/api/secure",
             method="POST",
-            parameters={'hack': 'attempt'},
+            parameters={"hack": "attempt"},
             headers=self._generate_attack_headers(),
             payload=payload,
             expected_behavior="validation_bypass_blocked",
             chaos_level=1.0,
             mutation_seed=random.randint(0, 999999),
-            quantum_state="|tunnel⟩ = ∫ψ(x)dx"
+            quantum_state="|tunnel⟩ = ∫ψ(x)dx",
         )
 
     async def _generate_interference_test(self, api_spec: Dict) -> QuantumTest:
@@ -247,14 +246,14 @@ class QuantumTestGenerator:
 
         # Create intentionally conflicting parameters
         conflicts = {
-            'format': 'json',
-            'output': 'xml',
-            'async': 'true',
-            'sync': 'true',
-            'include': 'everything',
-            'exclude': 'everything',
-            'sort': 'asc',
-            'order': 'desc'
+            "format": "json",
+            "output": "xml",
+            "async": "true",
+            "sync": "true",
+            "include": "everything",
+            "exclude": "everything",
+            "sort": "asc",
+            "order": "desc",
         }
 
         return QuantumTest(
@@ -268,18 +267,14 @@ class QuantumTestGenerator:
             expected_behavior="conflict_resolution",
             chaos_level=0.7,
             mutation_seed=random.randint(0, 999999),
-            quantum_state="|interference⟩ = |ψ₁⟩ + |ψ₂⟩"
+            quantum_state="|interference⟩ = |ψ₁⟩ + |ψ₂⟩",
         )
 
     async def _generate_mutation_test(self, api_spec: Dict) -> QuantumTest:
         """Evolutionary mutation testing"""
 
         # Start with valid data then mutate it
-        base_payload = {
-            'name': 'John Doe',
-            'email': 'john@example.com',
-            'age': 30
-        }
+        base_payload = {"name": "John Doe", "email": "john@example.com", "age": 30}
 
         # Apply random mutations
         mutated = self.mutation_engine.mutate(base_payload)
@@ -295,7 +290,7 @@ class QuantumTestGenerator:
             expected_behavior="mutation_handling",
             chaos_level=0.5,
             mutation_seed=random.randint(0, 999999),
-            quantum_state="|mutated⟩ = M(|original⟩)"
+            quantum_state="|mutated⟩ = M(|original⟩)",
         )
 
     async def _generate_chaos_test(self, api_spec: Dict) -> QuantumTest:
@@ -308,14 +303,16 @@ class QuantumTestGenerator:
             test_id=self._generate_quantum_id(),
             strategy=TestStrategy.CHAOS,
             endpoint=self._random_endpoint(),
-            method=random.choice(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']),
+            method=random.choice(
+                ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+            ),
             parameters=self.chaos_engine.chaos_params(),
             headers=self.chaos_engine.chaos_headers(),
             payload=chaos_payload,
             expected_behavior="chaos_resistance",
             chaos_level=1.0,
             mutation_seed=random.randint(0, 999999),
-            quantum_state="|chaos⟩ = ∑ᵢ αᵢ|random⟩"
+            quantum_state="|chaos⟩ = ∑ᵢ αᵢ|random⟩",
         )
 
     async def _generate_fuzzing_test(self, api_spec: Dict) -> QuantumTest:
@@ -334,7 +331,7 @@ class QuantumTestGenerator:
             expected_behavior="fuzz_handling",
             chaos_level=0.8,
             mutation_seed=random.randint(0, 999999),
-            quantum_state="|fuzz⟩ = F(|input⟩)"
+            quantum_state="|fuzz⟩ = F(|input⟩)",
         )
 
     async def _generate_property_test(self, api_spec: Dict) -> QuantumTest:
@@ -353,7 +350,7 @@ class QuantumTestGenerator:
             expected_behavior="property_satisfaction",
             chaos_level=0.2,
             mutation_seed=random.randint(0, 999999),
-            quantum_state="|property⟩ = ∀x P(x)"
+            quantum_state="|property⟩ = ∀x P(x)",
         )
 
     def _generate_quantum_id(self) -> str:
@@ -363,42 +360,44 @@ class QuantumTestGenerator:
     def _generate_quantum_headers(self) -> Dict:
         """Generate test headers"""
         return {
-            'Content-Type': random.choice(['application/json', 'application/xml', 'text/plain']),
-            'X-Quantum-Test': 'true',
-            'X-Chaos-Level': str(random.random())
+            "Content-Type": random.choice(
+                ["application/json", "application/xml", "text/plain"]
+            ),
+            "X-Quantum-Test": "true",
+            "X-Chaos-Level": str(random.random()),
         }
 
     def _generate_attack_headers(self) -> Dict:
         """Generate attack headers for security testing"""
         return {
-            'X-Forwarded-For': '127.0.0.1',
-            'X-Real-IP': '192.168.1.1',
-            'X-Originating-IP': '10.0.0.1',
-            'X-Remote-IP': '172.16.0.1',
-            'X-Client-IP': '::1'
+            "X-Forwarded-For": "127.0.0.1",
+            "X-Real-IP": "192.168.1.1",
+            "X-Originating-IP": "10.0.0.1",
+            "X-Remote-IP": "172.16.0.1",
+            "X-Client-IP": "::1",
         }
 
     def _generate_param_values(self, spec: Dict) -> List:
         """Generate possible parameter values"""
-        param_type = spec.get('type', 'string')
+        param_type = spec.get("type", "string")
 
-        if param_type == 'integer':
+        if param_type == "integer":
             return [0, 1, -1, 999999, -999999, None]
-        elif param_type == 'string':
-            return ['', 'test', 'A' * 1000, None, '!@#$%^&*()']
-        elif param_type == 'boolean':
-            return [True, False, None, 'true', 'false', 1, 0]
+        elif param_type == "string":
+            return ["", "test", "A" * 1000, None, "!@#$%^&*()"]
+        elif param_type == "boolean":
+            return [True, False, None, "true", "false", 1, 0]
         else:
-            return ['test', None, '', {}]
+            return ["test", None, "", {}]
 
     def _generate_random_value(self) -> Any:
         """Generate random value"""
         types = [
             lambda: random.randint(-999999, 999999),
-            lambda: ''.join(random.choices(string.printable, k=random.randint(1, 100))),
+            lambda: "".join(random.choices(string.printable, k=random.randint(1, 100))),
             lambda: random.random(),
             lambda: random.choice([True, False]),
-            lambda: None
+            lambda: None,
         ]
         return random.choice(types)()
 
@@ -415,40 +414,66 @@ class QuantumTestGenerator:
 
     def _random_endpoint(self) -> str:
         """Generate random endpoint"""
-        paths = ['/api/', '/v1/', '/v2/', '/rest/', '/graphql/', '/']
-        resources = ['users', 'products', 'orders', 'payments', 'auth', 'data']
+        paths = ["/api/", "/v1/", "/v2/", "/rest/", "/graphql/", "/"]
+        resources = ["users", "products", "orders", "payments", "auth", "data"]
         return random.choice(paths) + random.choice(resources)
 
     def _smart_fuzz(self) -> Any:
         """Smart fuzzing based on common patterns"""
         fuzz_types = [
             # Numeric edge cases
-            0, -0, 1, -1, float('inf'), float('-inf'), float('nan'),
-            2**31-1, -2**31, 2**63-1, -2**63,
-
+            0,
+            -0,
+            1,
+            -1,
+            float("inf"),
+            float("-inf"),
+            float("nan"),
+            2**31 - 1,
+            -(2**31),
+            2**63 - 1,
+            -(2**63),
             # String edge cases
-            '', ' ', '\n', '\r\n', '\t', '\x00',
-            'A' * 10000,  # Very long string
-            '𝕳𝖊𝖑𝖑𝖔',  # Unicode
-            '\\', '/', '../', '..\\',
-
+            "",
+            " ",
+            "\n",
+            "\r\n",
+            "\t",
+            "\x00",
+            "A" * 10000,  # Very long string
+            "𝕳𝖊𝖑𝖑𝖔",  # Unicode
+            "\\",
+            "/",
+            "../",
+            "..\\",
             # Special characters
-            "'", '"', '`', '${', '{{', '<%', '<?',
-
+            "'",
+            '"',
+            "`",
+            "${",
+            "{{",
+            "<%",
+            "<?",
             # Format strings
-            '%s', '%d', '%n', '%x', '{0}', '{}',
-
+            "%s",
+            "%d",
+            "%n",
+            "%x",
+            "{0}",
+            "{}",
             # Common injections
-            '<img src=x>', 'javascript:', 'data:text/html',
+            "<img src=x>",
+            "javascript:",
+            "data:text/html",
         ]
         return random.choice(fuzz_types)
 
     def _generate_quantum_payload(self) -> Any:
         """Generate quantum payload"""
         return {
-            'quantum_field': random.random(),
-            'superposition': [0, 1],
-            'measurement': random.choice(['up', 'down', 'left', 'right'])
+            "quantum_field": random.random(),
+            "superposition": [0, 1],
+            "measurement": random.choice(["up", "down", "left", "right"]),
         }
 
     def _estimate_bug_coverage(self, tests: List[QuantumTest]) -> str:
@@ -516,8 +541,8 @@ class MutationEngine:
             lambda x: x[::-1],
             lambda x: x + "'",
             lambda x: x + "<script>",
-            lambda x: x.replace(' ', '%20'),
-            lambda x: x + '\x00'
+            lambda x: x.replace(" ", "%20"),
+            lambda x: x + "\x00",
         ]
         return random.choice(mutations)(s)
 
@@ -528,26 +553,26 @@ class ChaosEngine:
     def generate_chaos(self) -> Any:
         """Generate pure chaos"""
         chaos_types = [
-            lambda: {'chaos': True, 'entropy': random.random()},
+            lambda: {"chaos": True, "entropy": random.random()},
             lambda: [random.random() for _ in range(random.randint(1, 100))],
-            lambda: ''.join(random.choices(string.printable, k=random.randint(1, 1000))),
+            lambda: "".join(
+                random.choices(string.printable, k=random.randint(1, 1000))
+            ),
             lambda: random.getrandbits(256),
-            lambda: None
+            lambda: None,
         ]
         return random.choice(chaos_types)()
 
     def chaos_params(self) -> Dict:
         """Generate chaotic parameters"""
         return {
-            f"chaos_{i}": self.generate_chaos()
-            for i in range(random.randint(1, 10))
+            f"chaos_{i}": self.generate_chaos() for i in range(random.randint(1, 10))
         }
 
     def chaos_headers(self) -> Dict:
         """Generate chaotic headers"""
         return {
-            f"X-Chaos-{i}": str(random.random())
-            for i in range(random.randint(1, 5))
+            f"X-Chaos-{i}": str(random.random()) for i in range(random.randint(1, 5))
         }
 
 
@@ -557,9 +582,9 @@ class PropertyEngine:
     def generate_properties(self) -> Dict:
         """Generate test properties"""
         return {
-            'idempotent': random.choice([True, False]),
-            'commutative': random.choice([True, False]),
-            'associative': random.choice([True, False]),
-            'distributive': random.choice([True, False]),
-            'invariant': f"x + 0 = {random.randint(1, 100)}"
+            "idempotent": random.choice([True, False]),
+            "commutative": random.choice([True, False]),
+            "associative": random.choice([True, False]),
+            "distributive": random.choice([True, False]),
+            "invariant": f"x + 0 = {random.randint(1, 100)}",
         }

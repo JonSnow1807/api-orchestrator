@@ -7,19 +7,19 @@ This is what Postman WISHES they had!
 
 import hashlib
 import json
-import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, asdict
-import asyncio
-from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Float
+from typing import Dict, List, Any
+from dataclasses import dataclass
+from sqlalchemy import Column, Integer, String, DateTime, JSON, Float
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+
 @dataclass
 class APISnapshot:
     """A moment in time for an API"""
+
     timestamp: datetime
     endpoint: str
     method: str
@@ -34,14 +34,12 @@ class APISnapshot:
     def calculate_hash(self) -> str:
         """Create unique fingerprint of API behavior"""
         behavior = {
-            'request': self.request_schema,
-            'response': self.response_schema,
-            'headers': self.headers,
-            'status_codes': self.status_codes
+            "request": self.request_schema,
+            "response": self.response_schema,
+            "headers": self.headers,
+            "status_codes": self.status_codes,
         }
-        return hashlib.sha256(
-            json.dumps(behavior, sort_keys=True).encode()
-        ).hexdigest()
+        return hashlib.sha256(json.dumps(behavior, sort_keys=True).encode()).hexdigest()
 
 
 class APITimeMachine:
@@ -60,9 +58,14 @@ class APITimeMachine:
         self.max_snapshots_per_endpoint = 1000  # Limit for production
         self.alert_threshold = 0.5  # Only alert for high-confidence changes
 
-    async def capture_snapshot(self, endpoint: str, method: str,
-                              request_data: Dict, response_data: Dict,
-                              latency: float) -> APISnapshot:
+    async def capture_snapshot(
+        self,
+        endpoint: str,
+        method: str,
+        request_data: Dict,
+        response_data: Dict,
+        latency: float,
+    ) -> APISnapshot:
         """Capture current state of API"""
 
         # Extract schemas from actual data
@@ -75,10 +78,10 @@ class APITimeMachine:
             method=method,
             request_schema=request_schema,
             response_schema=response_schema,
-            headers=response_data.get('headers', {}),
-            status_codes=[response_data.get('status_code', 200)],
+            headers=response_data.get("headers", {}),
+            status_codes=[response_data.get("status_code", 200)],
             average_latency=latency,
-            behavior_hash=""
+            behavior_hash="",
         )
 
         snapshot.behavior_hash = snapshot.calculate_hash()
@@ -105,8 +108,9 @@ class APITimeMachine:
         self.timeline[endpoint].append(snapshot)
         return snapshot
 
-    async def detect_breaking_changes(self, old_snapshot: APISnapshot,
-                                     new_snapshot: APISnapshot) -> List[str]:
+    async def detect_breaking_changes(
+        self, old_snapshot: APISnapshot, new_snapshot: APISnapshot
+    ) -> List[str]:
         """Detect breaking changes between snapshots"""
         changes = []
 
@@ -140,7 +144,9 @@ class APITimeMachine:
 
         return changes
 
-    async def rollback_to_snapshot(self, endpoint: str, timestamp: datetime = None) -> Dict:
+    async def rollback_to_snapshot(
+        self, endpoint: str, timestamp: datetime = None
+    ) -> Dict:
         """Rollback API behavior to specific point in time"""
 
         if endpoint not in self.timeline:
@@ -168,14 +174,14 @@ class APITimeMachine:
 
         # Generate rollback configuration
         rollback_config = {
-            'endpoint': endpoint,
-            'timestamp': target_snapshot.timestamp.isoformat(),
-            'request_schema': target_snapshot.request_schema,
-            'response_schema': target_snapshot.response_schema,
-            'headers': target_snapshot.headers,
-            'expected_latency': target_snapshot.average_latency,
-            'behavior_hash': target_snapshot.behavior_hash,
-            'rollback_script': self._generate_rollback_script(target_snapshot)
+            "endpoint": endpoint,
+            "timestamp": target_snapshot.timestamp.isoformat(),
+            "request_schema": target_snapshot.request_schema,
+            "response_schema": target_snapshot.response_schema,
+            "headers": target_snapshot.headers,
+            "expected_latency": target_snapshot.average_latency,
+            "behavior_hash": target_snapshot.behavior_hash,
+            "rollback_script": self._generate_rollback_script(target_snapshot),
         }
 
         return rollback_config
@@ -184,34 +190,37 @@ class APITimeMachine:
         """Generate visual timeline of API changes"""
 
         if endpoint not in self.timeline:
-            return {'error': 'No timeline available'}
+            return {"error": "No timeline available"}
 
         snapshots = self.timeline[endpoint]
 
         timeline_data = {
-            'endpoint': endpoint,
-            'total_snapshots': len(snapshots),
-            'first_seen': snapshots[0].timestamp.isoformat(),
-            'last_updated': snapshots[-1].timestamp.isoformat(),
-            'events': []
+            "endpoint": endpoint,
+            "total_snapshots": len(snapshots),
+            "first_seen": snapshots[0].timestamp.isoformat(),
+            "last_updated": snapshots[-1].timestamp.isoformat(),
+            "events": [],
         }
 
         for i, snapshot in enumerate(snapshots):
             event = {
-                'id': i,
-                'timestamp': snapshot.timestamp.isoformat(),
-                'hash': snapshot.behavior_hash[:8],
-                'latency': snapshot.average_latency,
-                'type': 'normal'
+                "id": i,
+                "timestamp": snapshot.timestamp.isoformat(),
+                "hash": snapshot.behavior_hash[:8],
+                "latency": snapshot.average_latency,
+                "type": "normal",
             }
 
             if snapshot.breaking_changes:
-                event['type'] = 'breaking'
-                event['changes'] = snapshot.breaking_changes
-            elif i > 0 and snapshot.average_latency > snapshots[i-1].average_latency * 1.3:
-                event['type'] = 'performance_degradation'
+                event["type"] = "breaking"
+                event["changes"] = snapshot.breaking_changes
+            elif (
+                i > 0
+                and snapshot.average_latency > snapshots[i - 1].average_latency * 1.3
+            ):
+                event["type"] = "performance_degradation"
 
-            timeline_data['events'].append(event)
+            timeline_data["events"].append(event)
 
         return timeline_data
 
@@ -219,7 +228,7 @@ class APITimeMachine:
         """Predict future API behavior based on historical patterns"""
 
         if endpoint not in self.timeline or len(self.timeline[endpoint]) < 5:
-            return {'error': 'Insufficient data for prediction'}
+            return {"error": "Insufficient data for prediction"}
 
         snapshots = self.timeline[endpoint]
 
@@ -233,26 +242,27 @@ class APITimeMachine:
         next_change_prediction = last_change + avg_time_between_changes
 
         prediction = {
-            'endpoint': endpoint,
-            'predictions': {
-                'next_breaking_change': next_change_prediction.isoformat(),
-                'confidence': 0.75 if len(snapshots) > 10 else 0.5,
-                'latency_trend': 'increasing' if latency_trend > 0 else 'stable',
-                'projected_latency_7d': snapshots[-1].average_latency * (1 + latency_trend * 7),
-                'change_frequency': change_frequency,
-                'stability_score': max(0, 100 - change_frequency * 10)
+            "endpoint": endpoint,
+            "predictions": {
+                "next_breaking_change": next_change_prediction.isoformat(),
+                "confidence": 0.75 if len(snapshots) > 10 else 0.5,
+                "latency_trend": "increasing" if latency_trend > 0 else "stable",
+                "projected_latency_7d": snapshots[-1].average_latency
+                * (1 + latency_trend * 7),
+                "change_frequency": change_frequency,
+                "stability_score": max(0, 100 - change_frequency * 10),
             },
-            'recommendations': []
+            "recommendations": [],
         }
 
         # Generate recommendations
         if latency_trend > 0.1:
-            prediction['recommendations'].append(
+            prediction["recommendations"].append(
                 "⚠️ Performance degradation detected. Consider optimization."
             )
 
         if change_frequency > 5:
-            prediction['recommendations'].append(
+            prediction["recommendations"].append(
                 "⚠️ High change frequency. Consider API versioning."
             )
 
@@ -263,11 +273,11 @@ class APITimeMachine:
         if isinstance(data, dict):
             return {k: self._extract_schema(v) for k, v in data.items()}
         elif isinstance(data, list):
-            return ['array', self._extract_schema(data[0]) if data else 'unknown']
+            return ["array", self._extract_schema(data[0]) if data else "unknown"]
         else:
             return type(data).__name__
 
-    def _flatten_schema(self, schema: Dict, prefix: str = '') -> List[str]:
+    def _flatten_schema(self, schema: Dict, prefix: str = "") -> List[str]:
         """Flatten nested schema to field paths"""
         fields = []
         for key, value in schema.items():
@@ -280,13 +290,13 @@ class APITimeMachine:
 
     def _get_field_type(self, schema: Dict, field_path: str) -> str:
         """Get type of field from schema"""
-        parts = field_path.split('.')
+        parts = field_path.split(".")
         current = schema
         for part in parts:
             if isinstance(current, dict) and part in current:
                 current = current[part]
             else:
-                return 'unknown'
+                return "unknown"
         return str(current)
 
     def _generate_rollback_script(self, snapshot: APISnapshot) -> str:
@@ -350,7 +360,7 @@ def rollback_api():
 
         changes = 0
         for i in range(1, len(snapshots)):
-            if snapshots[i].behavior_hash != snapshots[i-1].behavior_hash:
+            if snapshots[i].behavior_hash != snapshots[i - 1].behavior_hash:
                 changes += 1
 
         time_span = (snapshots[-1].timestamp - snapshots[0].timestamp).days or 1
@@ -365,7 +375,9 @@ def rollback_api():
 
         total_time = timedelta()
         for i in range(1, len(breaking_changes)):
-            total_time += breaking_changes[i].timestamp - breaking_changes[i-1].timestamp
+            total_time += (
+                breaking_changes[i].timestamp - breaking_changes[i - 1].timestamp
+            )
 
         return total_time / (len(breaking_changes) - 1)
 
@@ -373,7 +385,9 @@ def rollback_api():
         """Alert about breaking changes"""
         # Only log critical changes in production
         if len(changes) > 2:  # Multiple breaking changes
-            print(f"\n🚨 CRITICAL: Multiple breaking changes on {endpoint}: {len(changes)} issues")
+            print(
+                f"\n🚨 CRITICAL: Multiple breaking changes on {endpoint}: {len(changes)} issues"
+            )
         # Silently log minor changes
 
         # TODO: Send notifications via webhook/email
@@ -387,7 +401,6 @@ class BreakingChangeDetector:
     def analyze_semantic_changes(self, old_schema: Dict, new_schema: Dict) -> List[str]:
         """Detect semantic breaking changes"""
         # TODO: Implement semantic analysis
-        pass
 
 
 class BehaviorAnalyzer:
@@ -396,12 +409,11 @@ class BehaviorAnalyzer:
     def detect_anomalies(self, snapshots: List[APISnapshot]) -> List[Dict]:
         """Detect anomalous behavior"""
         # TODO: Implement anomaly detection
-        pass
 
 
 # Database model for persistence
 class APITimeMachineSnapshot(Base):
-    __tablename__ = 'api_time_machine_snapshots'
+    __tablename__ = "api_time_machine_snapshots"
 
     id = Column(Integer, primary_key=True)
     endpoint = Column(String(500), index=True)
@@ -427,5 +439,5 @@ class APITimeMachineSnapshot(Base):
             status_codes=self.status_codes,
             average_latency=self.average_latency,
             behavior_hash=self.behavior_hash,
-            breaking_changes=self.breaking_changes
+            breaking_changes=self.breaking_changes,
         )

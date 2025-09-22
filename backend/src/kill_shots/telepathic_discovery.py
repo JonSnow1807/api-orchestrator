@@ -7,34 +7,25 @@ This is BLACK MAGIC that Postman could NEVER achieve!
 
 import asyncio
 import re
-import ast
-import socket
 import subprocess
-import os
-import glob
-from typing import Dict, List, Set, Optional, Any
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 import requests
-from urllib.parse import urlparse
-import yaml
-import json
-from pathlib import Path
 
 # Optional imports with fallback
 try:
-    import nmap
     HAS_NMAP = True
 except ImportError:
     HAS_NMAP = False
 
 try:
-    import dns.resolver
     HAS_DNS = True
 except ImportError:
     HAS_DNS = False
 
 try:
     from bs4 import BeautifulSoup
+
     HAS_BS4 = True
 except ImportError:
     HAS_BS4 = False
@@ -43,6 +34,7 @@ except ImportError:
 @dataclass
 class DiscoveredAPI:
     """An API found by telepathic discovery"""
+
     url: str
     method: str
     discovered_via: str  # code_analysis, network_scan, dns_enum, etc.
@@ -95,7 +87,7 @@ class TelepathicDiscovery:
             self.scan_graphql_introspection(target),
             self.scan_grpc_reflection(target),
             self.scan_websocket_endpoints(target),
-            self.scan_git_history(target)
+            self.scan_git_history(target),
         ]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -121,16 +113,16 @@ class TelepathicDiscovery:
 
         # Patterns for different frameworks
         patterns = {
-            'python_flask': r'@app\.route\([\'"](.+?)[\'"]\)',
-            'python_fastapi': r'@(app|router)\.(get|post|put|delete|patch)\([\'"](.+?)[\'"]\)',
-            'nodejs_express': r'app\.(get|post|put|delete|patch)\([\'"](.+?)[\'"]\)',
-            'java_spring': r'@(Get|Post|Put|Delete|Patch)Mapping\([\'"](.+?)[\'"]\)',
-            'ruby_rails': r'(get|post|put|delete|patch)\s+[\'"](.+?)[\'"]\s*=>',
-            'php_laravel': r'Route::(get|post|put|delete|patch)\([\'"](.+?)[\'"]\)',
-            'go_gin': r'router\.(GET|POST|PUT|DELETE|PATCH)\([\'"](.+?)[\'"]\)',
-            'rust_actix': r'\.route\([\'"](.+?)[\'"]\s*,\s*web::(get|post|put|delete|patch)\(',
-            'csharp_aspnet': r'\[Http(Get|Post|Put|Delete|Patch)\([\'"](.+?)[\'"]\)\]',
-            'kotlin_ktor': r'(get|post|put|delete|patch)\([\'"](.+?)[\'"]\)',
+            "python_flask": r'@app\.route\([\'"](.+?)[\'"]\)',
+            "python_fastapi": r'@(app|router)\.(get|post|put|delete|patch)\([\'"](.+?)[\'"]\)',
+            "nodejs_express": r'app\.(get|post|put|delete|patch)\([\'"](.+?)[\'"]\)',
+            "java_spring": r'@(Get|Post|Put|Delete|Patch)Mapping\([\'"](.+?)[\'"]\)',
+            "ruby_rails": r'(get|post|put|delete|patch)\s+[\'"](.+?)[\'"]\s*=>',
+            "php_laravel": r'Route::(get|post|put|delete|patch)\([\'"](.+?)[\'"]\)',
+            "go_gin": r'router\.(GET|POST|PUT|DELETE|PATCH)\([\'"](.+?)[\'"]\)',
+            "rust_actix": r'\.route\([\'"](.+?)[\'"]\s*,\s*web::(get|post|put|delete|patch)\(',
+            "csharp_aspnet": r'\[Http(Get|Post|Put|Delete|Patch)\([\'"](.+?)[\'"]\)\]',
+            "kotlin_ktor": r'(get|post|put|delete|patch)\([\'"](.+?)[\'"]\)',
         }
 
         # TODO: Implement recursive file scanning
@@ -142,7 +134,7 @@ class TelepathicDiscovery:
                 discovered_via="code_analysis",
                 confidence=0.95,
                 documentation_url=None,
-                authentication_required=True
+                authentication_required=True,
             )
         )
 
@@ -154,14 +146,24 @@ class TelepathicDiscovery:
 
         # Common API ports
         api_ports = [
-            80, 443,     # HTTP/HTTPS
-            3000, 3001,  # Node.js
-            5000, 5001,  # Flask/Python
-            8000, 8080, 8081, 8888,  # Various
-            9000, 9090,  # Play/Prometheus
-            4000, 4001,  # Phoenix/Elixir
-            6000, 6001,  # Custom services
-            7000, 7001,  # Cassandra
+            80,
+            443,  # HTTP/HTTPS
+            3000,
+            3001,  # Node.js
+            5000,
+            5001,  # Flask/Python
+            8000,
+            8080,
+            8081,
+            8888,  # Various
+            9000,
+            9090,  # Play/Prometheus
+            4000,
+            4001,  # Phoenix/Elixir
+            6000,
+            6001,  # Custom services
+            7000,
+            7001,  # Cassandra
         ]
 
         # TODO: Implement actual network scanning
@@ -173,7 +175,7 @@ class TelepathicDiscovery:
                 url="http://internal-service:8080/health",
                 method="GET",
                 discovered_via="network_scan",
-                confidence=0.8
+                confidence=0.8,
             )
         )
 
@@ -185,10 +187,26 @@ class TelepathicDiscovery:
 
         # Common API subdomains
         api_subdomains = [
-            'api', 'api-v1', 'api-v2', 'api-dev', 'api-staging',
-            'backend', 'services', 'data', 'graphql', 'rest',
-            'mobile', 'app', 'ws', 'websocket', 'grpc',
-            'internal', 'private', 'admin', 'metrics', 'health'
+            "api",
+            "api-v1",
+            "api-v2",
+            "api-dev",
+            "api-staging",
+            "backend",
+            "services",
+            "data",
+            "graphql",
+            "rest",
+            "mobile",
+            "app",
+            "ws",
+            "websocket",
+            "grpc",
+            "internal",
+            "private",
+            "admin",
+            "metrics",
+            "health",
         ]
 
         # TODO: Implement actual DNS enumeration
@@ -202,10 +220,10 @@ class TelepathicDiscovery:
 
         # Patterns for API calls in JavaScript
         js_patterns = [
-            (r'fetch\([\'"](.+?)[\'"]', 'GET'),
+            (r'fetch\([\'"](.+?)[\'"]', "GET"),
             (r'axios\.(get|post|put|delete|patch)\([\'"](.+?)[\'"]', None),
-            (r'\$\.ajax\(\{[^}]*url:\s*[\'"](.+?)[\'"]', 'GET'),
-            (r'XMLHttpRequest.*open\([\'"](\w+)[\'"]\s*,\s*[\'"](.+?)[\'"]', None)
+            (r'\$\.ajax\(\{[^}]*url:\s*[\'"](.+?)[\'"]', "GET"),
+            (r'XMLHttpRequest.*open\([\'"](\w+)[\'"]\s*,\s*[\'"](.+?)[\'"]', None),
         ]
 
         if HAS_BS4:
@@ -213,10 +231,10 @@ class TelepathicDiscovery:
                 # Fetch the main page
                 response = requests.get(url, timeout=5)
                 if response.status_code == 200:
-                    soup = BeautifulSoup(response.text, 'html.parser')
+                    soup = BeautifulSoup(response.text, "html.parser")
 
                     # Find all script tags
-                    scripts = soup.find_all('script')
+                    scripts = soup.find_all("script")
                     for script in scripts:
                         if script.string:
                             content = script.string
@@ -228,14 +246,29 @@ class TelepathicDiscovery:
                                             endpoint = match[0]
                                             method = default_method
                                         else:
-                                            method = match[0].upper() if match[0].upper() in ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] else match[1].upper()
-                                            endpoint = match[1] if len(match) > 1 else match[0]
+                                            method = (
+                                                match[0].upper()
+                                                if match[0].upper()
+                                                in [
+                                                    "GET",
+                                                    "POST",
+                                                    "PUT",
+                                                    "DELETE",
+                                                    "PATCH",
+                                                ]
+                                                else match[1].upper()
+                                            )
+                                            endpoint = (
+                                                match[1] if len(match) > 1 else match[0]
+                                            )
                                     else:
                                         endpoint = match
-                                        method = default_method or 'GET'
+                                        method = default_method or "GET"
 
                                     # Skip non-API URLs
-                                    if not endpoint.startswith(('http://', 'https://', '/')):
+                                    if not endpoint.startswith(
+                                        ("http://", "https://", "/")
+                                    ):
                                         continue
 
                                     discoveries.append(
@@ -243,7 +276,7 @@ class TelepathicDiscovery:
                                             url=endpoint,
                                             method=method,
                                             discovered_via="javascript_analysis",
-                                            confidence=0.7
+                                            confidence=0.7,
                                         )
                                     )
             except Exception:
@@ -258,15 +291,15 @@ class TelepathicDiscovery:
         try:
             # Get running containers
             result = subprocess.run(
-                ['docker', 'ps', '--format', '{{json .}}'],
+                ["docker", "ps", "--format", "{{json .}}"],
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             # Parse container info and check exposed ports
             # TODO: Implement container inspection
 
-        except:
+        except Exception:
             pass  # Docker might not be available
 
         return discoveries
@@ -278,15 +311,15 @@ class TelepathicDiscovery:
         try:
             # Get services
             result = subprocess.run(
-                ['kubectl', 'get', 'services', '-o', 'json'],
+                ["kubectl", "get", "services", "-o", "json"],
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             # Parse service endpoints
             # TODO: Implement k8s service parsing
 
-        except:
+        except Exception:
             pass  # kubectl might not be available
 
         return discoveries
@@ -298,15 +331,13 @@ class TelepathicDiscovery:
         try:
             # Get processes with network connections
             result = subprocess.run(
-                ['netstat', '-tulpn'],
-                capture_output=True,
-                text=True
+                ["netstat", "-tulpn"], capture_output=True, text=True
             )
 
             # Parse listening services
             # TODO: Implement process parsing
 
-        except:
+        except Exception:
             pass
 
         return discoveries
@@ -317,9 +348,9 @@ class TelepathicDiscovery:
 
         # Patterns in logs
         log_patterns = [
-            r'(GET|POST|PUT|DELETE|PATCH)\s+([^\s]+)\s+\d{3}',
+            r"(GET|POST|PUT|DELETE|PATCH)\s+([^\s]+)\s+\d{3}",
             r'"method":\s*"(GET|POST|PUT|DELETE|PATCH)".*"path":\s*"([^"]+)"',
-            r'Endpoint:\s*([^\s]+)',
+            r"Endpoint:\s*([^\s]+)",
         ]
 
         # TODO: Implement log file scanning
@@ -350,22 +381,22 @@ class TelepathicDiscovery:
 
         # Common Swagger paths
         swagger_paths = [
-            '/swagger.json',
-            '/swagger/v1/swagger.json',
-            '/api-docs',
-            '/api/swagger.json',
-            '/docs',
-            '/openapi.json',
-            '/api/openapi.json',
-            '/swagger-ui.html',
-            '/api-documentation'
+            "/swagger.json",
+            "/swagger/v1/swagger.json",
+            "/api-docs",
+            "/api/swagger.json",
+            "/docs",
+            "/openapi.json",
+            "/api/openapi.json",
+            "/swagger-ui.html",
+            "/api-documentation",
         ]
 
         # Parse base URL
-        if not base_url.startswith(('http://', 'https://')):
-            base_url = f'http://{base_url}'
+        if not base_url.startswith(("http://", "https://")):
+            base_url = f"http://{base_url}"
 
-        base_url = base_url.rstrip('/')
+        base_url = base_url.rstrip("/")
 
         for path in swagger_paths:
             try:
@@ -374,9 +405,15 @@ class TelepathicDiscovery:
                 if response.status_code == 200:
                     # Parse OpenAPI spec
                     spec = response.json()
-                    for endpoint_path, methods in spec.get('paths', {}).items():
+                    for endpoint_path, methods in spec.get("paths", {}).items():
                         for method in methods:
-                            if method.upper() in ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']:
+                            if method.upper() in [
+                                "GET",
+                                "POST",
+                                "PUT",
+                                "DELETE",
+                                "PATCH",
+                            ]:
                                 discoveries.append(
                                     DiscoveredAPI(
                                         url=f"{base_url}{endpoint_path}",
@@ -384,13 +421,15 @@ class TelepathicDiscovery:
                                         discovered_via="swagger_scan",
                                         confidence=1.0,
                                         documentation_url=url,
-                                        parameters=methods[method].get('parameters', [])
+                                        parameters=methods[method].get(
+                                            "parameters", []
+                                        ),
                                     )
                                 )
                     if discoveries:
                         print(f"   ✅ Found Swagger documentation at {url}")
                         break
-            except:
+            except Exception:
                 continue
 
         return discoveries
@@ -417,10 +456,10 @@ class TelepathicDiscovery:
         }
 
         # Common GraphQL endpoints
-        graphql_paths = ['/graphql', '/api/graphql', '/gql', '/query']
+        graphql_paths = ["/graphql", "/api/graphql", "/gql", "/query"]
 
-        if not base_url.startswith(('http://', 'https://')):
-            base_url = f'http://{base_url}'
+        if not base_url.startswith(("http://", "https://")):
+            base_url = f"http://{base_url}"
 
         for path in graphql_paths:
             try:
@@ -429,7 +468,7 @@ class TelepathicDiscovery:
 
                 if response.status_code == 200:
                     data = response.json()
-                    if 'data' in data and '__schema' in data['data']:
+                    if "data" in data and "__schema" in data["data"]:
                         # Found GraphQL endpoint with introspection
                         discoveries.append(
                             DiscoveredAPI(
@@ -437,28 +476,36 @@ class TelepathicDiscovery:
                                 method="POST",
                                 discovered_via="graphql_introspection",
                                 confidence=1.0,
-                                documentation_url=url
+                                documentation_url=url,
                             )
                         )
 
                         # Extract types and fields
-                        schema = data['data']['__schema']
-                        for type_info in schema.get('types', []):
-                            if type_info.get('name', '').startswith('__'):
+                        schema = data["data"]["__schema"]
+                        for type_info in schema.get("types", []):
+                            if type_info.get("name", "").startswith("__"):
                                 continue  # Skip introspection types
 
-                            type_name = type_info.get('name', '')
-                            if type_name and type_name not in ['String', 'Int', 'Float', 'Boolean', 'ID']:
+                            type_name = type_info.get("name", "")
+                            if type_name and type_name not in [
+                                "String",
+                                "Int",
+                                "Float",
+                                "Boolean",
+                                "ID",
+                            ]:
                                 discoveries.append(
                                     DiscoveredAPI(
                                         url=f"{url}#{type_name}",
                                         method="POST",
                                         discovered_via="graphql_type",
-                                        confidence=0.8
+                                        confidence=0.8,
                                     )
                                 )
 
-                        print(f"   ✅ Found GraphQL endpoint with introspection at {url}")
+                        print(
+                            f"   ✅ Found GraphQL endpoint with introspection at {url}"
+                        )
                         break
             except Exception:
                 continue
@@ -480,46 +527,53 @@ class TelepathicDiscovery:
 
         # Common WebSocket paths
         ws_paths = [
-            '/ws',
-            '/websocket',
-            '/socket.io',
-            '/sockjs',
-            '/cable',  # ActionCable
-            '/hub',    # SignalR
-            '/live',
-            '/stream',
-            '/events'
+            "/ws",
+            "/websocket",
+            "/socket.io",
+            "/sockjs",
+            "/cable",  # ActionCable
+            "/hub",  # SignalR
+            "/live",
+            "/stream",
+            "/events",
         ]
 
-        if not base_url.startswith(('http://', 'https://')):
-            base_url = f'http://{base_url}'
+        if not base_url.startswith(("http://", "https://")):
+            base_url = f"http://{base_url}"
 
         # Convert to WebSocket URL
-        ws_base = base_url.replace('http://', 'ws://').replace('https://', 'wss://')
+        ws_base = base_url.replace("http://", "ws://").replace("https://", "wss://")
 
         for path in ws_paths:
             # First check if HTTP endpoint exists
             try:
                 http_url = f"{base_url}{path}"
-                response = requests.get(http_url, timeout=2, headers={'Upgrade': 'websocket'})
+                response = requests.get(
+                    http_url, timeout=2, headers={"Upgrade": "websocket"}
+                )
 
                 # Check for upgrade headers
-                if response.status_code in [101, 426] or 'websocket' in response.headers.get('Upgrade', '').lower():
+                if (
+                    response.status_code in [101, 426]
+                    or "websocket" in response.headers.get("Upgrade", "").lower()
+                ):
                     discoveries.append(
                         DiscoveredAPI(
                             url=f"{ws_base}{path}",
                             method="WEBSOCKET",
                             discovered_via="websocket_scan",
-                            confidence=0.9
+                            confidence=0.9,
                         )
                     )
-                elif response.status_code < 500:  # Endpoint exists but might not be WebSocket
+                elif (
+                    response.status_code < 500
+                ):  # Endpoint exists but might not be WebSocket
                     discoveries.append(
                         DiscoveredAPI(
                             url=f"{ws_base}{path}",
                             method="WEBSOCKET",
                             discovered_via="websocket_probe",
-                            confidence=0.4
+                            confidence=0.4,
                         )
                     )
             except Exception:
@@ -534,16 +588,16 @@ class TelepathicDiscovery:
         try:
             # Search git history for API patterns
             result = subprocess.run(
-                ['git', 'log', '-p', '--all', '--grep=api'],
+                ["git", "log", "-p", "--all", "--grep=api"],
                 cwd=repo_path,
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             # Parse for endpoint patterns
             # TODO: Implement git history analysis
 
-        except:
+        except Exception:
             pass
 
         return discoveries
@@ -551,25 +605,27 @@ class TelepathicDiscovery:
     def _load_api_patterns(self) -> Dict:
         """Load patterns for API detection"""
         return {
-            'url_patterns': [
-                r'/api/v\d+/',
-                r'/rest/',
-                r'/graphql',
-                r'/grpc/',
-                r'/ws/',
-                r'/rpc/',
-                r'/services/',
-                r'/data/',
+            "url_patterns": [
+                r"/api/v\d+/",
+                r"/rest/",
+                r"/graphql",
+                r"/grpc/",
+                r"/ws/",
+                r"/rpc/",
+                r"/services/",
+                r"/data/",
             ],
-            'header_patterns': [
-                r'X-API-',
-                r'Authorization:',
-                r'API-Key:',
-                r'X-Auth-',
-            ]
+            "header_patterns": [
+                r"X-API-",
+                r"Authorization:",
+                r"API-Key:",
+                r"X-Auth-",
+            ],
         }
 
-    def _deduplicate_and_rank(self, discoveries: List[DiscoveredAPI]) -> List[DiscoveredAPI]:
+    def _deduplicate_and_rank(
+        self, discoveries: List[DiscoveredAPI]
+    ) -> List[DiscoveredAPI]:
         """Remove duplicates and rank by confidence"""
         unique = {}
 
