@@ -5,13 +5,15 @@ Supports SAML 2.0 and OIDC authentication for enterprise customers
 
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
-from fastapi import Depends, HTTPException, status, Request, Response
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr
+
 # Optional imports - gracefully handle missing packages
 try:
     from authlib.integrations.starlette_client import OAuth
+
     HAS_AUTHLIB = True
 except ImportError:
     OAuth = None
@@ -21,6 +23,7 @@ try:
     from onelogin.saml2.auth import OneLogin_Saml2_Auth
     from onelogin.saml2.settings import OneLogin_Saml2_Settings
     from onelogin.saml2.utils import OneLogin_Saml2_Utils
+
     HAS_SAML = True
 except (ImportError, Exception) as e:
     OneLogin_Saml2_Auth = None
@@ -31,7 +34,6 @@ except (ImportError, Exception) as e:
 import os
 import json
 import uuid
-from urllib.parse import urlparse, parse_qs
 
 from src.database import get_db, User
 from src.auth import AuthManager, Token
@@ -40,8 +42,10 @@ from src.config import settings
 # Security
 security = HTTPBearer()
 
+
 class SSOProvider(BaseModel):
     """SSO Provider Configuration"""
+
     id: str
     name: str
     type: str  # "saml" or "oidc"
@@ -52,8 +56,10 @@ class SSOProvider(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
 class SSOUser(BaseModel):
     """SSO User Info"""
+
     email: EmailStr
     username: str
     full_name: Optional[str] = None
@@ -61,6 +67,7 @@ class SSOUser(BaseModel):
     attributes: Dict[str, Any] = {}
     provider_id: str
     provider_user_id: str
+
 
 class EnterpriseAuth:
     """Enterprise Authentication Manager"""
@@ -96,9 +103,9 @@ class EnterpriseAuth:
                     client_id=config["client_id"],
                     client_secret=config["client_secret"],
                     server_metadata_url=config["discovery_url"],
-                    client_kwargs=config.get("client_kwargs", {
-                        "scope": "openid email profile"
-                    })
+                    client_kwargs=config.get(
+                        "client_kwargs", {"scope": "openid email profile"}
+                    ),
                 )
                 self.oidc_providers[provider_id] = config
         except json.JSONDecodeError:
@@ -118,7 +125,7 @@ class EnterpriseAuth:
                     config=config,
                     domains=config.get("domains", []),
                     created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow()
+                    updated_at=datetime.utcnow(),
                 )
 
         # Check OIDC providers
@@ -131,7 +138,7 @@ class EnterpriseAuth:
                     config=config,
                     domains=config.get("domains", []),
                     created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow()
+                    updated_at=datetime.utcnow(),
                 )
 
         return None
@@ -139,10 +146,7 @@ class EnterpriseAuth:
     def get_saml_auth_url(self, provider_id: str, return_to: str = None) -> str:
         """Get SAML authentication URL"""
         if provider_id not in self.saml_providers:
-            raise HTTPException(
-                status_code=404,
-                detail="SAML provider not found"
-            )
+            raise HTTPException(status_code=404, detail="SAML provider not found")
 
         config = self.saml_providers[provider_id]
 
@@ -152,26 +156,26 @@ class EnterpriseAuth:
                 "entityId": config["sp_entity_id"],
                 "assertionConsumerService": {
                     "url": config["sp_acs_url"],
-                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
                 },
                 "singleLogoutService": {
                     "url": config.get("sp_sls_url", config["sp_acs_url"]),
-                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
                 },
-                "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"
+                "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
             },
             "idp": {
                 "entityId": config["idp_entity_id"],
                 "singleSignOnService": {
                     "url": config["idp_sso_url"],
-                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
                 },
                 "singleLogoutService": {
                     "url": config.get("idp_sls_url", ""),
-                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
                 },
-                "x509cert": config["idp_cert"]
-            }
+                "x509cert": config["idp_cert"],
+            },
         }
 
         # Create auth request
@@ -180,13 +184,12 @@ class EnterpriseAuth:
 
         return auth_url
 
-    def get_oidc_auth_url(self, provider_id: str, request: Request, return_to: str = None) -> str:
+    def get_oidc_auth_url(
+        self, provider_id: str, request: Request, return_to: str = None
+    ) -> str:
         """Get OIDC authentication URL"""
         if provider_id not in self.oidc_providers:
-            raise HTTPException(
-                status_code=404,
-                detail="OIDC provider not found"
-            )
+            raise HTTPException(status_code=404, detail="OIDC provider not found")
 
         client = self.oauth.create_client(provider_id)
         redirect_uri = f"{request.base_url}auth/sso/oidc/{provider_id}/callback"
@@ -197,20 +200,14 @@ class EnterpriseAuth:
         if return_to:
             request.session["oauth_return_to"] = return_to
 
-        auth_url = client.authorize_redirect_url(
-            redirect_uri=redirect_uri,
-            state=state
-        )
+        auth_url = client.authorize_redirect_url(redirect_uri=redirect_uri, state=state)
 
         return auth_url
 
     def process_saml_response(self, provider_id: str, saml_response: str) -> SSOUser:
         """Process SAML authentication response"""
         if provider_id not in self.saml_providers:
-            raise HTTPException(
-                status_code=404,
-                detail="SAML provider not found"
-            )
+            raise HTTPException(status_code=404, detail="SAML provider not found")
 
         config = self.saml_providers[provider_id]
 
@@ -220,17 +217,17 @@ class EnterpriseAuth:
                 "entityId": config["sp_entity_id"],
                 "assertionConsumerService": {
                     "url": config["sp_acs_url"],
-                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
-                }
+                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+                },
             },
             "idp": {
                 "entityId": config["idp_entity_id"],
                 "singleSignOnService": {
                     "url": config["idp_sso_url"],
-                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
                 },
-                "x509cert": config["idp_cert"]
-            }
+                "x509cert": config["idp_cert"],
+            },
         }
 
         # Process response
@@ -240,7 +237,7 @@ class EnterpriseAuth:
         if not auth.is_authenticated():
             raise HTTPException(
                 status_code=401,
-                detail=f"SAML authentication failed: {auth.get_last_error_reason()}"
+                detail=f"SAML authentication failed: {auth.get_last_error_reason()}",
             )
 
         attributes = auth.get_attributes()
@@ -255,8 +252,7 @@ class EnterpriseAuth:
 
         if not email:
             raise HTTPException(
-                status_code=400,
-                detail="Email attribute not found in SAML response"
+                status_code=400, detail="Email attribute not found in SAML response"
             )
 
         return SSOUser(
@@ -266,38 +262,26 @@ class EnterpriseAuth:
             groups=groups,
             attributes=attributes,
             provider_id=provider_id,
-            provider_user_id=auth.get_nameid()
+            provider_user_id=auth.get_nameid(),
         )
 
     async def process_oidc_callback(
-        self,
-        provider_id: str,
-        request: Request,
-        authorization_code: str,
-        state: str
+        self, provider_id: str, request: Request, authorization_code: str, state: str
     ) -> SSOUser:
         """Process OIDC authentication callback"""
         if provider_id not in self.oidc_providers:
-            raise HTTPException(
-                status_code=404,
-                detail="OIDC provider not found"
-            )
+            raise HTTPException(status_code=404, detail="OIDC provider not found")
 
         # Verify state
         if request.session.get("oauth_state") != state:
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid OAuth state"
-            )
+            raise HTTPException(status_code=400, detail="Invalid OAuth state")
 
         client = self.oauth.create_client(provider_id)
         redirect_uri = f"{request.base_url}auth/sso/oidc/{provider_id}/callback"
 
         # Exchange code for token
         token = await client.authorize_access_token(
-            request=request,
-            redirect_uri=redirect_uri,
-            code=authorization_code
+            request=request, redirect_uri=redirect_uri, code=authorization_code
         )
 
         # Get user info
@@ -308,8 +292,7 @@ class EnterpriseAuth:
         email = user_info.get("email")
         if not email:
             raise HTTPException(
-                status_code=400,
-                detail="Email not found in OIDC response"
+                status_code=400, detail="Email not found in OIDC response"
             )
 
         return SSOUser(
@@ -319,7 +302,7 @@ class EnterpriseAuth:
             groups=user_info.get("groups", []),
             attributes=user_info,
             provider_id=provider_id,
-            provider_user_id=user_info.get("sub")
+            provider_user_id=user_info.get("sub"),
         )
 
     def create_or_update_user(self, db: Session, sso_user: SSOUser) -> User:
@@ -334,9 +317,9 @@ class EnterpriseAuth:
             user.last_login = datetime.utcnow()
 
             # Update SSO attributes
-            if not hasattr(user, 'sso_provider'):
+            if not hasattr(user, "sso_provider"):
                 user.sso_provider = sso_user.provider_id
-            if not hasattr(user, 'sso_user_id'):
+            if not hasattr(user, "sso_user_id"):
                 user.sso_user_id = sso_user.provider_user_id
 
             # Enterprise users get upgraded tier
@@ -357,7 +340,7 @@ class EnterpriseAuth:
                 api_calls_this_month=0,
                 sso_provider=sso_user.provider_id,
                 sso_user_id=sso_user.provider_user_id,
-                last_login=datetime.utcnow()
+                last_login=datetime.utcnow(),
             )
 
         db.add(user)
@@ -374,39 +357,35 @@ class EnterpriseAuth:
                 "email": user.email,
                 "user_id": user.id,
                 "sso_provider": provider_id,
-                "tier": user.subscription_tier
+                "tier": user.subscription_tier,
             },
-            expires_delta=access_token_expires
+            expires_delta=access_token_expires,
         )
 
         refresh_token = AuthManager.create_refresh_token(
-            data={
-                "email": user.email,
-                "user_id": user.id,
-                "sso_provider": provider_id
-            }
+            data={"email": user.email, "user_id": user.id, "sso_provider": provider_id}
         )
 
         return Token(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            token_type="bearer"
+            access_token=access_token, refresh_token=refresh_token, token_type="bearer"
         )
+
 
 # Global instance
 enterprise_auth = EnterpriseAuth()
 
+
 # Dependency functions
 async def get_sso_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ) -> User:
     """Get current SSO user"""
     payload = AuthManager.decode_token(credentials.credentials)
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials"
+            detail="Invalid authentication credentials",
         )
 
     email = payload.get("email")
@@ -414,25 +393,28 @@ async def get_sso_user(
 
     if not email or not sso_provider:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid SSO token"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid SSO token"
         )
 
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     return user
 
+
 def check_enterprise_features(user: User):
     """Check if user has access to enterprise features"""
     enterprise_tiers = ["professional", "enterprise"]
-    sso_tiers = ["starter", "professional", "enterprise"]  # SSO users get enhanced access
+    sso_tiers = [
+        "starter",
+        "professional",
+        "enterprise",
+    ]  # SSO users get enhanced access
 
-    has_sso = hasattr(user, 'sso_provider') and user.sso_provider
+    has_sso = hasattr(user, "sso_provider") and user.sso_provider
     has_enterprise_tier = user.subscription_tier in enterprise_tiers
     has_sso_tier = user.subscription_tier in sso_tiers
 
@@ -443,8 +425,9 @@ def check_enterprise_features(user: User):
         "team_features": has_sso_tier,
         "unlimited_apis": user.subscription_tier in ["professional", "enterprise"],
         "priority_support": has_enterprise_tier,
-        "custom_branding": user.subscription_tier == "enterprise"
+        "custom_branding": user.subscription_tier == "enterprise",
     }
+
 
 # Configuration helpers
 def get_sso_providers() -> List[SSOProvider]:
@@ -453,31 +436,36 @@ def get_sso_providers() -> List[SSOProvider]:
 
     # Add SAML providers
     for provider_id, config in enterprise_auth.saml_providers.items():
-        providers.append(SSOProvider(
-            id=provider_id,
-            name=config["name"],
-            type="saml",
-            enabled=config.get("enabled", True),
-            config=config,
-            domains=config.get("domains", []),
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
-        ))
+        providers.append(
+            SSOProvider(
+                id=provider_id,
+                name=config["name"],
+                type="saml",
+                enabled=config.get("enabled", True),
+                config=config,
+                domains=config.get("domains", []),
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+        )
 
     # Add OIDC providers
     for provider_id, config in enterprise_auth.oidc_providers.items():
-        providers.append(SSOProvider(
-            id=provider_id,
-            name=config["name"],
-            type="oidc",
-            enabled=config.get("enabled", True),
-            config=config,
-            domains=config.get("domains", []),
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
-        ))
+        providers.append(
+            SSOProvider(
+                id=provider_id,
+                name=config["name"],
+                type="oidc",
+                enabled=config.get("enabled", True),
+                config=config,
+                domains=config.get("domains", []),
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+        )
 
     return providers
+
 
 def is_sso_required_for_domain(email: str) -> bool:
     """Check if SSO is required for email domain"""

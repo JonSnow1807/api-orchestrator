@@ -4,21 +4,17 @@ Enterprise SSO Integration
 Comprehensive single sign-on integration with multiple providers
 """
 
-import asyncio
-import jwt
 import httpx
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union
-from dataclasses import dataclass, asdict
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass
 from enum import Enum
-import json
 import base64
-import hashlib
 import secrets
 import xml.etree.ElementTree as ET
-from urllib.parse import urlencode, parse_qs
-import aiohttp
+from urllib.parse import urlencode
+
 
 class SSOProvider(Enum):
     OKTA = "okta"
@@ -29,11 +25,13 @@ class SSOProvider(Enum):
     SAML_GENERIC = "saml_generic"
     OAUTH2_GENERIC = "oauth2_generic"
 
+
 class AuthMethod(Enum):
     SAML2 = "saml2"
     OIDC = "oidc"
     OAUTH2 = "oauth2"
     LDAP = "ldap"
+
 
 @dataclass
 class SSOConfiguration:
@@ -46,6 +44,7 @@ class SSOConfiguration:
     scopes: List[str]
     additional_config: Dict[str, Any]
 
+
 @dataclass
 class UserProfile:
     user_id: str
@@ -57,6 +56,7 @@ class UserProfile:
     organization: str
     metadata: Dict[str, Any]
 
+
 @dataclass
 class AuthSession:
     session_id: str
@@ -65,6 +65,7 @@ class AuthSession:
     refresh_token: Optional[str]
     expires_at: datetime
     provider: SSOProvider
+
 
 class EnterpriseSSOIntegration:
     """
@@ -104,7 +105,9 @@ class EnterpriseSSOIntegration:
                 await self._load_provider_metadata(provider)
                 self.logger.info(f"✅ Loaded metadata for {provider.value}")
             except Exception as e:
-                self.logger.error(f"❌ Failed to load metadata for {provider.value}: {e}")
+                self.logger.error(
+                    f"❌ Failed to load metadata for {provider.value}: {e}"
+                )
 
     async def _setup_provider_templates(self):
         """Setup templates for common enterprise SSO providers"""
@@ -122,8 +125,8 @@ class EnterpriseSSOIntegration:
                 additional_config={
                     "domain": "",  # company.okta.com
                     "audience": "api://default",
-                    "issuer": "https://{domain}.okta.com/oauth2/default"
-                }
+                    "issuer": "https://{domain}.okta.com/oauth2/default",
+                },
             )
             self.sso_configs[SSOProvider.OKTA] = okta_config
 
@@ -140,8 +143,8 @@ class EnterpriseSSOIntegration:
                 additional_config={
                     "tenant_id": "",  # Your Azure AD tenant ID
                     "authority": "https://login.microsoftonline.com/{tenant}",
-                    "graph_endpoint": "https://graph.microsoft.com/v1.0"
-                }
+                    "graph_endpoint": "https://graph.microsoft.com/v1.0",
+                },
             )
             self.sso_configs[SSOProvider.AZURE_AD] = azure_config
 
@@ -158,8 +161,8 @@ class EnterpriseSSOIntegration:
                 additional_config={
                     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                     "token_uri": "https://oauth2.googleapis.com/token",
-                    "hd": ""  # Hosted domain for workspace
-                }
+                    "hd": "",  # Hosted domain for workspace
+                },
             )
             self.sso_configs[SSOProvider.GOOGLE_WORKSPACE] = google_config
 
@@ -177,8 +180,8 @@ class EnterpriseSSOIntegration:
                     "entity_id": "http://localhost:3000/metadata",
                     "assertion_consumer_service": "http://localhost:3000/auth/callback/saml",
                     "single_logout_service": "http://localhost:3000/auth/logout/saml",
-                    "name_id_format": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"
-                }
+                    "name_id_format": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
+                },
             )
             self.sso_configs[SSOProvider.SAML_GENERIC] = saml_config
 
@@ -213,33 +216,37 @@ class EnterpriseSSOIntegration:
 
             # Extract key SAML endpoints and configuration
             namespaces = {
-                'md': 'urn:oasis:names:tc:SAML:2.0:metadata',
-                'ds': 'http://www.w3.org/2000/09/xmldsig#'
+                "md": "urn:oasis:names:tc:SAML:2.0:metadata",
+                "ds": "http://www.w3.org/2000/09/xmldsig#",
             }
 
             metadata = {
                 "entity_id": root.get("entityID"),
                 "sso_bindings": [],
                 "slo_bindings": [],
-                "certificates": []
+                "certificates": [],
             }
 
             # Find SSO endpoints
-            for sso_service in root.findall('.//md:SingleSignOnService', namespaces):
-                metadata["sso_bindings"].append({
-                    "binding": sso_service.get("Binding"),
-                    "location": sso_service.get("Location")
-                })
+            for sso_service in root.findall(".//md:SingleSignOnService", namespaces):
+                metadata["sso_bindings"].append(
+                    {
+                        "binding": sso_service.get("Binding"),
+                        "location": sso_service.get("Location"),
+                    }
+                )
 
             # Find SLO endpoints
-            for slo_service in root.findall('.//md:SingleLogoutService', namespaces):
-                metadata["slo_bindings"].append({
-                    "binding": slo_service.get("Binding"),
-                    "location": slo_service.get("Location")
-                })
+            for slo_service in root.findall(".//md:SingleLogoutService", namespaces):
+                metadata["slo_bindings"].append(
+                    {
+                        "binding": slo_service.get("Binding"),
+                        "location": slo_service.get("Location"),
+                    }
+                )
 
             # Extract certificates
-            for cert in root.findall('.//ds:X509Certificate', namespaces):
+            for cert in root.findall(".//ds:X509Certificate", namespaces):
                 if cert.text:
                     metadata["certificates"].append(cert.text.strip())
 
@@ -249,7 +256,9 @@ class EnterpriseSSOIntegration:
             self.logger.error(f"Failed to parse SAML metadata: {e}")
             return {}
 
-    async def initiate_sso_login(self, provider: SSOProvider, state: Optional[str] = None) -> str:
+    async def initiate_sso_login(
+        self, provider: SSOProvider, state: Optional[str] = None
+    ) -> str:
         """Initiate SSO login flow"""
         config = self.sso_configs.get(provider)
         if not config:
@@ -264,7 +273,9 @@ class EnterpriseSSOIntegration:
         else:
             raise ValueError(f"Unsupported auth method: {config.auth_method}")
 
-    async def _initiate_oidc_login(self, config: SSOConfiguration, state: Optional[str]) -> str:
+    async def _initiate_oidc_login(
+        self, config: SSOConfiguration, state: Optional[str]
+    ) -> str:
         """Initiate OIDC login flow"""
         metadata = self.provider_metadata.get(config.provider, {})
         auth_endpoint = metadata.get("authorization_endpoint")
@@ -276,7 +287,9 @@ class EnterpriseSSOIntegration:
                 auth_endpoint = f"https://{domain}.okta.com/oauth2/default/v1/authorize"
             elif config.provider == SSOProvider.AZURE_AD:
                 tenant = config.additional_config.get("tenant_id", "")
-                auth_endpoint = f"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize"
+                auth_endpoint = (
+                    f"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize"
+                )
 
         # Generate state and nonce for security
         if not state:
@@ -290,7 +303,7 @@ class EnterpriseSSOIntegration:
             "scope": " ".join(config.scopes),
             "redirect_uri": config.redirect_uri,
             "state": state,
-            "nonce": nonce
+            "nonce": nonce,
         }
 
         auth_url = f"{auth_endpoint}?{urlencode(params)}"
@@ -299,12 +312,14 @@ class EnterpriseSSOIntegration:
         self.discovery_cache[state] = {
             "provider": config.provider,
             "nonce": nonce,
-            "timestamp": datetime.now()
+            "timestamp": datetime.now(),
         }
 
         return auth_url
 
-    async def _initiate_oauth2_login(self, config: SSOConfiguration, state: Optional[str]) -> str:
+    async def _initiate_oauth2_login(
+        self, config: SSOConfiguration, state: Optional[str]
+    ) -> str:
         """Initiate OAuth2 login flow"""
         auth_endpoint = config.additional_config.get("auth_uri")
 
@@ -316,7 +331,7 @@ class EnterpriseSSOIntegration:
             "response_type": "code",
             "scope": " ".join(config.scopes),
             "redirect_uri": config.redirect_uri,
-            "state": state
+            "state": state,
         }
 
         # Google Workspace specific
@@ -329,12 +344,14 @@ class EnterpriseSSOIntegration:
 
         self.discovery_cache[state] = {
             "provider": config.provider,
-            "timestamp": datetime.now()
+            "timestamp": datetime.now(),
         }
 
         return auth_url
 
-    async def _initiate_saml_login(self, config: SSOConfiguration, state: Optional[str]) -> str:
+    async def _initiate_saml_login(
+        self, config: SSOConfiguration, state: Optional[str]
+    ) -> str:
         """Initiate SAML login flow"""
         # Generate SAML AuthnRequest
         request_id = f"id_{secrets.token_hex(16)}"
@@ -359,10 +376,7 @@ class EnterpriseSSOIntegration:
 
         # Build redirect URL
         sso_url = self._get_saml_sso_url(config.provider)
-        params = {
-            "SAMLRequest": encoded_request,
-            "RelayState": state or ""
-        }
+        params = {"SAMLRequest": encoded_request, "RelayState": state or ""}
 
         return f"{sso_url}?{urlencode(params)}"
 
@@ -376,10 +390,13 @@ class EnterpriseSSOIntegration:
 
         return ""
 
-    async def handle_sso_callback(self, provider: SSOProvider,
-                                  code: Optional[str] = None,
-                                  state: Optional[str] = None,
-                                  saml_response: Optional[str] = None) -> AuthSession:
+    async def handle_sso_callback(
+        self,
+        provider: SSOProvider,
+        code: Optional[str] = None,
+        state: Optional[str] = None,
+        saml_response: Optional[str] = None,
+    ) -> AuthSession:
         """Handle SSO callback and create user session"""
         config = self.sso_configs.get(provider)
         if not config:
@@ -399,7 +416,9 @@ class EnterpriseSSOIntegration:
         else:
             raise ValueError(f"Unsupported auth method: {config.auth_method}")
 
-    async def _handle_oidc_callback(self, config: SSOConfiguration, code: str, state: str) -> AuthSession:
+    async def _handle_oidc_callback(
+        self, config: SSOConfiguration, code: str, state: str
+    ) -> AuthSession:
         """Handle OIDC/OAuth2 callback"""
         # Exchange code for tokens
         token_endpoint = await self._get_token_endpoint(config)
@@ -409,14 +428,14 @@ class EnterpriseSSOIntegration:
             "code": code,
             "redirect_uri": config.redirect_uri,
             "client_id": config.client_id,
-            "client_secret": config.client_secret
+            "client_secret": config.client_secret,
         }
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 token_endpoint,
                 data=token_data,
-                headers={"Content-Type": "application/x-www-form-urlencoded"}
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
             )
 
             if response.status_code != 200:
@@ -437,16 +456,20 @@ class EnterpriseSSOIntegration:
             access_token=tokens["access_token"],
             refresh_token=tokens.get("refresh_token"),
             expires_at=expires_at,
-            provider=config.provider
+            provider=config.provider,
         )
 
         self.active_sessions[session_id] = session
 
-        self.logger.info(f"✅ Created SSO session for {user_profile.email} via {config.provider.value}")
+        self.logger.info(
+            f"✅ Created SSO session for {user_profile.email} via {config.provider.value}"
+        )
 
         return session
 
-    async def _handle_saml_callback(self, config: SSOConfiguration, saml_response: str) -> AuthSession:
+    async def _handle_saml_callback(
+        self, config: SSOConfiguration, saml_response: str
+    ) -> AuthSession:
         """Handle SAML callback"""
         # Decode and parse SAML response
         decoded_response = base64.b64decode(saml_response).decode()
@@ -464,7 +487,7 @@ class EnterpriseSSOIntegration:
             access_token="saml_session_" + session_id,
             refresh_token=None,
             expires_at=expires_at,
-            provider=config.provider
+            provider=config.provider,
         )
 
         self.active_sessions[session_id] = session
@@ -477,8 +500,8 @@ class EnterpriseSSOIntegration:
             root = ET.fromstring(saml_response)
 
             namespaces = {
-                'saml': 'urn:oasis:names:tc:SAML:2.0:assertion',
-                'samlp': 'urn:oasis:names:tc:SAML:2.0:protocol'
+                "saml": "urn:oasis:names:tc:SAML:2.0:assertion",
+                "samlp": "urn:oasis:names:tc:SAML:2.0:protocol",
             }
 
             # Extract user attributes
@@ -487,18 +510,18 @@ class EnterpriseSSOIntegration:
             last_name = ""
             groups = []
 
-            for attr in root.findall('.//saml:Attribute', namespaces):
-                attr_name = attr.get('Name', '').lower()
-                attr_value = attr.find('.//saml:AttributeValue', namespaces)
+            for attr in root.findall(".//saml:Attribute", namespaces):
+                attr_name = attr.get("Name", "").lower()
+                attr_value = attr.find(".//saml:AttributeValue", namespaces)
 
                 if attr_value is not None and attr_value.text:
-                    if 'email' in attr_name:
+                    if "email" in attr_name:
                         email = attr_value.text
-                    elif 'firstname' in attr_name or 'givenname' in attr_name:
+                    elif "firstname" in attr_name or "givenname" in attr_name:
                         first_name = attr_value.text
-                    elif 'lastname' in attr_name or 'surname' in attr_name:
+                    elif "lastname" in attr_name or "surname" in attr_name:
                         last_name = attr_value.text
-                    elif 'group' in attr_name or 'role' in attr_name:
+                    elif "group" in attr_name or "role" in attr_name:
                         groups.append(attr_value.text)
 
             return UserProfile(
@@ -509,7 +532,7 @@ class EnterpriseSSOIntegration:
                 groups=groups,
                 roles=[],
                 organization="",
-                metadata={}
+                metadata={},
             )
 
         except Exception as e:
@@ -528,13 +551,17 @@ class EnterpriseSSOIntegration:
                 token_endpoint = f"https://{domain}.okta.com/oauth2/default/v1/token"
             elif config.provider == SSOProvider.AZURE_AD:
                 tenant = config.additional_config.get("tenant_id", "")
-                token_endpoint = f"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+                token_endpoint = (
+                    f"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+                )
             elif config.provider == SSOProvider.GOOGLE_WORKSPACE:
                 token_endpoint = "https://oauth2.googleapis.com/token"
 
         return token_endpoint
 
-    async def _get_user_profile(self, config: SSOConfiguration, access_token: str) -> UserProfile:
+    async def _get_user_profile(
+        self, config: SSOConfiguration, access_token: str
+    ) -> UserProfile:
         """Get user profile from provider"""
         user_info_endpoint = await self._get_userinfo_endpoint(config)
 
@@ -560,7 +587,9 @@ class EnterpriseSSOIntegration:
             # Provider-specific endpoints
             if config.provider == SSOProvider.OKTA:
                 domain = config.additional_config.get("domain", "")
-                userinfo_endpoint = f"https://{domain}.okta.com/oauth2/default/v1/userinfo"
+                userinfo_endpoint = (
+                    f"https://{domain}.okta.com/oauth2/default/v1/userinfo"
+                )
             elif config.provider == SSOProvider.AZURE_AD:
                 userinfo_endpoint = "https://graph.microsoft.com/v1.0/me"
             elif config.provider == SSOProvider.GOOGLE_WORKSPACE:
@@ -568,7 +597,9 @@ class EnterpriseSSOIntegration:
 
         return userinfo_endpoint
 
-    def _map_user_profile(self, provider: SSOProvider, user_data: Dict[str, Any]) -> UserProfile:
+    def _map_user_profile(
+        self, provider: SSOProvider, user_data: Dict[str, Any]
+    ) -> UserProfile:
         """Map provider-specific user data to standard profile"""
         if provider == SSOProvider.OKTA:
             return UserProfile(
@@ -579,7 +610,7 @@ class EnterpriseSSOIntegration:
                 groups=user_data.get("groups", []),
                 roles=[],
                 organization=user_data.get("org", ""),
-                metadata=user_data
+                metadata=user_data,
             )
         elif provider == SSOProvider.AZURE_AD:
             return UserProfile(
@@ -590,7 +621,7 @@ class EnterpriseSSOIntegration:
                 groups=[],  # Requires additional Graph API call
                 roles=[],
                 organization=user_data.get("companyName", ""),
-                metadata=user_data
+                metadata=user_data,
             )
         elif provider == SSOProvider.GOOGLE_WORKSPACE:
             return UserProfile(
@@ -601,7 +632,7 @@ class EnterpriseSSOIntegration:
                 groups=[],
                 roles=[],
                 organization=user_data.get("hd", ""),
-                metadata=user_data
+                metadata=user_data,
             )
         else:
             # Generic mapping
@@ -613,7 +644,7 @@ class EnterpriseSSOIntegration:
                 groups=user_data.get("groups", []),
                 roles=user_data.get("roles", []),
                 organization=user_data.get("organization", ""),
-                metadata=user_data
+                metadata=user_data,
             )
 
     def get_session(self, session_id: str) -> Optional[AuthSession]:
@@ -646,14 +677,14 @@ class EnterpriseSSOIntegration:
                 "grant_type": "refresh_token",
                 "refresh_token": session.refresh_token,
                 "client_id": config.client_id,
-                "client_secret": config.client_secret
+                "client_secret": config.client_secret,
             }
 
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     token_endpoint,
                     data=refresh_data,
-                    headers={"Content-Type": "application/x-www-form-urlencoded"}
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
                 )
 
                 if response.status_code != 200:
@@ -663,7 +694,9 @@ class EnterpriseSSOIntegration:
 
             # Update session
             session.access_token = tokens["access_token"]
-            session.expires_at = datetime.now() + timedelta(seconds=tokens.get("expires_in", 3600))
+            session.expires_at = datetime.now() + timedelta(
+                seconds=tokens.get("expires_in", 3600)
+            )
 
             if "refresh_token" in tokens:
                 session.refresh_token = tokens["refresh_token"]
@@ -687,7 +720,9 @@ class EnterpriseSSOIntegration:
             if config:
                 await self._initiate_sso_logout(config, session)
 
-    async def _initiate_sso_logout(self, config: SSOConfiguration, session: AuthSession):
+    async def _initiate_sso_logout(
+        self, config: SSOConfiguration, session: AuthSession
+    ):
         """Initiate SSO logout with provider"""
         try:
             if config.auth_method == AuthMethod.SAML2:
@@ -707,7 +742,7 @@ class EnterpriseSSOIntegration:
         if logout_endpoint:
             params = {
                 "id_token_hint": session.access_token,
-                "post_logout_redirect_uri": config.redirect_uri
+                "post_logout_redirect_uri": config.redirect_uri,
             }
 
             logout_url = f"{logout_endpoint}?{urlencode(params)}"
@@ -734,9 +769,13 @@ class EnterpriseSSOIntegration:
         """
 
         # In a real implementation, send this to the IdP
-        self.logger.info(f"SAML logout request generated for {session.user_profile.email}")
+        self.logger.info(
+            f"SAML logout request generated for {session.user_profile.email}"
+        )
 
-    def get_provider_configuration_template(self, provider: SSOProvider) -> Dict[str, Any]:
+    def get_provider_configuration_template(
+        self, provider: SSOProvider
+    ) -> Dict[str, Any]:
         """Get configuration template for a provider"""
         templates = {
             SSOProvider.OKTA: {
@@ -745,7 +784,7 @@ class EnterpriseSSOIntegration:
                 "domain": "your-company.okta.com",
                 "metadata_url": "https://your-company.okta.com/.well-known/openid_configuration",
                 "redirect_uri": "http://localhost:3000/auth/callback/okta",
-                "scopes": ["openid", "profile", "email", "groups"]
+                "scopes": ["openid", "profile", "email", "groups"],
             },
             SSOProvider.AZURE_AD: {
                 "client_id": "12345678-1234-1234-1234-123456789012",
@@ -753,7 +792,7 @@ class EnterpriseSSOIntegration:
                 "tenant_id": "87654321-4321-4321-4321-210987654321",
                 "metadata_url": "https://login.microsoftonline.com/{tenant}/v2.0/.well-known/openid_configuration",
                 "redirect_uri": "http://localhost:3000/auth/callback/azure",
-                "scopes": ["openid", "profile", "email", "User.Read"]
+                "scopes": ["openid", "profile", "email", "User.Read"],
             },
             SSOProvider.GOOGLE_WORKSPACE: {
                 "client_id": "123456789012-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com",
@@ -761,8 +800,8 @@ class EnterpriseSSOIntegration:
                 "hosted_domain": "your-company.com",
                 "metadata_url": "https://accounts.google.com/.well-known/openid_configuration",
                 "redirect_uri": "http://localhost:3000/auth/callback/google",
-                "scopes": ["openid", "email", "profile"]
-            }
+                "scopes": ["openid", "email", "profile"],
+            },
         }
 
         return templates.get(provider, {})
@@ -773,17 +812,22 @@ class EnterpriseSSOIntegration:
             "timestamp": datetime.now().isoformat(),
             "configured_providers": [p.value for p in self.sso_configs.keys()],
             "active_sessions": len(self.active_sessions),
-            "provider_metadata_loaded": [p.value for p in self.provider_metadata.keys()],
+            "provider_metadata_loaded": [
+                p.value for p in self.provider_metadata.keys()
+            ],
             "supported_providers": [p.value for p in SSOProvider],
-            "supported_auth_methods": [m.value for m in AuthMethod]
+            "supported_auth_methods": [m.value for m in AuthMethod],
         }
+
 
 # Global SSO integration instance
 enterprise_sso = EnterpriseSSOIntegration()
 
+
 async def initialize_enterprise_sso():
     """Initialize the enterprise SSO integration"""
     await enterprise_sso.initialize_providers()
+
 
 def get_sso_status():
     """Get current SSO integration status"""
