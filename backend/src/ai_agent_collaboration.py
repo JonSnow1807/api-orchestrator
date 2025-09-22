@@ -5,15 +5,15 @@ Revolutionary multi-agent AI system where 20 agents work together in real-time
 """
 
 import asyncio
-import json
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Set, Tuple
-from dataclasses import dataclass, asdict
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass
 from enum import Enum
 import logging
 import uuid
 from collections import defaultdict
+
 
 # Import all AI agents with fallback implementations for proper error handling
 def safe_import_agent(module_path, class_name):
@@ -29,48 +29,86 @@ def safe_import_agent(module_path, class_name):
                 self.name = class_name
 
             async def analyze(self, *args, **kwargs):
-                return {"analysis": f"Fallback analysis from {self.name}", "status": "fallback"}
+                return {
+                    "analysis": f"Fallback analysis from {self.name}",
+                    "status": "fallback",
+                }
 
             async def analyze_security(self, *args, **kwargs):
-                return {"security_analysis": f"Fallback security analysis from {self.name}", "status": "fallback"}
+                return {
+                    "security_analysis": f"Fallback security analysis from {self.name}",
+                    "status": "fallback",
+                }
 
             async def analyze_performance(self, *args, **kwargs):
-                return {"performance_analysis": f"Fallback performance analysis from {self.name}", "status": "fallback"}
+                return {
+                    "performance_analysis": f"Fallback performance analysis from {self.name}",
+                    "status": "fallback",
+                }
 
             async def generate_tests(self, *args, **kwargs):
-                return {"generated_tests": f"Fallback tests from {self.name}", "status": "fallback"}
+                return {
+                    "generated_tests": f"Fallback tests from {self.name}",
+                    "status": "fallback",
+                }
 
             async def process(self, *args, **kwargs):
-                return {"result": f"Fallback processing from {self.name}", "status": "fallback"}
+                return {
+                    "result": f"Fallback processing from {self.name}",
+                    "status": "fallback",
+                }
 
             async def autonomous_operation(self, *args, **kwargs):
-                return {"operation": f"Fallback autonomous operation from {self.name}", "status": "fallback"}
+                return {
+                    "operation": f"Fallback autonomous operation from {self.name}",
+                    "status": "fallback",
+                }
 
         return FallbackAgent
 
+
 # Import agent classes with fallbacks
-AIIntelligenceAgent = safe_import_agent('agents.ai_agent', 'AIIntelligenceAgent')
-AutonomousSecurityAgent = safe_import_agent('agents.autonomous_security_agent', 'AutonomousSecurityAgent')
-DiscoveryAgent = safe_import_agent('agents.discovery_agent', 'DiscoveryAgent')
-PerformanceAgent = safe_import_agent('agents.performance_agent', 'PerformanceAgent')
-TestGeneratorAgent = safe_import_agent('agents.test_agent', 'TestGeneratorAgent')
-SpecGeneratorAgent = safe_import_agent('agents.spec_agent', 'SpecGeneratorAgent')
-CodeGeneratorAgent = safe_import_agent('agents.code_generator_agent', 'CodeGeneratorAgent')
-DocumentationAgent = safe_import_agent('agents.documentation_agent', 'DocumentationAgent')
-MockServerAgent = safe_import_agent('agents.mock_server_agent', 'MockServerAgent')
-SecurityComplianceAgent = safe_import_agent('agents.security_compliance_agent', 'SecurityComplianceAgent')
-WorkflowOptimizationAgent = safe_import_agent('agents.workflow_optimization_agent', 'WorkflowOptimizationAgent')
-TestRunnerAgent = safe_import_agent('agents.test_runner_agent', 'TestRunnerAgent')
-IntegrationAgent = safe_import_agent('agents.integration_agent', 'IntegrationAgent')
+AIIntelligenceAgent = safe_import_agent("agents.ai_agent", "AIIntelligenceAgent")
+AutonomousSecurityAgent = safe_import_agent(
+    "agents.autonomous_security_agent", "AutonomousSecurityAgent"
+)
+DiscoveryAgent = safe_import_agent("agents.discovery_agent", "DiscoveryAgent")
+PerformanceAgent = safe_import_agent("agents.performance_agent", "PerformanceAgent")
+TestGeneratorAgent = safe_import_agent("agents.test_agent", "TestGeneratorAgent")
+SpecGeneratorAgent = safe_import_agent("agents.spec_agent", "SpecGeneratorAgent")
+CodeGeneratorAgent = safe_import_agent(
+    "agents.code_generator_agent", "CodeGeneratorAgent"
+)
+DocumentationAgent = safe_import_agent(
+    "agents.documentation_agent", "DocumentationAgent"
+)
+MockServerAgent = safe_import_agent("agents.mock_server_agent", "MockServerAgent")
+SecurityComplianceAgent = safe_import_agent(
+    "agents.security_compliance_agent", "SecurityComplianceAgent"
+)
+WorkflowOptimizationAgent = safe_import_agent(
+    "agents.workflow_optimization_agent", "WorkflowOptimizationAgent"
+)
+TestRunnerAgent = safe_import_agent("agents.test_runner_agent", "TestRunnerAgent")
+IntegrationAgent = safe_import_agent("agents.integration_agent", "IntegrationAgent")
 
 # AI Employee agents
-AIEmployeeOrchestrator = safe_import_agent('ai_employee.ai_employee_orchestrator', 'AIEmployeeOrchestrator')
-AICodeGen = safe_import_agent('ai_employee.code_generation_agent', 'CodeGenerationAgent')
-DatabaseAgent = safe_import_agent('ai_employee.database_agent', 'DatabaseAgent')
-DevOpsAgent = safe_import_agent('ai_employee.devops_agent', 'DevOpsAgent')
-SelfLearningSystem = safe_import_agent('ai_employee.self_learning_system', 'SelfLearningSystem')
-GitAgent = safe_import_agent('ai_employee.git_agent', 'GitAgent')
-CloudDeploymentAgent = safe_import_agent('ai_employee.cloud_deployment_agent', 'CloudDeploymentAgent')
+AIEmployeeOrchestrator = safe_import_agent(
+    "ai_employee.ai_employee_orchestrator", "AIEmployeeOrchestrator"
+)
+AICodeGen = safe_import_agent(
+    "ai_employee.code_generation_agent", "CodeGenerationAgent"
+)
+DatabaseAgent = safe_import_agent("ai_employee.database_agent", "DatabaseAgent")
+DevOpsAgent = safe_import_agent("ai_employee.devops_agent", "DevOpsAgent")
+SelfLearningSystem = safe_import_agent(
+    "ai_employee.self_learning_system", "SelfLearningSystem"
+)
+GitAgent = safe_import_agent("ai_employee.git_agent", "GitAgent")
+CloudDeploymentAgent = safe_import_agent(
+    "ai_employee.cloud_deployment_agent", "CloudDeploymentAgent"
+)
+
 
 class AgentRole(Enum):
     COORDINATOR = "coordinator"
@@ -80,11 +118,13 @@ class AgentRole(Enum):
     VALIDATOR = "validator"
     OPTIMIZER = "optimizer"
 
+
 class TaskPriority(Enum):
     CRITICAL = 1
     HIGH = 2
     MEDIUM = 3
     LOW = 4
+
 
 class CollaborationMode(Enum):
     SEQUENTIAL = "sequential"
@@ -95,6 +135,7 @@ class CollaborationMode(Enum):
     REINFORCEMENT = "reinforcement"
     CONSENSUS = "consensus"
     PIPELINE = "pipeline"
+
 
 @dataclass
 class CollaborationTask:
@@ -119,6 +160,7 @@ class CollaborationTask:
     subtasks: Optional[List[str]] = None
     validation_results: Optional[Dict[str, Any]] = None
 
+
 @dataclass
 class AgentMessage:
     message_id: str
@@ -130,6 +172,7 @@ class AgentMessage:
     requires_response: bool = False
     priority: TaskPriority = TaskPriority.MEDIUM
 
+
 @dataclass
 class AgentCapability:
     agent_id: str
@@ -138,6 +181,7 @@ class AgentCapability:
     max_concurrent_tasks: int
     specializations: List[str]
     collaboration_rating: float
+
 
 class RealTimeCollaborationEngine:
     """
@@ -153,7 +197,9 @@ class RealTimeCollaborationEngine:
             self.agents = self._initialize_agents()
             if not self.agents:
                 self.logger.error("No agents were successfully initialized")
-                raise RuntimeError("Failed to initialize any agents - system cannot operate")
+                raise RuntimeError(
+                    "Failed to initialize any agents - system cannot operate"
+                )
 
             self.logger.info(f"Successfully initialized {len(self.agents)} agents")
             self.agent_capabilities = self._register_agent_capabilities()
@@ -175,7 +221,9 @@ class RealTimeCollaborationEngine:
             self.broadcast_channel: asyncio.Queue = asyncio.Queue()
 
         except Exception as e:
-            self.logger.error(f"Critical error during collaboration engine initialization: {e}")
+            self.logger.error(
+                f"Critical error during collaboration engine initialization: {e}"
+            )
             # Ensure we have at least minimal state to prevent further errors
             self.agents = {}
             self.agent_capabilities = {}
@@ -184,7 +232,9 @@ class RealTimeCollaborationEngine:
             self.agent_statuses = {}
             self.collaboration_history = []
             self.communication_channels = {}
-            raise RuntimeError(f"Collaboration engine initialization failed: {e}") from e
+            raise RuntimeError(
+                f"Collaboration engine initialization failed: {e}"
+            ) from e
 
         # Performance metrics
         self.collaboration_metrics = {
@@ -192,7 +242,7 @@ class RealTimeCollaborationEngine:
             "average_completion_time": 0,
             "agent_efficiency_scores": {},
             "successful_collaborations": 0,
-            "failed_collaborations": 0
+            "failed_collaborations": 0,
         }
 
     def _initialize_agents(self) -> Dict[str, Any]:
@@ -216,7 +266,6 @@ class RealTimeCollaborationEngine:
             "workflow_optimization": WorkflowOptimizationAgent,
             "test_runner": TestRunnerAgent,
             "integration": IntegrationAgent,
-
             # AI Employee agents
             "orchestrator": AIEmployeeOrchestrator,
             "ai_code_generation": AICodeGen,
@@ -234,7 +283,9 @@ class RealTimeCollaborationEngine:
                 if agent_id == "orchestrator":
                     agents[agent_id] = agent_class(config={})
                 elif agent_id == "database":
-                    agents[agent_id] = agent_class(connection_string="sqlite:///default.db")
+                    agents[agent_id] = agent_class(
+                        connection_string="sqlite:///default.db"
+                    )
                 else:
                     agents[agent_id] = agent_class()
                 self.logger.debug(f"✓ Initialized {agent_id}")
@@ -257,15 +308,19 @@ class RealTimeCollaborationEngine:
                 current_load=0.0,
                 max_concurrent_tasks=5,
                 specializations=["pattern_recognition", "data_analysis"],
-                collaboration_rating=9.5
+                collaboration_rating=9.5,
             ),
             "autonomous_security": AgentCapability(
                 agent_id="autonomous_security",
-                capabilities=["security_analysis", "vulnerability_detection", "auto_remediation"],
+                capabilities=[
+                    "security_analysis",
+                    "vulnerability_detection",
+                    "auto_remediation",
+                ],
                 current_load=0.0,
                 max_concurrent_tasks=3,
                 specializations=["penetration_testing", "compliance"],
-                collaboration_rating=9.0
+                collaboration_rating=9.0,
             ),
             "discovery": AgentCapability(
                 agent_id="discovery",
@@ -273,7 +328,7 @@ class RealTimeCollaborationEngine:
                 current_load=0.0,
                 max_concurrent_tasks=4,
                 specializations=["network_scanning", "api_enumeration"],
-                collaboration_rating=8.5
+                collaboration_rating=8.5,
             ),
             "performance": AgentCapability(
                 agent_id="performance",
@@ -281,7 +336,7 @@ class RealTimeCollaborationEngine:
                 current_load=0.0,
                 max_concurrent_tasks=6,
                 specializations=["load_testing", "bottleneck_detection"],
-                collaboration_rating=8.8
+                collaboration_rating=8.8,
             ),
             "test_generator": AgentCapability(
                 agent_id="test_generator",
@@ -289,15 +344,19 @@ class RealTimeCollaborationEngine:
                 current_load=0.0,
                 max_concurrent_tasks=8,
                 specializations=["edge_case_testing", "regression_testing"],
-                collaboration_rating=9.2
+                collaboration_rating=9.2,
             ),
             "orchestrator": AgentCapability(
                 agent_id="orchestrator",
-                capabilities=["task_coordination", "workflow_management", "agent_orchestration"],
+                capabilities=[
+                    "task_coordination",
+                    "workflow_management",
+                    "agent_orchestration",
+                ],
                 current_load=0.0,
                 max_concurrent_tasks=10,
                 specializations=["multi_agent_coordination", "resource_allocation"],
-                collaboration_rating=9.8
+                collaboration_rating=9.8,
             ),
             "self_learning": AgentCapability(
                 agent_id="self_learning",
@@ -305,8 +364,8 @@ class RealTimeCollaborationEngine:
                 current_load=0.0,
                 max_concurrent_tasks=3,
                 specializations=["anomaly_detection", "predictive_modeling"],
-                collaboration_rating=9.7
-            )
+                collaboration_rating=9.7,
+            ),
         }
 
         # Add capabilities for remaining agents
@@ -318,7 +377,7 @@ class RealTimeCollaborationEngine:
                     current_load=0.0,
                     max_concurrent_tasks=4,
                     specializations=[agent_id.replace("_", " ")],
-                    collaboration_rating=8.0
+                    collaboration_rating=8.0,
                 )
 
         return capabilities
@@ -330,7 +389,7 @@ class RealTimeCollaborationEngine:
                 "status": "idle",
                 "current_tasks": [],
                 "last_activity": datetime.now(),
-                "collaboration_score": 0.0
+                "collaboration_score": 0.0,
             }
 
     async def initialize_collaboration(self):
@@ -346,7 +405,7 @@ class RealTimeCollaborationEngine:
             asyncio.create_task(self._message_router()),
             asyncio.create_task(self._health_monitor()),
             asyncio.create_task(self._performance_tracker()),
-            asyncio.create_task(self._collaboration_optimizer())
+            asyncio.create_task(self._collaboration_optimizer()),
         ]
 
         self.logger.info("✅ Background tasks started")
@@ -392,9 +451,13 @@ class RealTimeCollaborationEngine:
         if target_channel:
             try:
                 await target_channel.put(message)
-                self.logger.debug(f"📨 Message routed: {message.sender_agent} → {message.receiver_agent}")
+                self.logger.debug(
+                    f"📨 Message routed: {message.sender_agent} → {message.receiver_agent}"
+                )
             except asyncio.QueueFull:
-                self.logger.warning(f"⚠️ Message queue full for agent: {message.receiver_agent}")
+                self.logger.warning(
+                    f"⚠️ Message queue full for agent: {message.receiver_agent}"
+                )
 
     async def _broadcast_message(self, message: Dict[str, Any]):
         """Broadcast message to all agents"""
@@ -406,16 +469,19 @@ class RealTimeCollaborationEngine:
                     receiver_agent=agent_id,
                     message_type="broadcast",
                     content=message,
-                    timestamp=datetime.now()
+                    timestamp=datetime.now(),
                 )
                 await channel.put(broadcast_msg)
             except asyncio.QueueFull:
                 continue
 
-    async def create_collaboration_task(self, task_description: str,
-                                      task_type: str = "general",
-                                      priority: TaskPriority = TaskPriority.MEDIUM,
-                                      collaboration_mode: CollaborationMode = CollaborationMode.SWARM) -> str:
+    async def create_collaboration_task(
+        self,
+        task_description: str,
+        task_type: str = "general",
+        priority: TaskPriority = TaskPriority.MEDIUM,
+        collaboration_mode: CollaborationMode = CollaborationMode.SWARM,
+    ) -> str:
         """Create a new collaboration task for the AI agents"""
 
         task_id = str(uuid.uuid4())
@@ -435,7 +501,7 @@ class RealTimeCollaborationEngine:
             deadline=datetime.now() + timedelta(hours=1),
             dependencies=[],
             assigned_agents=[],
-            results={}
+            results={},
         )
 
         self.active_tasks[task_id] = task
@@ -443,22 +509,34 @@ class RealTimeCollaborationEngine:
         # Start task execution
         await self._execute_collaboration_task(task)
 
-        self.logger.info(f"🚀 Created collaboration task: {task_id} - {task_description}")
+        self.logger.info(
+            f"🚀 Created collaboration task: {task_id} - {task_description}"
+        )
         return task_id
 
-    async def _select_optimal_agents(self, task_type: str, description: str) -> List[str]:
+    async def _select_optimal_agents(
+        self, task_type: str, description: str
+    ) -> List[str]:
         """Intelligently select the best agents for a task"""
 
         # Task type to agent mapping
         task_agent_mapping = {
-            "security_analysis": ["autonomous_security", "security_compliance", "ai_intelligence"],
-            "performance_optimization": ["performance", "workflow_optimization", "self_learning"],
+            "security_analysis": [
+                "autonomous_security",
+                "security_compliance",
+                "ai_intelligence",
+            ],
+            "performance_optimization": [
+                "performance",
+                "workflow_optimization",
+                "self_learning",
+            ],
             "api_testing": ["test_generator", "test_runner", "discovery"],
             "code_generation": ["code_generator", "ai_code_generation", "git"],
             "documentation": ["documentation", "spec_generator", "ai_intelligence"],
             "deployment": ["devops", "cloud_deployment", "orchestrator"],
             "database_optimization": ["database", "performance", "self_learning"],
-            "general": ["orchestrator", "ai_intelligence", "self_learning"]
+            "general": ["orchestrator", "ai_intelligence", "self_learning"],
         }
 
         # Get base agents for task type
@@ -475,7 +553,7 @@ class RealTimeCollaborationEngine:
             "database": ["database"],
             "git": ["git"],
             "mock": ["mock_server"],
-            "integration": ["integration"]
+            "integration": ["integration"],
         }
 
         additional_agents = []
@@ -488,17 +566,22 @@ class RealTimeCollaborationEngine:
         selected_agents = list(set(base_agents + additional_agents))
 
         # Ensure we have available agents
-        available_agents = [agent_id for agent_id in selected_agents
-                          if agent_id in self.agents and
-                          agent_id in self.agent_capabilities and
-                          self.agent_capabilities[agent_id].current_load < 1.0]
+        available_agents = [
+            agent_id
+            for agent_id in selected_agents
+            if agent_id in self.agents
+            and agent_id in self.agent_capabilities
+            and self.agent_capabilities[agent_id].current_load < 1.0
+        ]
 
         if not available_agents:
             self.logger.warning(f"No idle agents available for task type: {task_type}")
             # Fallback to least loaded agents from all available agents
-            all_agents = [(aid, self.agent_capabilities[aid].current_load)
-                         for aid in self.agents.keys()
-                         if aid in self.agent_capabilities]
+            all_agents = [
+                (aid, self.agent_capabilities[aid].current_load)
+                for aid in self.agents.keys()
+                if aid in self.agent_capabilities
+            ]
 
             if all_agents:
                 # Sort by load and take the least loaded agents
@@ -506,7 +589,9 @@ class RealTimeCollaborationEngine:
                 available_agents = [aid for aid, _ in all_agents[:3]]
                 self.logger.warning(f"Using least loaded agents: {available_agents}")
             else:
-                self.logger.error("No agents available at all - system may be misconfigured")
+                self.logger.error(
+                    "No agents available at all - system may be misconfigured"
+                )
                 return []
 
         return available_agents[:8]  # Limit to 8 agents for efficiency
@@ -546,7 +631,7 @@ class RealTimeCollaborationEngine:
             "task_description": task.description,
             "collaboration_mode": "swarm",
             "your_role": "contributor",
-            "expected_contribution": "analysis_and_recommendations"
+            "expected_contribution": "analysis_and_recommendations",
         }
 
         # Send task to all agents simultaneously
@@ -558,7 +643,9 @@ class RealTimeCollaborationEngine:
         results = await asyncio.gather(*agent_tasks, return_exceptions=True)
 
         # Aggregate results
-        task.results = await self._aggregate_swarm_results(results, task.required_agents)
+        task.results = await self._aggregate_swarm_results(
+            results, task.required_agents
+        )
         task.status = "completed"
         task.progress = 1.0
 
@@ -581,7 +668,7 @@ class RealTimeCollaborationEngine:
                 "task_id": task.task_id,
                 "task_description": task.description,
                 "collaboration_mode": "parallel",
-                "your_role": "independent_processor"
+                "your_role": "independent_processor",
             }
             agent_tasks.append(self._send_task_to_agent(agent_id, task_data))
 
@@ -596,7 +683,9 @@ class RealTimeCollaborationEngine:
 
     async def _execute_sequential_collaboration(self, task: CollaborationTask):
         """Execute task using sequential processing - agents work one after another"""
-        self.logger.info(f"🔄 Starting sequential collaboration for task: {task.task_id}")
+        self.logger.info(
+            f"🔄 Starting sequential collaboration for task: {task.task_id}"
+        )
 
         task.assigned_agents = task.required_agents
         task.status = "in_progress"
@@ -610,7 +699,7 @@ class RealTimeCollaborationEngine:
                 "task_description": task.description,
                 "collaboration_mode": "sequential",
                 "your_role": f"step_{i+1}_processor",
-                "previous_result": previous_result
+                "previous_result": previous_result,
             }
 
             result = await self._send_task_to_agent(agent_id, task_data)
@@ -628,7 +717,9 @@ class RealTimeCollaborationEngine:
 
     async def _execute_hierarchical_collaboration(self, task: CollaborationTask):
         """Execute task using hierarchical processing - coordinator manages workers"""
-        self.logger.info(f"🏗️ Starting hierarchical collaboration for task: {task.task_id}")
+        self.logger.info(
+            f"🏗️ Starting hierarchical collaboration for task: {task.task_id}"
+        )
 
         task.assigned_agents = task.required_agents
         task.status = "in_progress"
@@ -643,10 +734,12 @@ class RealTimeCollaborationEngine:
             "task_description": task.description,
             "collaboration_mode": "hierarchical",
             "your_role": "coordinator",
-            "worker_agents": worker_ids
+            "worker_agents": worker_ids,
         }
 
-        coordinator_result = await self._send_task_to_agent(coordinator_id, coordinator_task)
+        coordinator_result = await self._send_task_to_agent(
+            coordinator_id, coordinator_task
+        )
 
         # Workers execute sub-tasks
         worker_tasks = []
@@ -656,7 +749,7 @@ class RealTimeCollaborationEngine:
                 "task_description": f"Sub-task {i+1}: {task.description}",
                 "collaboration_mode": "hierarchical",
                 "your_role": "worker",
-                "coordinator_instructions": coordinator_result
+                "coordinator_instructions": coordinator_result,
             }
             worker_tasks.append(self._send_task_to_agent(worker_id, worker_task))
 
@@ -664,7 +757,7 @@ class RealTimeCollaborationEngine:
 
         task.results = {
             "coordinator_result": coordinator_result,
-            "worker_results": worker_results
+            "worker_results": worker_results,
         }
         task.status = "completed"
         task.progress = 1.0
@@ -701,7 +794,9 @@ class RealTimeCollaborationEngine:
 
     async def _execute_reinforcement_collaboration(self, task: CollaborationTask):
         """Execute task using reinforcement learning - agents learn from previous task outcomes"""
-        self.logger.info(f"🎯 Starting reinforcement collaboration for task: {task.task_id}")
+        self.logger.info(
+            f"🎯 Starting reinforcement collaboration for task: {task.task_id}"
+        )
 
         task.assigned_agents = task.required_agents
         task.status = "in_progress"
@@ -718,24 +813,33 @@ class RealTimeCollaborationEngine:
                 "task_id": task.task_id,
                 "task_description": task.description,
                 "collaboration_mode": "reinforcement",
-                "historical_context": await self._get_agent_performance_history(agent_id)
+                "historical_context": await self._get_agent_performance_history(
+                    agent_id
+                ),
             }
 
             result = await self._send_task_to_agent(agent_id, task_data)
             execution_time = time.time() - start_time
 
-            performance_data.append({
-                "agent_id": agent_id,
-                "execution_time": execution_time,
-                "quality_score": result.get("confidence", 0.5),
-                "result": result
-            })
+            performance_data.append(
+                {
+                    "agent_id": agent_id,
+                    "execution_time": execution_time,
+                    "quality_score": result.get("confidence", 0.5),
+                    "result": result,
+                }
+            )
 
         # Store learning data for future optimization
         task.learning_data = {
             "performance_data": performance_data,
             "task_complexity": await self._analyze_task_complexity(task),
-            "optimal_agents": [p["agent_id"] for p in sorted(performance_data, key=lambda x: x["quality_score"], reverse=True)[:3]]
+            "optimal_agents": [
+                p["agent_id"]
+                for p in sorted(
+                    performance_data, key=lambda x: x["quality_score"], reverse=True
+                )[:3]
+            ],
         }
 
         task.results = {"reinforcement_results": performance_data}
@@ -751,7 +855,9 @@ class RealTimeCollaborationEngine:
 
     async def _execute_consensus_collaboration(self, task: CollaborationTask):
         """Execute task using consensus - multiple agents vote on best solution"""
-        self.logger.info(f"🗳️ Starting consensus collaboration for task: {task.task_id}")
+        self.logger.info(
+            f"🗳️ Starting consensus collaboration for task: {task.task_id}"
+        )
 
         task.assigned_agents = task.required_agents
         task.status = "in_progress"
@@ -763,7 +869,7 @@ class RealTimeCollaborationEngine:
                 "task_id": task.task_id,
                 "task_description": task.description,
                 "collaboration_mode": "consensus_initial",
-                "phase": "solution_generation"
+                "phase": "solution_generation",
             }
             solution = await self._send_task_to_agent(agent_id, task_data)
             initial_solutions.append(solution)
@@ -776,19 +882,21 @@ class RealTimeCollaborationEngine:
                 "task_description": task.description,
                 "collaboration_mode": "consensus_voting",
                 "phase": "solution_evaluation",
-                "solutions_to_evaluate": initial_solutions
+                "solutions_to_evaluate": initial_solutions,
             }
             votes = await self._send_task_to_agent(agent_id, task_data)
             voting_results.append(votes)
 
         # Phase 3: Determine consensus and refine solution
-        consensus_solution = await self._determine_consensus(initial_solutions, voting_results)
+        consensus_solution = await self._determine_consensus(
+            initial_solutions, voting_results
+        )
 
         task.results = {
             "initial_solutions": initial_solutions,
             "voting_results": voting_results,
             "consensus_solution": consensus_solution,
-            "consensus_confidence": consensus_solution.get("confidence", 0.8)
+            "consensus_confidence": consensus_solution.get("confidence", 0.8),
         }
 
         task.status = "completed"
@@ -822,7 +930,7 @@ class RealTimeCollaborationEngine:
                     "stage_index": stage_idx,
                     "stage_type": stage["type"],
                     "input_data": current_data,
-                    "expected_output": stage["expected_output"]
+                    "expected_output": stage["expected_output"],
                 }
 
                 result = await self._send_task_to_agent(agent_id, task_data)
@@ -830,12 +938,14 @@ class RealTimeCollaborationEngine:
 
             # Aggregate stage results and prepare for next stage
             stage_output = await self._aggregate_pipeline_stage(stage_results, stage)
-            pipeline_results.append({
-                "stage_index": stage_idx,
-                "stage_type": stage["type"],
-                "stage_results": stage_results,
-                "stage_output": stage_output
-            })
+            pipeline_results.append(
+                {
+                    "stage_index": stage_idx,
+                    "stage_type": stage["type"],
+                    "stage_results": stage_results,
+                    "stage_output": stage_output,
+                }
+            )
 
             # Update progress
             task.progress = (stage_idx + 1) / len(pipeline_stages)
@@ -846,7 +956,9 @@ class RealTimeCollaborationEngine:
         task.results = {
             "pipeline_results": pipeline_results,
             "final_output": current_data,
-            "pipeline_efficiency": await self._calculate_pipeline_efficiency(pipeline_results)
+            "pipeline_efficiency": await self._calculate_pipeline_efficiency(
+                pipeline_results
+            ),
         }
 
         task.status = "completed"
@@ -855,7 +967,9 @@ class RealTimeCollaborationEngine:
         self.collaboration_metrics["successful_collaborations"] += 1
         self.logger.info(f"✅ Pipeline collaboration completed: {task.task_id}")
 
-    async def _send_task_to_agent(self, agent_id: str, task_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _send_task_to_agent(
+        self, agent_id: str, task_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Send a task to a specific agent and get response"""
 
         try:
@@ -877,7 +991,9 @@ class RealTimeCollaborationEngine:
             self.logger.error(f"Error in agent {agent_id}: {e}")
             return {"agent_id": agent_id, "error": str(e), "status": "failed"}
 
-    async def _call_agent_method(self, agent_id: str, task_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _call_agent_method(
+        self, agent_id: str, task_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Call actual agent method based on task type and agent capabilities"""
 
         start_time = time.time()
@@ -889,7 +1005,7 @@ class RealTimeCollaborationEngine:
                 "task_id": task_data["task_id"],
                 "status": "failed",
                 "error": "Agent not found",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
         try:
@@ -897,7 +1013,9 @@ class RealTimeCollaborationEngine:
             task_type = task_data.get("task_type", "analyze")
             input_data = task_data.get("input_data", {})
 
-            contribution = await self._route_task_to_agent_method(agent, agent_id, task_type, input_data)
+            contribution = await self._route_task_to_agent_method(
+                agent, agent_id, task_type, input_data
+            )
 
             processing_time = time.time() - start_time
 
@@ -910,7 +1028,7 @@ class RealTimeCollaborationEngine:
                 "contribution": contribution,
                 "confidence": 0.85,  # Base confidence, could be improved with agent feedback
                 "processing_time": processing_time,
-                "recommendations": contribution.get("recommendations", [])
+                "recommendations": contribution.get("recommendations", []),
             }
 
             return response
@@ -923,14 +1041,18 @@ class RealTimeCollaborationEngine:
                 "status": "failed",
                 "error": str(e),
                 "timestamp": datetime.now().isoformat(),
-                "processing_time": time.time() - start_time
+                "processing_time": time.time() - start_time,
             }
 
-    async def _route_task_to_agent_method(self, agent, agent_id: str, task_type: str, input_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _route_task_to_agent_method(
+        self, agent, agent_id: str, task_type: str, input_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Route task to appropriate agent method based on agent type and task"""
 
         # Default empty spec for agents that require it
-        default_spec = input_data.get("api_spec", {"paths": {}, "info": {"title": "API", "version": "1.0"}})
+        default_spec = input_data.get(
+            "api_spec", {"paths": {}, "info": {"title": "API", "version": "1.0"}}
+        )
 
         try:
             # Route based on agent type
@@ -940,7 +1062,9 @@ class RealTimeCollaborationEngine:
                 elif task_type == "test_generation":
                     result = await agent.generate_intelligent_tests(default_spec)
                 else:
-                    result = await agent.analyze(input_data.get("apis", []), default_spec)
+                    result = await agent.analyze(
+                        input_data.get("apis", []), default_spec
+                    )
 
             elif agent_id == "autonomous_security":
                 # Security agent methods
@@ -953,50 +1077,60 @@ class RealTimeCollaborationEngine:
                 result = await agent.generate_tests(input_data)
 
             elif agent_id == "documentation":
-                if hasattr(agent, 'generate_documentation'):
+                if hasattr(agent, "generate_documentation"):
                     result = await agent.generate_documentation(default_spec)
                 else:
-                    result = {"documentation": "Generated documentation", "sections": []}
+                    result = {
+                        "documentation": "Generated documentation",
+                        "sections": [],
+                    }
 
             elif agent_id == "code_generator":
-                if hasattr(agent, 'generate_code'):
+                if hasattr(agent, "generate_code"):
                     result = await agent.generate_code(input_data)
                 else:
-                    result = {"generated_code": "// Generated code", "language": "javascript"}
+                    result = {
+                        "generated_code": "// Generated code",
+                        "language": "javascript",
+                    }
 
             elif agent_id == "orchestrator":
-                if hasattr(agent, 'autonomous_operation'):
+                if hasattr(agent, "autonomous_operation"):
                     result = await agent.autonomous_operation()
                 else:
                     result = {"orchestration": "Task orchestrated", "status": "success"}
 
             else:
                 # Generic agent method call
-                if hasattr(agent, 'analyze'):
+                if hasattr(agent, "analyze"):
                     result = await agent.analyze(input_data)
-                elif hasattr(agent, 'process'):
+                elif hasattr(agent, "process"):
                     result = await agent.process(input_data)
                 else:
                     # Fallback for agents without standard methods
                     result = {
                         "analysis": f"Processed by {agent_id}",
                         "recommendations": [f"Recommendation from {agent_id}"],
-                        "confidence": 0.8
+                        "confidence": 0.8,
                     }
 
             return result if isinstance(result, dict) else {"result": str(result)}
 
         except Exception as e:
-            self.logger.warning(f"Agent {agent_id} method call failed, using fallback: {e}")
+            self.logger.warning(
+                f"Agent {agent_id} method call failed, using fallback: {e}"
+            )
             # Provide fallback response
             return {
                 "analysis": f"Analysis completed by {agent_id}",
                 "recommendations": [f"Recommendation from {agent_id}"],
                 "status": "completed_with_fallback",
-                "error": str(e)
+                "error": str(e),
             }
 
-    async def _aggregate_swarm_results(self, results: List[Any], agent_ids: List[str]) -> Dict[str, Any]:
+    async def _aggregate_swarm_results(
+        self, results: List[Any], agent_ids: List[str]
+    ) -> Dict[str, Any]:
         """Aggregate results from swarm collaboration"""
 
         aggregated = {
@@ -1008,7 +1142,7 @@ class RealTimeCollaborationEngine:
             "overall_confidence": 0.0,
             "combined_insights": {},
             "recommendations": [],
-            "completion_time": datetime.now().isoformat()
+            "completion_time": datetime.now().isoformat(),
         }
 
         successful_results = []
@@ -1031,7 +1165,9 @@ class RealTimeCollaborationEngine:
 
                 # Collect recommendations
                 if "recommendations" in result["contribution"]:
-                    aggregated["recommendations"].extend(result["contribution"]["recommendations"])
+                    aggregated["recommendations"].extend(
+                        result["contribution"]["recommendations"]
+                    )
 
         return aggregated
 
@@ -1044,8 +1180,13 @@ class RealTimeCollaborationEngine:
 
                     # Check for stuck agents
                     time_since_activity = datetime.now() - status["last_activity"]
-                    if time_since_activity > timedelta(minutes=5) and status["status"] == "working":
-                        self.logger.warning(f"⚠️ Agent {agent_id} appears stuck - resetting")
+                    if (
+                        time_since_activity > timedelta(minutes=5)
+                        and status["status"] == "working"
+                    ):
+                        self.logger.warning(
+                            f"⚠️ Agent {agent_id} appears stuck - resetting"
+                        )
                         status["status"] = "idle"
                         status["current_tasks"] = []
 
@@ -1068,7 +1209,9 @@ class RealTimeCollaborationEngine:
                     base_efficiency = capability.collaboration_rating / 10
                     activity_bonus = 0.1 if status["status"] == "working" else 0.0
 
-                    self.collaboration_metrics["agent_efficiency_scores"][agent_id] = base_efficiency + activity_bonus
+                    self.collaboration_metrics["agent_efficiency_scores"][agent_id] = (
+                        base_efficiency + activity_bonus
+                    )
 
                 await asyncio.sleep(60)  # Update every minute
 
@@ -1081,10 +1224,12 @@ class RealTimeCollaborationEngine:
         while True:
             try:
                 # Analyze collaboration patterns
-                successful_rate = (
-                    self.collaboration_metrics["successful_collaborations"] /
-                    max(1, self.collaboration_metrics["successful_collaborations"] +
-                        self.collaboration_metrics["failed_collaborations"])
+                successful_rate = self.collaboration_metrics[
+                    "successful_collaborations"
+                ] / max(
+                    1,
+                    self.collaboration_metrics["successful_collaborations"]
+                    + self.collaboration_metrics["failed_collaborations"],
                 )
 
                 if successful_rate < 0.8:  # Less than 80% success rate
@@ -1106,27 +1251,30 @@ class RealTimeCollaborationEngine:
     async def _analyze_task_complexity(self, task: CollaborationTask) -> float:
         """Analyze the complexity of a task to determine optimal collaboration approach"""
         complexity_factors = {
-            "description_length": len(task.description.split()) / 100,  # Longer descriptions = more complex
-            "agent_count": len(task.required_agents) / 10,  # More agents needed = more complex
+            "description_length": len(task.description.split())
+            / 100,  # Longer descriptions = more complex
+            "agent_count": len(task.required_agents)
+            / 10,  # More agents needed = more complex
             "task_type_complexity": {
                 "security_analysis": 0.9,
                 "performance_optimization": 0.8,
                 "code_generation": 0.7,
                 "api_testing": 0.6,
                 "documentation": 0.4,
-                "general": 0.3
+                "general": 0.3,
             }.get(task.task_type, 0.5),
             "dependency_complexity": len(task.dependencies) / 5,
-            "priority_weight": task.priority.value / 4  # Higher priority often means more complex
+            "priority_weight": task.priority.value
+            / 4,  # Higher priority often means more complex
         }
 
         # Calculate weighted complexity score
         complexity_score = (
-            complexity_factors["description_length"] * 0.2 +
-            complexity_factors["agent_count"] * 0.3 +
-            complexity_factors["task_type_complexity"] * 0.3 +
-            complexity_factors["dependency_complexity"] * 0.1 +
-            complexity_factors["priority_weight"] * 0.1
+            complexity_factors["description_length"] * 0.2
+            + complexity_factors["agent_count"] * 0.3
+            + complexity_factors["task_type_complexity"] * 0.3
+            + complexity_factors["dependency_complexity"] * 0.1
+            + complexity_factors["priority_weight"] * 0.1
         )
 
         return min(1.0, complexity_score)  # Cap at 1.0
@@ -1144,13 +1292,15 @@ class RealTimeCollaborationEngine:
                 "task_id": f"{task.task_id}_planning",
                 "task_description": f"Plan approach for: {task.description}",
                 "collaboration_mode": "adaptive_planning",
-                "available_workers": worker_agents
+                "available_workers": worker_agents,
             }
             planning_result = await self._send_task_to_agent(coord_id, planning_task)
             planning_results.append(planning_result)
 
         # Phase 2: Execute sub-tasks in swarm groups
-        swarm_groups = await self._organize_swarm_groups(worker_agents, len(worker_agents) // 2 + 1)
+        swarm_groups = await self._organize_swarm_groups(
+            worker_agents, len(worker_agents) // 2 + 1
+        )
         swarm_results = []
 
         for group_idx, group in enumerate(swarm_groups):
@@ -1158,24 +1308,26 @@ class RealTimeCollaborationEngine:
                 "task_id": f"{task.task_id}_swarm_{group_idx}",
                 "task_description": f"Sub-task {group_idx + 1}: {task.description}",
                 "collaboration_mode": "swarm",
-                "group_coordination": planning_results
+                "group_coordination": planning_results,
             }
 
-            group_tasks = [self._send_task_to_agent(agent_id, group_task) for agent_id in group]
+            group_tasks = [
+                self._send_task_to_agent(agent_id, group_task) for agent_id in group
+            ]
             group_result = await asyncio.gather(*group_tasks, return_exceptions=True)
             swarm_results.append(group_result)
 
         task.results = {
             "adaptive_type": "complex",
             "planning_results": planning_results,
-            "swarm_results": swarm_results
+            "swarm_results": swarm_results,
         }
 
     async def _execute_medium_adaptive_workflow(self, task: CollaborationTask):
         """Execute medium adaptive workflow for medium-complexity tasks"""
         # Sequential execution with parallel validation
-        main_agents = task.required_agents[:len(task.required_agents)//2]
-        validation_agents = task.required_agents[len(task.required_agents)//2:]
+        main_agents = task.required_agents[: len(task.required_agents) // 2]
+        validation_agents = task.required_agents[len(task.required_agents) // 2 :]
 
         # Sequential execution
         sequential_results = []
@@ -1186,7 +1338,7 @@ class RealTimeCollaborationEngine:
                 "task_id": f"{task.task_id}_seq",
                 "task_description": task.description,
                 "collaboration_mode": "adaptive_sequential",
-                "previous_result": previous_result
+                "previous_result": previous_result,
             }
             result = await self._send_task_to_agent(agent_id, seq_task)
             sequential_results.append(result)
@@ -1199,16 +1351,18 @@ class RealTimeCollaborationEngine:
                 "task_id": f"{task.task_id}_validation",
                 "task_description": f"Validate results for: {task.description}",
                 "collaboration_mode": "adaptive_validation",
-                "results_to_validate": sequential_results
+                "results_to_validate": sequential_results,
             }
             validation_tasks.append(self._send_task_to_agent(agent_id, val_task))
 
-        validation_results = await asyncio.gather(*validation_tasks, return_exceptions=True)
+        validation_results = await asyncio.gather(
+            *validation_tasks, return_exceptions=True
+        )
 
         task.results = {
             "adaptive_type": "medium",
             "sequential_results": sequential_results,
-            "validation_results": validation_results
+            "validation_results": validation_results,
         }
 
     async def _execute_simple_adaptive_workflow(self, task: CollaborationTask):
@@ -1219,16 +1373,13 @@ class RealTimeCollaborationEngine:
             simple_task = {
                 "task_id": task.task_id,
                 "task_description": task.description,
-                "collaboration_mode": "adaptive_parallel"
+                "collaboration_mode": "adaptive_parallel",
             }
             parallel_tasks.append(self._send_task_to_agent(agent_id, simple_task))
 
         parallel_results = await asyncio.gather(*parallel_tasks, return_exceptions=True)
 
-        task.results = {
-            "adaptive_type": "simple",
-            "parallel_results": parallel_results
-        }
+        task.results = {"adaptive_type": "simple", "parallel_results": parallel_results}
 
     async def _optimize_agents_with_history(self, task: CollaborationTask) -> List[str]:
         """Optimize agent selection based on historical performance"""
@@ -1242,9 +1393,15 @@ class RealTimeCollaborationEngine:
 
             # Adjust based on task type affinity (simulated)
             task_affinity = {
-                "security_analysis": {"autonomous_security": 1.2, "security_compliance": 1.1},
-                "performance_optimization": {"performance": 1.2, "workflow_optimization": 1.1},
-                "code_generation": {"code_generator": 1.2, "ai_code_generation": 1.1}
+                "security_analysis": {
+                    "autonomous_security": 1.2,
+                    "security_compliance": 1.1,
+                },
+                "performance_optimization": {
+                    "performance": 1.2,
+                    "workflow_optimization": 1.1,
+                },
+                "code_generation": {"code_generator": 1.2, "ai_code_generation": 1.1},
             }.get(task.task_type, {})
 
             affinity_bonus = task_affinity.get(agent_id, 1.0)
@@ -1263,17 +1420,26 @@ class RealTimeCollaborationEngine:
             "average_quality_score": 0.85,
             "task_success_rate": 0.92,
             "preferred_task_types": ["analysis", "optimization"],
-            "collaboration_patterns": ["works_well_with_ai_intelligence", "efficient_in_parallel_mode"]
+            "collaboration_patterns": [
+                "works_well_with_ai_intelligence",
+                "efficient_in_parallel_mode",
+            ],
         }
 
-    async def _update_agent_performance_histories(self, performance_data: List[Dict[str, Any]]):
+    async def _update_agent_performance_histories(
+        self, performance_data: List[Dict[str, Any]]
+    ):
         """Update agent performance histories with new data"""
         # In a real implementation, this would update a database
         for data in performance_data:
             agent_id = data["agent_id"]
-            self.logger.debug(f"Updating performance history for {agent_id}: {data['quality_score']:.2f}")
+            self.logger.debug(
+                f"Updating performance history for {agent_id}: {data['quality_score']:.2f}"
+            )
 
-    async def _determine_consensus(self, initial_solutions: List[Dict], voting_results: List[Dict]) -> Dict[str, Any]:
+    async def _determine_consensus(
+        self, initial_solutions: List[Dict], voting_results: List[Dict]
+    ) -> Dict[str, Any]:
         """Determine consensus solution from voting results"""
         # Simple consensus algorithm - in practice, this would be more sophisticated
         solution_scores = defaultdict(float)
@@ -1283,18 +1449,25 @@ class RealTimeCollaborationEngine:
             if "preferred_solution" in vote_result.get("contribution", {}):
                 preferred_idx = vote_result["contribution"]["preferred_solution"]
                 solution_scores[preferred_idx] += 1.0
-                confidence_scores[preferred_idx].append(vote_result.get("confidence", 0.5))
+                confidence_scores[preferred_idx].append(
+                    vote_result.get("confidence", 0.5)
+                )
 
         # Find solution with highest score
         if solution_scores:
-            best_solution_idx = max(solution_scores.keys(), key=lambda k: solution_scores[k])
-            avg_confidence = sum(confidence_scores[best_solution_idx]) / len(confidence_scores[best_solution_idx])
+            best_solution_idx = max(
+                solution_scores.keys(), key=lambda k: solution_scores[k]
+            )
+            avg_confidence = sum(confidence_scores[best_solution_idx]) / len(
+                confidence_scores[best_solution_idx]
+            )
 
             return {
                 "consensus_solution": initial_solutions[best_solution_idx],
-                "consensus_strength": solution_scores[best_solution_idx] / len(voting_results),
+                "consensus_strength": solution_scores[best_solution_idx]
+                / len(voting_results),
                 "confidence": avg_confidence,
-                "voting_summary": dict(solution_scores)
+                "voting_summary": dict(solution_scores),
             }
         else:
             # Fallback to first solution if no clear consensus
@@ -1303,35 +1476,86 @@ class RealTimeCollaborationEngine:
                 "consensus_strength": 0.5,
                 "confidence": 0.6,
                 "voting_summary": {},
-                "note": "No clear consensus, using fallback solution"
+                "note": "No clear consensus, using fallback solution",
             }
 
-    async def _design_optimal_pipeline(self, task: CollaborationTask) -> List[Dict[str, Any]]:
+    async def _design_optimal_pipeline(
+        self, task: CollaborationTask
+    ) -> List[Dict[str, Any]]:
         """Design optimal pipeline stages for a task"""
         # Design pipeline based on task type
         pipeline_templates = {
             "security_analysis": [
-                {"type": "discovery", "agents": ["discovery"], "description": "Discover security endpoints", "expected_output": "endpoint_list"},
-                {"type": "analysis", "agents": ["autonomous_security", "security_compliance"], "description": "Analyze security vulnerabilities", "expected_output": "vulnerability_report"},
-                {"type": "validation", "agents": ["ai_intelligence"], "description": "Validate security findings", "expected_output": "validated_report"}
+                {
+                    "type": "discovery",
+                    "agents": ["discovery"],
+                    "description": "Discover security endpoints",
+                    "expected_output": "endpoint_list",
+                },
+                {
+                    "type": "analysis",
+                    "agents": ["autonomous_security", "security_compliance"],
+                    "description": "Analyze security vulnerabilities",
+                    "expected_output": "vulnerability_report",
+                },
+                {
+                    "type": "validation",
+                    "agents": ["ai_intelligence"],
+                    "description": "Validate security findings",
+                    "expected_output": "validated_report",
+                },
             ],
             "code_generation": [
-                {"type": "planning", "agents": ["orchestrator"], "description": "Plan code structure", "expected_output": "code_plan"},
-                {"type": "generation", "agents": ["code_generator", "ai_code_generation"], "description": "Generate code", "expected_output": "generated_code"},
-                {"type": "testing", "agents": ["test_generator", "test_runner"], "description": "Test generated code", "expected_output": "test_results"},
-                {"type": "optimization", "agents": ["performance", "workflow_optimization"], "description": "Optimize code", "expected_output": "optimized_code"}
+                {
+                    "type": "planning",
+                    "agents": ["orchestrator"],
+                    "description": "Plan code structure",
+                    "expected_output": "code_plan",
+                },
+                {
+                    "type": "generation",
+                    "agents": ["code_generator", "ai_code_generation"],
+                    "description": "Generate code",
+                    "expected_output": "generated_code",
+                },
+                {
+                    "type": "testing",
+                    "agents": ["test_generator", "test_runner"],
+                    "description": "Test generated code",
+                    "expected_output": "test_results",
+                },
+                {
+                    "type": "optimization",
+                    "agents": ["performance", "workflow_optimization"],
+                    "description": "Optimize code",
+                    "expected_output": "optimized_code",
+                },
             ],
             "general": [
-                {"type": "analysis", "agents": task.required_agents[:len(task.required_agents)//2], "description": f"Analyze: {task.description}", "expected_output": "analysis_result"},
-                {"type": "synthesis", "agents": task.required_agents[len(task.required_agents)//2:], "description": f"Synthesize solution for: {task.description}", "expected_output": "final_solution"}
-            ]
+                {
+                    "type": "analysis",
+                    "agents": task.required_agents[: len(task.required_agents) // 2],
+                    "description": f"Analyze: {task.description}",
+                    "expected_output": "analysis_result",
+                },
+                {
+                    "type": "synthesis",
+                    "agents": task.required_agents[len(task.required_agents) // 2 :],
+                    "description": f"Synthesize solution for: {task.description}",
+                    "expected_output": "final_solution",
+                },
+            ],
         }
 
         return pipeline_templates.get(task.task_type, pipeline_templates["general"])
 
-    async def _aggregate_pipeline_stage(self, stage_results: List[Dict], stage: Dict[str, Any]) -> Dict[str, Any]:
+    async def _aggregate_pipeline_stage(
+        self, stage_results: List[Dict], stage: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Aggregate results from a pipeline stage"""
-        successful_results = [r for r in stage_results if r.get("status") == "completed"]
+        successful_results = [
+            r for r in stage_results if r.get("status") == "completed"
+        ]
 
         if not successful_results:
             return {"stage_type": stage["type"], "status": "failed", "results": []}
@@ -1342,55 +1566,78 @@ class RealTimeCollaborationEngine:
             "status": "completed",
             "agent_count": len(successful_results),
             "combined_insights": {},
-            "stage_confidence": 0.0
+            "stage_confidence": 0.0,
         }
 
         confidences = []
         for result in successful_results:
             agent_id = result.get("agent_id")
-            combined_output["combined_insights"][agent_id] = result.get("contribution", {})
+            combined_output["combined_insights"][agent_id] = result.get(
+                "contribution", {}
+            )
             confidences.append(result.get("confidence", 0.5))
 
-        combined_output["stage_confidence"] = sum(confidences) / len(confidences) if confidences else 0.5
+        combined_output["stage_confidence"] = (
+            sum(confidences) / len(confidences) if confidences else 0.5
+        )
 
         return combined_output
 
-    async def _calculate_pipeline_efficiency(self, pipeline_results: List[Dict]) -> float:
+    async def _calculate_pipeline_efficiency(
+        self, pipeline_results: List[Dict]
+    ) -> float:
         """Calculate the efficiency of the pipeline execution"""
         if not pipeline_results:
             return 0.0
 
-        successful_stages = sum(1 for stage in pipeline_results if stage["stage_output"].get("status") == "completed")
-        stage_confidences = [stage["stage_output"].get("stage_confidence", 0.5) for stage in pipeline_results]
+        successful_stages = sum(
+            1
+            for stage in pipeline_results
+            if stage["stage_output"].get("status") == "completed"
+        )
+        stage_confidences = [
+            stage["stage_output"].get("stage_confidence", 0.5)
+            for stage in pipeline_results
+        ]
 
         # Calculate efficiency as combination of success rate and confidence
         success_rate = successful_stages / len(pipeline_results)
-        avg_confidence = sum(stage_confidences) / len(stage_confidences) if stage_confidences else 0.5
+        avg_confidence = (
+            sum(stage_confidences) / len(stage_confidences)
+            if stage_confidences
+            else 0.5
+        )
 
         return (success_rate * 0.6) + (avg_confidence * 0.4)
 
-    async def _organize_swarm_groups(self, agents: List[str], group_size: int) -> List[List[str]]:
+    async def _organize_swarm_groups(
+        self, agents: List[str], group_size: int
+    ) -> List[List[str]]:
         """Organize agents into swarm groups for complex adaptive workflows"""
         groups = []
         for i in range(0, len(agents), group_size):
-            group = agents[i:i + group_size]
+            group = agents[i : i + group_size]
             if group:  # Only add non-empty groups
                 groups.append(group)
         return groups
 
-    async def create_advanced_collaboration_task(self,
-                                               task_description: str,
-                                               task_type: str = "general",
-                                               priority: TaskPriority = TaskPriority.MEDIUM,
-                                               collaboration_mode: CollaborationMode = CollaborationMode.ADAPTIVE,
-                                               max_retries: int = 3,
-                                               enable_learning: bool = True) -> str:
+    async def create_advanced_collaboration_task(
+        self,
+        task_description: str,
+        task_type: str = "general",
+        priority: TaskPriority = TaskPriority.MEDIUM,
+        collaboration_mode: CollaborationMode = CollaborationMode.ADAPTIVE,
+        max_retries: int = 3,
+        enable_learning: bool = True,
+    ) -> str:
         """Create an advanced collaboration task with enhanced features"""
 
         task_id = str(uuid.uuid4())
 
         # Intelligent agent selection with advanced criteria
-        required_agents = await self._select_optimal_agents_advanced(task_type, task_description, collaboration_mode)
+        required_agents = await self._select_optimal_agents_advanced(
+            task_type, task_description, collaboration_mode
+        )
 
         task = CollaborationTask(
             task_id=task_id,
@@ -1406,7 +1653,7 @@ class RealTimeCollaborationEngine:
             assigned_agents=[],
             results={},
             max_retries=max_retries,
-            learning_data={} if enable_learning else None
+            learning_data={} if enable_learning else None,
         )
 
         self.active_tasks[task_id] = task
@@ -1414,10 +1661,14 @@ class RealTimeCollaborationEngine:
         # Execute with advanced error handling and retry logic
         await self._execute_collaboration_task_with_retries(task)
 
-        self.logger.info(f"🚀 Created advanced collaboration task: {task_id} - {task_description}")
+        self.logger.info(
+            f"🚀 Created advanced collaboration task: {task_id} - {task_description}"
+        )
         return task_id
 
-    async def _select_optimal_agents_advanced(self, task_type: str, description: str, collaboration_mode: CollaborationMode) -> List[str]:
+    async def _select_optimal_agents_advanced(
+        self, task_type: str, description: str, collaboration_mode: CollaborationMode
+    ) -> List[str]:
         """Advanced agent selection considering collaboration mode and historical performance"""
         base_agents = await self._select_optimal_agents(task_type, description)
 
@@ -1430,7 +1681,9 @@ class RealTimeCollaborationEngine:
             # Need odd number of agents for voting
             if len(base_agents) % 2 == 0 and len(base_agents) < len(self.agents):
                 # Add one more agent
-                available = [aid for aid in self.agents.keys() if aid not in base_agents]
+                available = [
+                    aid for aid in self.agents.keys() if aid not in base_agents
+                ]
                 if available:
                     base_agents.append(available[0])
         elif collaboration_mode == CollaborationMode.PIPELINE:
@@ -1439,13 +1692,31 @@ class RealTimeCollaborationEngine:
 
         return base_agents[:10]  # Cap at 10 agents for advanced workflows
 
-    async def _order_agents_for_pipeline(self, agents: List[str], task_type: str) -> List[str]:
+    async def _order_agents_for_pipeline(
+        self, agents: List[str], task_type: str
+    ) -> List[str]:
         """Order agents optimally for pipeline execution"""
         # Define preferred order for different task types
         pipeline_orders = {
-            "security_analysis": ["discovery", "autonomous_security", "security_compliance", "ai_intelligence"],
-            "code_generation": ["orchestrator", "code_generator", "ai_code_generation", "test_generator", "performance"],
-            "performance_optimization": ["performance", "workflow_optimization", "self_learning", "ai_intelligence"]
+            "security_analysis": [
+                "discovery",
+                "autonomous_security",
+                "security_compliance",
+                "ai_intelligence",
+            ],
+            "code_generation": [
+                "orchestrator",
+                "code_generator",
+                "ai_code_generation",
+                "test_generator",
+                "performance",
+            ],
+            "performance_optimization": [
+                "performance",
+                "workflow_optimization",
+                "self_learning",
+                "ai_intelligence",
+            ],
         }
 
         preferred_order = pipeline_orders.get(task_type, agents)
@@ -1473,10 +1744,14 @@ class RealTimeCollaborationEngine:
                 task.quality_score = quality_score
 
                 if quality_score >= 0.7:  # Acceptable quality threshold
-                    self.logger.info(f"✅ Task {task.task_id} completed with quality score: {quality_score:.2f}")
+                    self.logger.info(
+                        f"✅ Task {task.task_id} completed with quality score: {quality_score:.2f}"
+                    )
                     return
                 elif attempt < task.max_retries:
-                    self.logger.warning(f"⚠️ Task {task.task_id} quality below threshold ({quality_score:.2f}), retrying...")
+                    self.logger.warning(
+                        f"⚠️ Task {task.task_id} quality below threshold ({quality_score:.2f}), retrying..."
+                    )
                     task.retry_count += 1
                     task.status = "retrying"
 
@@ -1484,12 +1759,14 @@ class RealTimeCollaborationEngine:
                     await self._adjust_task_for_retry(task)
 
             except Exception as e:
-                self.logger.error(f"❌ Task {task.task_id} failed on attempt {attempt + 1}: {e}")
+                self.logger.error(
+                    f"❌ Task {task.task_id} failed on attempt {attempt + 1}: {e}"
+                )
                 task.retry_count += 1
 
                 if attempt < task.max_retries:
                     task.status = "retrying"
-                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                    await asyncio.sleep(2**attempt)  # Exponential backoff
                 else:
                     task.status = "failed"
                     self.collaboration_metrics["failed_collaborations"] += 1
@@ -1504,7 +1781,7 @@ class RealTimeCollaborationEngine:
             "completeness": 0.0,
             "coherence": 0.0,
             "confidence": 0.0,
-            "agent_agreement": 0.0
+            "agent_agreement": 0.0,
         }
 
         # Check completeness
@@ -1523,7 +1800,9 @@ class RealTimeCollaborationEngine:
                             confidence_scores.append(item["confidence"])
 
         if confidence_scores:
-            quality_factors["confidence"] = sum(confidence_scores) / len(confidence_scores)
+            quality_factors["confidence"] = sum(confidence_scores) / len(
+                confidence_scores
+            )
         else:
             quality_factors["confidence"] = 0.7  # Default moderate confidence
 
@@ -1543,26 +1822,36 @@ class RealTimeCollaborationEngine:
             CollaborationMode.ADAPTIVE: CollaborationMode.CONSENSUS,
             CollaborationMode.CONSENSUS: CollaborationMode.PIPELINE,
             CollaborationMode.PIPELINE: CollaborationMode.ADAPTIVE,
-            CollaborationMode.REINFORCEMENT: CollaborationMode.SWARM
+            CollaborationMode.REINFORCEMENT: CollaborationMode.SWARM,
         }
 
         if task.collaboration_mode in mode_alternatives:
             original_mode = task.collaboration_mode
             task.collaboration_mode = mode_alternatives[original_mode]
-            self.logger.info(f"Switching collaboration mode from {original_mode.value} to {task.collaboration_mode.value} for retry")
+            self.logger.info(
+                f"Switching collaboration mode from {original_mode.value} to {task.collaboration_mode.value} for retry"
+            )
 
         # Potentially adjust agent selection
         if task.retry_count > 1:
             # Try with different agents
-            alternative_agents = await self._select_optimal_agents(task.task_type, task.description)
+            alternative_agents = await self._select_optimal_agents(
+                task.task_type, task.description
+            )
             if set(alternative_agents) != set(task.required_agents):
                 task.required_agents = alternative_agents
-                self.logger.info(f"Adjusted agent selection for retry: {alternative_agents}")
+                self.logger.info(
+                    f"Adjusted agent selection for retry: {alternative_agents}"
+                )
 
     def get_collaboration_status(self) -> Dict[str, Any]:
         """Get current collaboration system status"""
 
-        active_agents = sum(1 for status in self.agent_statuses.values() if status["status"] == "working")
+        active_agents = sum(
+            1
+            for status in self.agent_statuses.values()
+            if status["status"] == "working"
+        )
         idle_agents = len(self.agents) - active_agents
 
         return {
@@ -1570,14 +1859,18 @@ class RealTimeCollaborationEngine:
             "total_agents": len(self.agents),
             "active_agents": active_agents,
             "idle_agents": idle_agents,
-            "active_tasks": len([t for t in self.active_tasks.values() if t.status == "in_progress"]),
-            "completed_tasks": len([t for t in self.active_tasks.values() if t.status == "completed"]),
+            "active_tasks": len(
+                [t for t in self.active_tasks.values() if t.status == "in_progress"]
+            ),
+            "completed_tasks": len(
+                [t for t in self.active_tasks.values() if t.status == "completed"]
+            ),
             "collaboration_metrics": self.collaboration_metrics,
             "agent_statuses": {
                 agent_id: {
                     "status": status["status"],
                     "current_tasks": len(status["current_tasks"]),
-                    "last_activity": status["last_activity"].isoformat()
+                    "last_activity": status["last_activity"].isoformat(),
                 }
                 for agent_id, status in self.agent_statuses.items()
             },
@@ -1588,27 +1881,38 @@ class RealTimeCollaborationEngine:
                 "consensus_collaboration": True,
                 "pipeline_processing": True,
                 "quality_validation": True,
-                "retry_mechanisms": True
-            }
+                "retry_mechanisms": True,
+            },
         }
+
 
 # Global collaboration engine instance
 collaboration_engine = RealTimeCollaborationEngine()
+
 
 async def initialize_agent_collaboration():
     """Initialize the AI agent collaboration system"""
     await collaboration_engine.initialize_collaboration()
 
-async def create_collaboration_task(description: str, task_type: str = "general") -> str:
+
+async def create_collaboration_task(
+    description: str, task_type: str = "general"
+) -> str:
     """Create a new collaboration task"""
     return await collaboration_engine.create_collaboration_task(description, task_type)
+
 
 def get_collaboration_status():
     """Get current collaboration status"""
     return collaboration_engine.get_collaboration_status()
 
-async def create_advanced_collaboration_task(description: str,
-                                           task_type: str = "general",
-                                           collaboration_mode: CollaborationMode = CollaborationMode.ADAPTIVE) -> str:
+
+async def create_advanced_collaboration_task(
+    description: str,
+    task_type: str = "general",
+    collaboration_mode: CollaborationMode = CollaborationMode.ADAPTIVE,
+) -> str:
     """Create an advanced collaboration task with enhanced features"""
-    return await collaboration_engine.create_advanced_collaboration_task(description, task_type, CollaborationMode.MEDIUM, collaboration_mode)
+    return await collaboration_engine.create_advanced_collaboration_task(
+        description, task_type, CollaborationMode.MEDIUM, collaboration_mode
+    )

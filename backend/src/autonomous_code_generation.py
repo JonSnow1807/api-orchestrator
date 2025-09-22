@@ -7,10 +7,9 @@ Revolutionary AI system that generates production-ready code from human descript
 import asyncio
 import re
 import ast
-import json
 import keyword
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, asdict
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass
 from enum import Enum
 import logging
 from datetime import datetime
@@ -19,15 +18,18 @@ import uuid
 # LLM integrations
 try:
     import openai
+
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
 
 try:
     import anthropic
+
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     ANTHROPIC_AVAILABLE = False
+
 
 class CodeLanguage(Enum):
     PYTHON = "python"
@@ -39,6 +41,7 @@ class CodeLanguage(Enum):
     SQL = "sql"
     BASH = "bash"
 
+
 class CodeType(Enum):
     API_ENDPOINT = "api_endpoint"
     DATABASE_MODEL = "database_model"
@@ -48,11 +51,13 @@ class CodeType(Enum):
     INTEGRATION_SCRIPT = "integration_script"
     DEPLOYMENT_CONFIG = "deployment_config"
 
+
 class QualityLevel(Enum):
     PROTOTYPE = "prototype"
     DEVELOPMENT = "development"
     PRODUCTION = "production"
     ENTERPRISE = "enterprise"
+
 
 @dataclass
 class CodeGenerationRequest:
@@ -66,6 +71,7 @@ class CodeGenerationRequest:
     context: Dict[str, Any]
     examples: Optional[List[str]] = None
     deadline: Optional[datetime] = None
+
 
 @dataclass
 class GeneratedCode:
@@ -84,6 +90,7 @@ class GeneratedCode:
     validation_results: Dict[str, Any]
     generation_time: float
     model_used: str
+
 
 class AutonomousCodeGenerator:
     """
@@ -106,16 +113,12 @@ class AutonomousCodeGenerator:
 
         # LLM configurations
         self.llm_configs = {
-            "openai": {
-                "model": "gpt-4",
-                "temperature": 0.3,
-                "max_tokens": 4000
-            },
+            "openai": {"model": "gpt-4", "temperature": 0.3, "max_tokens": 4000},
             "anthropic": {
                 "model": "claude-3-sonnet",
                 "temperature": 0.3,
-                "max_tokens": 4000
-            }
+                "max_tokens": 4000,
+            },
         }
 
         # Enhanced LLM integration
@@ -148,7 +151,9 @@ class AutonomousCodeGenerator:
                     self.anthropic_client = anthropic.Anthropic(api_key=api_key)
                     self.logger.info("✅ Anthropic client initialized successfully")
                 except Exception as e:
-                    self.logger.warning(f"⚠️ Failed to initialize Anthropic client: {e}")
+                    self.logger.warning(
+                        f"⚠️ Failed to initialize Anthropic client: {e}"
+                    )
             else:
                 self.logger.warning("⚠️ ANTHROPIC_API_KEY not found in environment")
 
@@ -194,7 +199,7 @@ class {class_name}(BaseModel):
         {validation_logic}
         return v
 ''',
-            "react_component": '''
+            "react_component": """
 import React, {{ useState, useEffect }} from 'react';
 import {{ {imports} }} from '@chakra-ui/react';
 
@@ -213,7 +218,7 @@ const {component_name} = ({{ {props} }}) => {{
 }};
 
 export default {component_name};
-''',
+""",
             "test_suite": '''
 import pytest
 import asyncio
@@ -237,7 +242,7 @@ class Test{test_class_name}:
         """Test main functionality"""
         {test_code}
         assert result == expected_result
-'''
+''',
         }
 
     def _load_best_practices(self) -> Dict[str, List[str]]:
@@ -253,7 +258,7 @@ class Test{test_class_name}:
                 "Use logging instead of print statements",
                 "Include unit tests with high coverage",
                 "Follow SOLID principles",
-                "Use dependency injection for testability"
+                "Use dependency injection for testability",
             ],
             "javascript": [
                 "Use const/let instead of var",
@@ -265,7 +270,7 @@ class Test{test_class_name}:
                 "Add comprehensive JSDoc comments",
                 "Use modern ES6+ features",
                 "Implement proper component lifecycle management",
-                "Add accessibility features"
+                "Add accessibility features",
             ],
             "sql": [
                 "Use parameterized queries to prevent SQL injection",
@@ -275,19 +280,24 @@ class Test{test_class_name}:
                 "Use descriptive table and column names",
                 "Implement proper backup and recovery",
                 "Use stored procedures for complex logic",
-                "Add proper commenting and documentation"
-            ]
+                "Add proper commenting and documentation",
+            ],
         }
 
-    async def generate_code_from_description(self, description: str,
-                                           language: CodeLanguage = CodeLanguage.PYTHON,
-                                           code_type: CodeType = CodeType.UTILITY_FUNCTION,
-                                           quality_level: QualityLevel = QualityLevel.PRODUCTION) -> GeneratedCode:
+    async def generate_code_from_description(
+        self,
+        description: str,
+        language: CodeLanguage = CodeLanguage.PYTHON,
+        code_type: CodeType = CodeType.UTILITY_FUNCTION,
+        quality_level: QualityLevel = QualityLevel.PRODUCTION,
+    ) -> GeneratedCode:
         """
         Generate high-quality code from natural language description
         """
 
-        self.logger.info(f"🤖 Generating {code_type.value} code in {language.value}: {description}")
+        self.logger.info(
+            f"🤖 Generating {code_type.value} code in {language.value}: {description}"
+        )
 
         request = CodeGenerationRequest(
             request_id=str(uuid.uuid4()),
@@ -297,7 +307,7 @@ class Test{test_class_name}:
             quality_level=quality_level,
             requirements=self._extract_requirements(description),
             constraints=self._extract_constraints(description),
-            context=self._analyze_context(description)
+            context=self._analyze_context(description),
         )
 
         # Pre-generation security validation
@@ -331,7 +341,7 @@ class Test{test_class_name}:
             r"should\s+(\w+.*?)(?:[.!]|$)",
             r"needs?\s+to\s+(\w+.*?)(?:[.!]|$)",
             r"requires?\s+(\w+.*?)(?:[.!]|$)",
-            r"(?:need|want)\s+(\w+.*?)(?:[.!]|$)"
+            r"(?:need|want)\s+(\w+.*?)(?:[.!]|$)",
         ]
 
         for pattern in requirement_patterns:
@@ -342,28 +352,34 @@ class Test{test_class_name}:
         description_lower = description.lower()
 
         if "api" in description_lower:
-            requirements.extend([
-                "Include proper error handling",
-                "Add request validation",
-                "Implement rate limiting",
-                "Include API documentation"
-            ])
+            requirements.extend(
+                [
+                    "Include proper error handling",
+                    "Add request validation",
+                    "Implement rate limiting",
+                    "Include API documentation",
+                ]
+            )
 
         if "database" in description_lower:
-            requirements.extend([
-                "Use parameterized queries",
-                "Add connection pooling",
-                "Implement proper transactions",
-                "Include migration scripts"
-            ])
+            requirements.extend(
+                [
+                    "Use parameterized queries",
+                    "Add connection pooling",
+                    "Implement proper transactions",
+                    "Include migration scripts",
+                ]
+            )
 
         if "security" in description_lower:
-            requirements.extend([
-                "Implement authentication",
-                "Add input sanitization",
-                "Use HTTPS only",
-                "Include audit logging"
-            ])
+            requirements.extend(
+                [
+                    "Implement authentication",
+                    "Add input sanitization",
+                    "Use HTTPS only",
+                    "Include audit logging",
+                ]
+            )
 
         return list(set(requirements))  # Remove duplicates
 
@@ -376,7 +392,9 @@ class Test{test_class_name}:
             constraints.append("Optimize for performance")
 
         # Scalability constraints
-        if re.search(r"scalable?|scale|concurrent|parallel", description, re.IGNORECASE):
+        if re.search(
+            r"scalable?|scale|concurrent|parallel", description, re.IGNORECASE
+        ):
             constraints.append("Design for scalability")
 
         # Memory constraints
@@ -395,7 +413,7 @@ class Test{test_class_name}:
             "domain": "general",
             "complexity": "medium",
             "integration_points": [],
-            "external_dependencies": []
+            "external_dependencies": [],
         }
 
         # Determine domain
@@ -404,7 +422,7 @@ class Test{test_class_name}:
             "data": ["database", "sql", "data", "analytics", "etl"],
             "ai": ["ai", "ml", "machine learning", "neural", "model"],
             "devops": ["deploy", "docker", "kubernetes", "ci/cd", "pipeline"],
-            "security": ["security", "auth", "encryption", "ssl", "oauth"]
+            "security": ["security", "auth", "encryption", "ssl", "oauth"],
         }
 
         description_lower = description.lower()
@@ -417,7 +435,7 @@ class Test{test_class_name}:
         complexity_indicators = {
             "simple": ["simple", "basic", "easy", "straightforward"],
             "medium": ["moderate", "standard", "typical"],
-            "complex": ["complex", "advanced", "sophisticated", "enterprise"]
+            "complex": ["complex", "advanced", "sophisticated", "enterprise"],
         }
 
         for complexity, indicators in complexity_indicators.items():
@@ -426,13 +444,26 @@ class Test{test_class_name}:
                 break
 
         # Identify integration points
-        integration_keywords = ["integrate", "connect", "api", "webhook", "callback", "sync"]
+        integration_keywords = [
+            "integrate",
+            "connect",
+            "api",
+            "webhook",
+            "callback",
+            "sync",
+        ]
         if any(keyword in description_lower for keyword in integration_keywords):
-            context["integration_points"] = ["external_api", "database", "message_queue"]
+            context["integration_points"] = [
+                "external_api",
+                "database",
+                "message_queue",
+            ]
 
         return context
 
-    async def _multi_step_generation(self, request: CodeGenerationRequest) -> GeneratedCode:
+    async def _multi_step_generation(
+        self, request: CodeGenerationRequest
+    ) -> GeneratedCode:
         """Multi-step code generation process"""
 
         # Step 1: Generate initial code structure
@@ -469,7 +500,7 @@ class Test{test_class_name}:
             dependencies=self._extract_dependencies(enhanced_code),
             validation_results={},
             generation_time=0.0,
-            model_used=self._get_active_model()
+            model_used=self._get_active_model(),
         )
 
     async def _generate_initial_structure(self, request: CodeGenerationRequest) -> str:
@@ -494,13 +525,18 @@ Generate clean, professional code with proper structure, imports, and placeholde
 Include comprehensive docstrings and type hints where applicable.
 """
             llm_result = await self._generate_with_llm(llm_prompt)
-            if llm_result and len(llm_result.strip()) > 50:  # Ensure meaningful response
+            if (
+                llm_result and len(llm_result.strip()) > 50
+            ):  # Ensure meaningful response
                 return llm_result
 
         # Fallback to template-based generation
-        template = self.templates.get(f"{request.language.value}_{request.code_type.value}")
+        self.templates.get(f"{request.language.value}_{request.code_type.value}")
 
-        if request.code_type == CodeType.API_ENDPOINT and request.language == CodeLanguage.PYTHON:
+        if (
+            request.code_type == CodeType.API_ENDPOINT
+            and request.language == CodeLanguage.PYTHON
+        ):
             # Extract method and path from description
             method = self._extract_http_method(request.description)
             path = self._extract_api_path(request.description)
@@ -519,10 +555,13 @@ async def {function_name}({parameters}):
     pass
 '''
 
-        elif request.code_type == CodeType.FRONTEND_COMPONENT and request.language == CodeLanguage.JAVASCRIPT:
+        elif (
+            request.code_type == CodeType.FRONTEND_COMPONENT
+            and request.language == CodeLanguage.JAVASCRIPT
+        ):
             component_name = self._generate_component_name(request.description)
 
-            return f'''
+            return f"""
 import React, {{ useState, useEffect }} from 'react';
 
 const {component_name} = () => {{
@@ -545,9 +584,12 @@ const {component_name} = () => {{
 }};
 
 export default {component_name};
-'''
+"""
 
-        elif request.code_type == CodeType.DATABASE_MODEL and request.language == CodeLanguage.PYTHON:
+        elif (
+            request.code_type == CodeType.DATABASE_MODEL
+            and request.language == CodeLanguage.PYTHON
+        ):
             class_name = self._generate_class_name(request.description)
 
             return f'''
@@ -595,7 +637,9 @@ if __name__ == "__main__":
     main()
 '''
 
-    async def _generate_business_logic(self, request: CodeGenerationRequest, initial_code: str) -> str:
+    async def _generate_business_logic(
+        self, request: CodeGenerationRequest, initial_code: str
+    ) -> str:
         """Generate business logic using LLM or pattern-based approach"""
 
         # Try LLM generation for more sophisticated business logic
@@ -630,7 +674,7 @@ Return the complete enhanced code with business logic implemented.
             "crud": self._generate_crud_logic,
             "validation": self._generate_validation_logic,
             "calculation": self._generate_calculation_logic,
-            "integration": self._generate_integration_logic
+            "integration": self._generate_integration_logic,
         }
 
         # Determine logic type from description
@@ -639,7 +683,10 @@ Return the complete enhanced code with business logic implemented.
         enhanced_code = initial_code
 
         for pattern_type, generator in logic_patterns.items():
-            if any(keyword in description_lower for keyword in self._get_pattern_keywords(pattern_type)):
+            if any(
+                keyword in description_lower
+                for keyword in self._get_pattern_keywords(pattern_type)
+            ):
                 enhanced_code = await generator(request, enhanced_code)
 
         return enhanced_code
@@ -647,14 +694,24 @@ Return the complete enhanced code with business logic implemented.
     def _get_pattern_keywords(self, pattern_type: str) -> List[str]:
         """Get keywords for different logic patterns"""
         keywords = {
-            "crud": ["create", "read", "update", "delete", "insert", "select", "modify"],
+            "crud": [
+                "create",
+                "read",
+                "update",
+                "delete",
+                "insert",
+                "select",
+                "modify",
+            ],
             "validation": ["validate", "check", "verify", "ensure", "confirm"],
             "calculation": ["calculate", "compute", "sum", "average", "total", "count"],
-            "integration": ["integrate", "connect", "sync", "import", "export", "api"]
+            "integration": ["integrate", "connect", "sync", "import", "export", "api"],
         }
         return keywords.get(pattern_type, [])
 
-    async def _generate_crud_logic(self, request: CodeGenerationRequest, code: str) -> str:
+    async def _generate_crud_logic(
+        self, request: CodeGenerationRequest, code: str
+    ) -> str:
         """Generate CRUD operations logic"""
 
         if request.language == CodeLanguage.PYTHON:
@@ -724,7 +781,9 @@ Return the complete enhanced code with business logic implemented.
 
         return code
 
-    async def _generate_validation_logic(self, request: CodeGenerationRequest, code: str) -> str:
+    async def _generate_validation_logic(
+        self, request: CodeGenerationRequest, code: str
+    ) -> str:
         """Generate validation logic"""
 
         validation_logic = '''
@@ -766,7 +825,9 @@ Return the complete enhanced code with business logic implemented.
 
         return code.replace("pass", validation_logic)
 
-    async def _add_error_handling(self, request: CodeGenerationRequest, code: str) -> str:
+    async def _add_error_handling(
+        self, request: CodeGenerationRequest, code: str
+    ) -> str:
         """Add comprehensive error handling"""
 
         if request.language == CodeLanguage.PYTHON:
@@ -812,7 +873,9 @@ def handle_errors(func):
 
         return code
 
-    async def _generate_calculation_logic(self, request: CodeGenerationRequest, code: str) -> str:
+    async def _generate_calculation_logic(
+        self, request: CodeGenerationRequest, code: str
+    ) -> str:
         """Generate calculation-specific logic"""
         calculation_logic = '''
 # Calculation logic
@@ -827,7 +890,9 @@ def calculate_result(input_data):
 '''
         return code + "\n" + calculation_logic
 
-    async def _generate_integration_logic(self, request: CodeGenerationRequest, code: str) -> str:
+    async def _generate_integration_logic(
+        self, request: CodeGenerationRequest, code: str
+    ) -> str:
         """Generate integration-specific logic"""
         integration_logic = '''
 # Integration logic
@@ -884,11 +949,14 @@ async def integrate_with_external_service(data):
             completion = self.llm_client.chat.completions.create(
                 model=self.llm_configs["openai"]["model"],
                 messages=[
-                    {"role": "system", "content": "You are an expert software engineer. Generate high-quality, production-ready code with proper error handling, documentation, and security practices."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": "You are an expert software engineer. Generate high-quality, production-ready code with proper error handling, documentation, and security practices.",
+                    },
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=self.llm_configs["openai"]["temperature"],
-                max_tokens=self.llm_configs["openai"]["max_tokens"]
+                max_tokens=self.llm_configs["openai"]["max_tokens"],
             )
             return completion.choices[0].message.content
         except Exception as e:
@@ -903,9 +971,7 @@ async def integrate_with_external_service(data):
                 max_tokens=self.llm_configs["anthropic"]["max_tokens"],
                 temperature=self.llm_configs["anthropic"]["temperature"],
                 system="You are an expert software engineer. Generate high-quality, production-ready code with proper error handling, documentation, and security practices.",
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
+                messages=[{"role": "user", "content": prompt}],
             )
             return message.content[0].text
         except Exception as e:
@@ -921,12 +987,15 @@ async def integrate_with_external_service(data):
                 stream = self.llm_client.chat.completions.create(
                     model=self.llm_configs["openai"]["model"],
                     messages=[
-                        {"role": "system", "content": "You are an expert software engineer. Generate high-quality, production-ready code with proper error handling, documentation, and security practices."},
-                        {"role": "user", "content": prompt}
+                        {
+                            "role": "system",
+                            "content": "You are an expert software engineer. Generate high-quality, production-ready code with proper error handling, documentation, and security practices.",
+                        },
+                        {"role": "user", "content": prompt},
                     ],
                     temperature=self.llm_configs["openai"]["temperature"],
                     max_tokens=self.llm_configs["openai"]["max_tokens"],
-                    stream=True
+                    stream=True,
                 )
 
                 full_response = ""
@@ -956,10 +1025,25 @@ async def integrate_with_external_service(data):
     def _get_pattern_keywords(self, pattern_type: str) -> List[str]:
         """Get keywords for different pattern types"""
         keyword_map = {
-            "crud": ["create", "read", "update", "delete", "database", "store", "retrieve"],
+            "crud": [
+                "create",
+                "read",
+                "update",
+                "delete",
+                "database",
+                "store",
+                "retrieve",
+            ],
             "validation": ["validate", "check", "verify", "sanitize", "clean"],
             "calculation": ["calculate", "compute", "math", "formula", "algorithm"],
-            "integration": ["api", "service", "connect", "integrate", "external", "third-party"]
+            "integration": [
+                "api",
+                "service",
+                "connect",
+                "integrate",
+                "external",
+                "third-party",
+            ],
         }
         return keyword_map.get(pattern_type, [])
 
@@ -967,43 +1051,123 @@ async def integrate_with_external_service(data):
         """Validate request for security concerns before code generation"""
 
         dangerous_keywords = [
-            'delete', 'remove', 'unlink', 'destroy', 'erase', 'wipe',
-            'format', 'clear', 'rm -rf', 'shred', 'truncate',
-            'password', 'credential', 'key', 'token', 'secret',
-            'hack', 'exploit', 'inject', 'bypass', 'crack',
-            'harvest', 'steal', 'extract', 'breach', 'compromise',
-            'subprocess', '__import__', 'exec', 'eval', 'compile',
-            'globals', 'locals', 'getattr', 'setattr', 'delattr'
+            "delete",
+            "remove",
+            "unlink",
+            "destroy",
+            "erase",
+            "wipe",
+            "format",
+            "clear",
+            "rm -rf",
+            "shred",
+            "truncate",
+            "password",
+            "credential",
+            "key",
+            "token",
+            "secret",
+            "hack",
+            "exploit",
+            "inject",
+            "bypass",
+            "crack",
+            "harvest",
+            "steal",
+            "extract",
+            "breach",
+            "compromise",
+            "subprocess",
+            "__import__",
+            "exec",
+            "eval",
+            "compile",
+            "globals",
+            "locals",
+            "getattr",
+            "setattr",
+            "delattr",
         ]
 
         description_lower = request.description.lower()
 
         for keyword in dangerous_keywords:
             if keyword in description_lower:
-                if keyword in ['delete', 'remove', 'unlink', 'destroy', 'erase', 'wipe', 'format', 'clear', 'rm -rf', 'shred', 'truncate']:
-                    raise ValueError(f"Security violation: Request contains dangerous file operation keyword '{keyword}'. Code generation blocked for safety.")
-                elif keyword in ['password', 'credential', 'key', 'token', 'secret']:
-                    if keyword in ['harvest', 'steal', 'extract', 'breach', 'compromise']:
-                        raise ValueError(f"Security violation: Request contains credential theft keyword '{keyword}'. Code generation blocked.")
+                if keyword in [
+                    "delete",
+                    "remove",
+                    "unlink",
+                    "destroy",
+                    "erase",
+                    "wipe",
+                    "format",
+                    "clear",
+                    "rm -rf",
+                    "shred",
+                    "truncate",
+                ]:
+                    raise ValueError(
+                        f"Security violation: Request contains dangerous file operation keyword '{keyword}'. Code generation blocked for safety."
+                    )
+                elif keyword in ["password", "credential", "key", "token", "secret"]:
+                    if keyword in [
+                        "harvest",
+                        "steal",
+                        "extract",
+                        "breach",
+                        "compromise",
+                    ]:
+                        raise ValueError(
+                            f"Security violation: Request contains credential theft keyword '{keyword}'. Code generation blocked."
+                        )
                     else:
-                        self.logger.warning(f"Security concern: Request involves sensitive data '{keyword}'. Extra validation will be applied.")
-                elif keyword in ['hack', 'exploit', 'inject', 'bypass', 'crack', 'harvest', 'steal', 'extract', 'breach', 'compromise', 'subprocess', '__import__', 'exec', 'eval', 'compile', 'globals', 'locals', 'getattr', 'setattr', 'delattr']:
-                    raise ValueError(f"Security violation: Request contains dangerous keyword '{keyword}'. Code generation blocked.")
+                        self.logger.warning(
+                            f"Security concern: Request involves sensitive data '{keyword}'. Extra validation will be applied."
+                        )
+                elif keyword in [
+                    "hack",
+                    "exploit",
+                    "inject",
+                    "bypass",
+                    "crack",
+                    "harvest",
+                    "steal",
+                    "extract",
+                    "breach",
+                    "compromise",
+                    "subprocess",
+                    "__import__",
+                    "exec",
+                    "eval",
+                    "compile",
+                    "globals",
+                    "locals",
+                    "getattr",
+                    "setattr",
+                    "delattr",
+                ]:
+                    raise ValueError(
+                        f"Security violation: Request contains dangerous keyword '{keyword}'. Code generation blocked."
+                    )
 
         # Additional validation for file system operations
-        file_operations = ['file', 'directory', 'folder', 'path']
-        destruction_words = ['all', 'everything', 'entire', 'complete']
+        file_operations = ["file", "directory", "folder", "path"]
+        destruction_words = ["all", "everything", "entire", "complete"]
 
         has_file_op = any(op in description_lower for op in file_operations)
         has_destruction = any(word in description_lower for word in destruction_words)
 
         if has_file_op and has_destruction:
-            raise ValueError("Security violation: Request appears to involve mass file operations. Code generation blocked for safety.")
+            raise ValueError(
+                "Security violation: Request appears to involve mass file operations. Code generation blocked for safety."
+            )
 
-    async def _generate_documentation(self, request: CodeGenerationRequest, code: str) -> str:
+    async def _generate_documentation(
+        self, request: CodeGenerationRequest, code: str
+    ) -> str:
         """Generate comprehensive documentation"""
 
-        return f'''
+        return f"""
 # {request.description}
 
 ## Overview
@@ -1058,7 +1222,7 @@ This code was generated automatically. For modifications:
 1. Update the natural language description
 2. Regenerate the code
 3. Review and test changes
-'''
+"""
 
     async def _generate_tests(self, request: CodeGenerationRequest, code: str) -> str:
         """Generate comprehensive test suite"""
@@ -1137,7 +1301,9 @@ class TestGeneratedCode:
 
         return "# No tests generated for this language yet"
 
-    async def _calculate_quality_score(self, code: str, request: CodeGenerationRequest) -> float:
+    async def _calculate_quality_score(
+        self, code: str, request: CodeGenerationRequest
+    ) -> float:
         """Calculate code quality score"""
 
         score = 0.0
@@ -1151,7 +1317,9 @@ class TestGeneratedCode:
             if self._check_practice_in_code(code, practice):
                 practices_found += 1
 
-        score += (practices_found / len(best_practices)) * 40  # 40 points for best practices
+        score += (
+            practices_found / len(best_practices)
+        ) * 40  # 40 points for best practices
 
         # Check for error handling
         if "try:" in code and "except" in code:
@@ -1175,7 +1343,9 @@ class TestGeneratedCode:
 
         return min(score, max_score)
 
-    async def _calculate_security_score(self, code: str, request: CodeGenerationRequest) -> float:
+    async def _calculate_security_score(
+        self, code: str, request: CodeGenerationRequest
+    ) -> float:
         """Calculate security score and enforce security validation"""
 
         score = 100.0  # Start with perfect score, deduct for issues
@@ -1211,12 +1381,30 @@ class TestGeneratedCode:
                 self.logger.warning(f"Security issue detected: {description}")
 
                 # Mark critical security issues
-                if issue in ["eval(", "exec(", "shell=True", "os.remove", "os.unlink", "shutil.rmtree", "rm -rf", "os.system", "subprocess.call", "subprocess.run", "subprocess.Popen", "__import__", "compile(", "globals(", "locals("]:
+                if issue in [
+                    "eval(",
+                    "exec(",
+                    "shell=True",
+                    "os.remove",
+                    "os.unlink",
+                    "shutil.rmtree",
+                    "rm -rf",
+                    "os.system",
+                    "subprocess.call",
+                    "subprocess.run",
+                    "subprocess.Popen",
+                    "__import__",
+                    "compile(",
+                    "globals(",
+                    "locals(",
+                ]:
                     has_critical_issues = True
 
         # Block code with critical security issues
         if has_critical_issues:
-            raise ValueError("Generated code contains critical security issues and cannot be returned")
+            raise ValueError(
+                "Generated code contains critical security issues and cannot be returned"
+            )
 
         # Reward security best practices
         security_patterns = [
@@ -1227,7 +1415,7 @@ class TestGeneratedCode:
             "hash",
             "bcrypt",
             "jwt",
-            "csrf"
+            "csrf",
         ]
 
         for pattern in security_patterns:
@@ -1240,7 +1428,7 @@ class TestGeneratedCode:
         """Check if a best practice is followed in the code"""
 
         practice_lower = practice.lower()
-        code_lower = code.lower()
+        code.lower()
 
         # Map practices to code patterns
         practice_patterns = {
@@ -1251,7 +1439,7 @@ class TestGeneratedCode:
             "logging": "logger.",
             "validation": "validate",
             "solid principles": "class",
-            "dependency injection": "__init__"
+            "dependency injection": "__init__",
         }
 
         for key, pattern in practice_patterns.items():
@@ -1284,30 +1472,38 @@ class TestGeneratedCode:
 
         return notes
 
-    def _generate_usage_examples(self, code: str, request: CodeGenerationRequest) -> List[str]:
+    def _generate_usage_examples(
+        self, code: str, request: CodeGenerationRequest
+    ) -> List[str]:
         """Generate usage examples"""
 
         examples = []
 
         if request.code_type == CodeType.API_ENDPOINT:
-            examples.extend([
-                "curl -X GET http://localhost:8000/api/endpoint",
-                "curl -X POST http://localhost:8000/api/endpoint -d '{\"key\": \"value\"}'",
-                "# Python client example:\n# response = requests.get('http://localhost:8000/api/endpoint')"
-            ])
+            examples.extend(
+                [
+                    "curl -X GET http://localhost:8000/api/endpoint",
+                    'curl -X POST http://localhost:8000/api/endpoint -d \'{"key": "value"}\'',
+                    "# Python client example:\n# response = requests.get('http://localhost:8000/api/endpoint')",
+                ]
+            )
 
         elif request.code_type == CodeType.UTILITY_FUNCTION:
-            examples.extend([
-                "# Basic usage:\nresult = function_name(input_data)",
-                "# With error handling:\ntry:\n    result = function_name(input_data)\nexcept Exception as e:\n    print(f'Error: {e}')"
-            ])
+            examples.extend(
+                [
+                    "# Basic usage:\nresult = function_name(input_data)",
+                    "# With error handling:\ntry:\n    result = function_name(input_data)\nexcept Exception as e:\n    print(f'Error: {e}')",
+                ]
+            )
 
         elif request.code_type == CodeType.FRONTEND_COMPONENT:
-            examples.extend([
-                "// Basic usage:\n<ComponentName />",
-                "// With props:\n<ComponentName prop1='value1' prop2='value2' />",
-                "// With state:\nconst [state, setState] = useState(initialValue);"
-            ])
+            examples.extend(
+                [
+                    "// Basic usage:\n<ComponentName />",
+                    "// With props:\n<ComponentName prop1='value1' prop2='value2' />",
+                    "// With state:\nconst [state, setState] = useState(initialValue);",
+                ]
+            )
 
         return examples
 
@@ -1346,9 +1542,13 @@ class TestGeneratedCode:
         """Extract HTTP method from description"""
         description_lower = description.lower()
 
-        if any(word in description_lower for word in ["create", "add", "insert", "post"]):
+        if any(
+            word in description_lower for word in ["create", "add", "insert", "post"]
+        ):
             return "post"
-        elif any(word in description_lower for word in ["update", "modify", "edit", "put"]):
+        elif any(
+            word in description_lower for word in ["update", "modify", "edit", "put"]
+        ):
             return "put"
         elif any(word in description_lower for word in ["delete", "remove"]):
             return "delete"
@@ -1363,8 +1563,12 @@ class TestGeneratedCode:
             return path_match.group()
 
         # Generate path from keywords
-        words = re.findall(r'\w+', description.lower())
-        relevant_words = [w for w in words if w not in ["api", "endpoint", "create", "get", "update", "delete"]]
+        words = re.findall(r"\w+", description.lower())
+        relevant_words = [
+            w
+            for w in words
+            if w not in ["api", "endpoint", "create", "get", "update", "delete"]
+        ]
 
         if relevant_words:
             return f"/api/{relevant_words[0]}"
@@ -1373,10 +1577,22 @@ class TestGeneratedCode:
 
     def _generate_function_name(self, description: str) -> str:
         """Generate function name from description"""
-        words = re.findall(r'\w+', description.lower())
+        words = re.findall(r"\w+", description.lower())
 
         # Filter out common words
-        stop_words = {"the", "a", "an", "to", "for", "of", "in", "on", "at", "by", "with"}
+        stop_words = {
+            "the",
+            "a",
+            "an",
+            "to",
+            "for",
+            "of",
+            "in",
+            "on",
+            "at",
+            "by",
+            "with",
+        }
         relevant_words = [w for w in words if w not in stop_words and w.isalpha()]
 
         if relevant_words:
@@ -1387,17 +1603,17 @@ class TestGeneratedCode:
                 name = "func_" + name
 
             # Remove any remaining invalid characters
-            name = re.sub(r'[^a-zA-Z0-9_]', '_', name)
+            name = re.sub(r"[^a-zA-Z0-9_]", "_", name)
 
             # Ensure no consecutive underscores or trailing underscores
-            name = re.sub(r'_+', '_', name).strip('_')
+            name = re.sub(r"_+", "_", name).strip("_")
 
             # Check if it's a Python keyword
             if keyword.iskeyword(name):
                 name = name + "_func"
 
             # Validate it's a proper identifier and not empty
-            if name and name.isidentifier() and not name.startswith('_'):
+            if name and name.isidentifier() and not name.startswith("_"):
                 return name
 
         # Fallback to guaranteed valid name
@@ -1417,7 +1633,7 @@ class TestGeneratedCode:
 
     def _generate_component_name(self, description: str) -> str:
         """Generate React component name"""
-        words = re.findall(r'\w+', description)
+        words = re.findall(r"\w+", description)
         relevant_words = [w.capitalize() for w in words if len(w) > 2]
 
         if relevant_words:
@@ -1427,7 +1643,7 @@ class TestGeneratedCode:
 
     def _generate_class_name(self, description: str) -> str:
         """Generate class name from description"""
-        words = re.findall(r'\w+', description)
+        words = re.findall(r"\w+", description)
         relevant_words = [w.capitalize() for w in words if len(w) > 2]
 
         if relevant_words:
@@ -1438,7 +1654,7 @@ class TestGeneratedCode:
     def _generate_usage_example(self, code: str, request: CodeGenerationRequest) -> str:
         """Generate a usage example"""
         if "def " in code:
-            function_match = re.search(r'def\s+(\w+)', code)
+            function_match = re.search(r"def\s+(\w+)", code)
             if function_match:
                 function_name = function_match.group(1)
                 return f"{function_name}()"
@@ -1451,7 +1667,7 @@ class TestGeneratedCode:
             method = self._extract_http_method(request.description)
             path = self._extract_api_path(request.description)
 
-            return f'''
+            return f"""
 ### {method.upper()} {path}
 
 **Description:** {request.description}
@@ -1467,7 +1683,7 @@ class TestGeneratedCode:
 ```json
 {{
     "success": true,
-    "data": {}
+    "data": {{}}
 }}
 ```
 
@@ -1476,11 +1692,13 @@ class TestGeneratedCode:
 - 400: Bad Request
 - 404: Not Found
 - 500: Internal Server Error
-'''
+"""
 
         return "No API documentation available for this code type."
 
-    async def _validate_and_enhance(self, generated_code: GeneratedCode, request: CodeGenerationRequest) -> GeneratedCode:
+    async def _validate_and_enhance(
+        self, generated_code: GeneratedCode, request: CodeGenerationRequest
+    ) -> GeneratedCode:
         """Validate and enhance the generated code"""
 
         # Syntax validation
@@ -1511,9 +1729,15 @@ class TestGeneratedCode:
             return {"message": "No code generated yet"}
 
         total_generated = len(self.generation_history)
-        avg_quality = sum(g.quality_score for g in self.generation_history) / total_generated
-        avg_security = sum(g.security_score for g in self.generation_history) / total_generated
-        avg_time = sum(g.generation_time for g in self.generation_history) / total_generated
+        avg_quality = (
+            sum(g.quality_score for g in self.generation_history) / total_generated
+        )
+        avg_security = (
+            sum(g.security_score for g in self.generation_history) / total_generated
+        )
+        avg_time = (
+            sum(g.generation_time for g in self.generation_history) / total_generated
+        )
 
         languages = {}
         code_types = {}
@@ -1529,13 +1753,19 @@ class TestGeneratedCode:
             "average_generation_time": round(avg_time, 2),
             "languages_used": languages,
             "code_types_generated": code_types,
-            "latest_generation": self.generation_history[-1].code_id if self.generation_history else None
+            "latest_generation": self.generation_history[-1].code_id
+            if self.generation_history
+            else None,
         }
+
 
 # Global code generator instance
 autonomous_generator = AutonomousCodeGenerator()
 
-async def generate_code(description: str, language: str = "python", code_type: str = "utility_function") -> GeneratedCode:
+
+async def generate_code(
+    description: str, language: str = "python", code_type: str = "utility_function"
+) -> GeneratedCode:
     """Generate code from natural language description"""
     lang_enum = CodeLanguage(language.lower())
     type_enum = CodeType(code_type.lower())
@@ -1544,8 +1774,9 @@ async def generate_code(description: str, language: str = "python", code_type: s
         description=description,
         language=lang_enum,
         code_type=type_enum,
-        quality_level=QualityLevel.PRODUCTION
+        quality_level=QualityLevel.PRODUCTION,
     )
+
 
 def get_generation_statistics():
     """Get code generation statistics"""
