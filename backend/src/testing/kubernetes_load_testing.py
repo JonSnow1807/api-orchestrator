@@ -9,15 +9,17 @@ import time
 import json
 import logging
 from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 import subprocess
 import yaml
 from pathlib import Path
 
+
 @dataclass
 class KubernetesTestConfig:
     """Kubernetes load test configuration"""
+
     namespace: str = "api-orchestrator"
     service_name: str = "api-orchestrator-service"
     deployment_name: str = "api-orchestrator"
@@ -37,9 +39,11 @@ class KubernetesTestConfig:
     concurrent_users_peak: int = 1000
     requests_per_user: int = 100
 
+
 @dataclass
 class KubernetesMetrics:
     """Kubernetes cluster metrics"""
+
     timestamp: datetime
     pod_count: int
     cpu_usage_percent: float
@@ -47,6 +51,7 @@ class KubernetesMetrics:
     request_rate: float
     response_time_p95: float
     error_rate: float
+
 
 class KubernetesManager:
     """Manage Kubernetes resources for load testing"""
@@ -63,13 +68,13 @@ class KubernetesManager:
                 "kind": "HorizontalPodAutoscaler",
                 "metadata": {
                     "name": f"{self.config.deployment_name}-hpa",
-                    "namespace": self.config.namespace
+                    "namespace": self.config.namespace,
                 },
                 "spec": {
                     "scaleTargetRef": {
                         "apiVersion": "apps/v1",
                         "kind": "Deployment",
-                        "name": self.config.deployment_name
+                        "name": self.config.deployment_name,
                     },
                     "minReplicas": self.config.initial_replicas,
                     "maxReplicas": self.config.max_replicas,
@@ -80,9 +85,9 @@ class KubernetesManager:
                                 "name": "cpu",
                                 "target": {
                                     "type": "Utilization",
-                                    "averageUtilization": self.config.target_cpu_utilization
-                                }
-                            }
+                                    "averageUtilization": self.config.target_cpu_utilization,
+                                },
+                            },
                         },
                         {
                             "type": "Resource",
@@ -90,12 +95,12 @@ class KubernetesManager:
                                 "name": "memory",
                                 "target": {
                                     "type": "Utilization",
-                                    "averageUtilization": 80
-                                }
-                            }
-                        }
-                    ]
-                }
+                                    "averageUtilization": 80,
+                                },
+                            },
+                        },
+                    ],
+                },
             }
 
             # Write HPA config to temporary file
@@ -107,7 +112,7 @@ class KubernetesManager:
             result = subprocess.run(
                 ["kubectl", "apply", "-f", str(hpa_file)],
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             if result.returncode == 0:
@@ -125,13 +130,22 @@ class KubernetesManager:
         """Get current pod metrics"""
         try:
             # Get pod count
-            pod_result = subprocess.run([
-                "kubectl", "get", "pods",
-                "-n", self.config.namespace,
-                "-l", f"app={self.config.deployment_name}",
-                "--field-selector=status.phase=Running",
-                "-o", "json"
-            ], capture_output=True, text=True)
+            pod_result = subprocess.run(
+                [
+                    "kubectl",
+                    "get",
+                    "pods",
+                    "-n",
+                    self.config.namespace,
+                    "-l",
+                    f"app={self.config.deployment_name}",
+                    "--field-selector=status.phase=Running",
+                    "-o",
+                    "json",
+                ],
+                capture_output=True,
+                text=True,
+            )
 
             if pod_result.returncode != 0:
                 return None
@@ -140,12 +154,20 @@ class KubernetesManager:
             pod_count = len(pod_data.get("items", []))
 
             # Get resource usage from metrics server
-            metrics_result = subprocess.run([
-                "kubectl", "top", "pods",
-                "-n", self.config.namespace,
-                "-l", f"app={self.config.deployment_name}",
-                "--no-headers"
-            ], capture_output=True, text=True)
+            metrics_result = subprocess.run(
+                [
+                    "kubectl",
+                    "top",
+                    "pods",
+                    "-n",
+                    self.config.namespace,
+                    "-l",
+                    f"app={self.config.deployment_name}",
+                    "--no-headers",
+                ],
+                capture_output=True,
+                text=True,
+            )
 
             cpu_usage = 0.0
             memory_usage = 0.0
@@ -171,10 +193,12 @@ class KubernetesManager:
                 timestamp=datetime.utcnow(),
                 pod_count=pod_count,
                 cpu_usage_percent=cpu_usage * 100 / pod_count if pod_count > 0 else 0,
-                memory_usage_percent=memory_usage / (512 * pod_count) * 100 if pod_count > 0 else 0,  # Assuming 512Mi per pod
+                memory_usage_percent=memory_usage / (512 * pod_count) * 100
+                if pod_count > 0
+                else 0,  # Assuming 512Mi per pod
                 request_rate=0.0,  # Will be filled by load tester
                 response_time_p95=0.0,  # Will be filled by load tester
-                error_rate=0.0  # Will be filled by load tester
+                error_rate=0.0,  # Will be filled by load tester
             )
 
         except Exception as e:
@@ -184,14 +208,21 @@ class KubernetesManager:
     async def cleanup(self):
         """Clean up HPA resources"""
         try:
-            subprocess.run([
-                "kubectl", "delete", "hpa",
-                f"{self.config.deployment_name}-hpa",
-                "-n", self.config.namespace
-            ], capture_output=True)
+            subprocess.run(
+                [
+                    "kubectl",
+                    "delete",
+                    "hpa",
+                    f"{self.config.deployment_name}-hpa",
+                    "-n",
+                    self.config.namespace,
+                ],
+                capture_output=True,
+            )
             self.logger.info("HPA cleaned up")
         except Exception as e:
             self.logger.error(f"Error cleaning up HPA: {e}")
+
 
 class KubernetesLoadTester:
     """Advanced load tester for Kubernetes environments"""
@@ -215,10 +246,10 @@ class KubernetesLoadTester:
                 "test_phases": {
                     "ramp_up": await self._run_ramp_up_phase(),
                     "plateau": await self._run_plateau_phase(),
-                    "ramp_down": await self._run_ramp_down_phase()
+                    "ramp_down": await self._run_ramp_down_phase(),
                 },
                 "scaling_analysis": self._analyze_scaling_behavior(),
-                "performance_summary": self._generate_performance_summary()
+                "performance_summary": self._generate_performance_summary(),
             }
 
             return results
@@ -233,7 +264,7 @@ class KubernetesLoadTester:
         phase_results = {
             "duration_seconds": self.config.ramp_up_duration,
             "metrics": [],
-            "scaling_events": []
+            "scaling_events": [],
         }
 
         start_time = time.time()
@@ -242,8 +273,14 @@ class KubernetesLoadTester:
         while time.time() < end_time:
             # Calculate current load based on progress
             progress = (time.time() - start_time) / self.config.ramp_up_duration
-            current_users = int(self.config.concurrent_users_start +
-                              (self.config.concurrent_users_peak - self.config.concurrent_users_start) * progress)
+            current_users = int(
+                self.config.concurrent_users_start
+                + (
+                    self.config.concurrent_users_peak
+                    - self.config.concurrent_users_start
+                )
+                * progress
+            )
 
             # Run load test with current user count
             load_result = await self._run_load_burst(current_users, duration=30)
@@ -266,7 +303,10 @@ class KubernetesLoadTester:
                             "timestamp": k8s_metrics.timestamp,
                             "from_pods": prev_metrics.pod_count,
                             "to_pods": k8s_metrics.pod_count,
-                            "trigger": "cpu_utilization" if k8s_metrics.cpu_usage_percent > self.config.target_cpu_utilization else "scale_down"
+                            "trigger": "cpu_utilization"
+                            if k8s_metrics.cpu_usage_percent
+                            > self.config.target_cpu_utilization
+                            else "scale_down",
                         }
                         phase_results["scaling_events"].append(scaling_event)
 
@@ -282,7 +322,7 @@ class KubernetesLoadTester:
         phase_results = {
             "duration_seconds": self.config.plateau_duration,
             "metrics": [],
-            "stability_analysis": {}
+            "stability_analysis": {},
         }
 
         start_time = time.time()
@@ -290,7 +330,9 @@ class KubernetesLoadTester:
 
         while time.time() < end_time:
             # Run load test with peak user count
-            load_result = await self._run_load_burst(self.config.concurrent_users_peak, duration=60)
+            load_result = await self._run_load_burst(
+                self.config.concurrent_users_peak, duration=60
+            )
 
             # Get Kubernetes metrics
             k8s_metrics = await self.k8s_manager.get_pod_metrics()
@@ -316,7 +358,7 @@ class KubernetesLoadTester:
                 "avg_pod_count": sum(pod_counts) / len(pod_counts),
                 "avg_response_time": sum(response_times) / len(response_times),
                 "avg_error_rate": sum(error_rates) / len(error_rates),
-                "max_error_rate": max(error_rates) if error_rates else 0
+                "max_error_rate": max(error_rates) if error_rates else 0,
             }
 
         return phase_results
@@ -328,7 +370,7 @@ class KubernetesLoadTester:
         phase_results = {
             "duration_seconds": self.config.ramp_down_duration,
             "metrics": [],
-            "scale_down_events": []
+            "scale_down_events": [],
         }
 
         start_time = time.time()
@@ -337,8 +379,14 @@ class KubernetesLoadTester:
         while time.time() < end_time:
             # Calculate current load based on progress
             progress = (time.time() - start_time) / self.config.ramp_down_duration
-            current_users = int(self.config.concurrent_users_peak -
-                              (self.config.concurrent_users_peak - self.config.concurrent_users_start) * progress)
+            current_users = int(
+                self.config.concurrent_users_peak
+                - (
+                    self.config.concurrent_users_peak
+                    - self.config.concurrent_users_start
+                )
+                * progress
+            )
 
             # Run load test with current user count
             load_result = await self._run_load_burst(max(current_users, 1), duration=30)
@@ -361,7 +409,7 @@ class KubernetesLoadTester:
                             "timestamp": k8s_metrics.timestamp,
                             "from_pods": prev_metrics.pod_count,
                             "to_pods": k8s_metrics.pod_count,
-                            "cpu_utilization": k8s_metrics.cpu_usage_percent
+                            "cpu_utilization": k8s_metrics.cpu_usage_percent,
                         }
                         phase_results["scale_down_events"].append(scale_down_event)
 
@@ -370,14 +418,18 @@ class KubernetesLoadTester:
 
         return phase_results
 
-    async def _run_load_burst(self, concurrent_users: int, duration: int) -> Dict[str, Any]:
+    async def _run_load_burst(
+        self, concurrent_users: int, duration: int
+    ) -> Dict[str, Any]:
         """Run a load burst with specified parameters"""
         try:
             # Create HTTP session
             timeout = aiohttp.ClientTimeout(total=30)
             connector = aiohttp.TCPConnector(limit=concurrent_users * 2)
 
-            async with aiohttp.ClientSession(timeout=timeout, connector=connector) as session:
+            async with aiohttp.ClientSession(
+                timeout=timeout, connector=connector
+            ) as session:
                 # Get service URL (assuming LoadBalancer or NodePort)
                 service_url = await self._get_service_url()
 
@@ -392,20 +444,30 @@ class KubernetesLoadTester:
                 end_time = time.time()
 
                 # Analyze results
-                successful_requests = sum(1 for r in results if isinstance(r, dict) and r.get("success"))
+                successful_requests = sum(
+                    1 for r in results if isinstance(r, dict) and r.get("success")
+                )
                 failed_requests = len(results) - successful_requests
-                response_times = [r.get("response_time", 0) for r in results if isinstance(r, dict)]
+                response_times = [
+                    r.get("response_time", 0) for r in results if isinstance(r, dict)
+                ]
 
-                request_rate = len(results) / (end_time - start_time) if end_time > start_time else 0
+                request_rate = (
+                    len(results) / (end_time - start_time)
+                    if end_time > start_time
+                    else 0
+                )
                 error_rate = failed_requests / len(results) if results else 0
-                p95_response_time = self._percentile(response_times, 95) if response_times else 0
+                p95_response_time = (
+                    self._percentile(response_times, 95) if response_times else 0
+                )
 
                 return {
                     "request_rate": request_rate,
                     "error_rate": error_rate,
                     "p95_response_time": p95_response_time,
                     "successful_requests": successful_requests,
-                    "failed_requests": failed_requests
+                    "failed_requests": failed_requests,
                 }
 
         except Exception as e:
@@ -416,22 +478,39 @@ class KubernetesLoadTester:
         """Get the service URL for load testing"""
         try:
             # Try to get LoadBalancer external IP
-            result = subprocess.run([
-                "kubectl", "get", "service", self.config.service_name,
-                "-n", self.config.namespace,
-                "-o", "json"
-            ], capture_output=True, text=True)
+            result = subprocess.run(
+                [
+                    "kubectl",
+                    "get",
+                    "service",
+                    self.config.service_name,
+                    "-n",
+                    self.config.namespace,
+                    "-o",
+                    "json",
+                ],
+                capture_output=True,
+                text=True,
+            )
 
             if result.returncode == 0:
                 service_data = json.loads(result.stdout)
 
                 # Check for LoadBalancer
                 if service_data.get("spec", {}).get("type") == "LoadBalancer":
-                    ingress = service_data.get("status", {}).get("loadBalancer", {}).get("ingress", [])
+                    ingress = (
+                        service_data.get("status", {})
+                        .get("loadBalancer", {})
+                        .get("ingress", [])
+                    )
                     if ingress:
                         external_ip = ingress[0].get("ip") or ingress[0].get("hostname")
                         if external_ip:
-                            port = service_data.get("spec", {}).get("ports", [{}])[0].get("port", 80)
+                            port = (
+                                service_data.get("spec", {})
+                                .get("ports", [{}])[0]
+                                .get("port", 80)
+                            )
                             return f"http://{external_ip}:{port}"
 
                 # Fallback to NodePort or ClusterIP with port-forward
@@ -446,7 +525,9 @@ class KubernetesLoadTester:
         # Default fallback
         return "http://localhost:8000"
 
-    async def _make_request(self, session: aiohttp.ClientSession, base_url: str) -> Dict[str, Any]:
+    async def _make_request(
+        self, session: aiohttp.ClientSession, base_url: str
+    ) -> Dict[str, Any]:
         """Make a single HTTP request"""
         try:
             start_time = time.time()
@@ -457,15 +538,11 @@ class KubernetesLoadTester:
                 return {
                     "success": response.status == 200,
                     "response_time": response_time * 1000,  # Convert to ms
-                    "status_code": response.status
+                    "status_code": response.status,
                 }
 
         except Exception as e:
-            return {
-                "success": False,
-                "response_time": 0,
-                "error": str(e)
-            }
+            return {"success": False, "response_time": 0, "error": str(e)}
 
     def _percentile(self, data: List[float], percentile: float) -> float:
         """Calculate percentile value"""
@@ -490,11 +567,17 @@ class KubernetesLoadTester:
             "max_pods": max(pod_counts),
             "avg_pods": sum(pod_counts) / len(pod_counts),
             "scaling_efficiency": {
-                "scale_up_triggered": any(cpu > self.config.target_cpu_utilization for cpu in cpu_usage),
+                "scale_up_triggered": any(
+                    cpu > self.config.target_cpu_utilization for cpu in cpu_usage
+                ),
                 "max_cpu_utilization": max(cpu_usage) if cpu_usage else 0,
-                "avg_cpu_utilization": sum(cpu_usage) / len(cpu_usage) if cpu_usage else 0,
-                "response_time_stability": max(response_times) - min(response_times) if response_times else 0
-            }
+                "avg_cpu_utilization": sum(cpu_usage) / len(cpu_usage)
+                if cpu_usage
+                else 0,
+                "response_time_stability": max(response_times) - min(response_times)
+                if response_times
+                else 0,
+            },
         }
 
     def _generate_performance_summary(self) -> Dict[str, Any]:
@@ -507,17 +590,28 @@ class KubernetesLoadTester:
         request_rates = [m.request_rate for m in self.metrics_history]
 
         return {
-            "test_duration_minutes": len(self.metrics_history) * 0.5,  # Assuming 30s intervals
-            "average_error_rate": sum(error_rates) / len(error_rates) if error_rates else 0,
+            "test_duration_minutes": len(self.metrics_history)
+            * 0.5,  # Assuming 30s intervals
+            "average_error_rate": sum(error_rates) / len(error_rates)
+            if error_rates
+            else 0,
             "max_error_rate": max(error_rates) if error_rates else 0,
-            "average_response_time": sum(response_times) / len(response_times) if response_times else 0,
+            "average_response_time": sum(response_times) / len(response_times)
+            if response_times
+            else 0,
             "max_response_time": max(response_times) if response_times else 0,
-            "average_throughput": sum(request_rates) / len(request_rates) if request_rates else 0,
+            "average_throughput": sum(request_rates) / len(request_rates)
+            if request_rates
+            else 0,
             "peak_throughput": max(request_rates) if request_rates else 0,
-            "performance_grade": self._calculate_performance_grade(error_rates, response_times)
+            "performance_grade": self._calculate_performance_grade(
+                error_rates, response_times
+            ),
         }
 
-    def _calculate_performance_grade(self, error_rates: List[float], response_times: List[float]) -> str:
+    def _calculate_performance_grade(
+        self, error_rates: List[float], response_times: List[float]
+    ) -> str:
         """Calculate overall performance grade"""
         if not error_rates or not response_times:
             return "INSUFFICIENT_DATA"
@@ -525,14 +619,21 @@ class KubernetesLoadTester:
         avg_error_rate = sum(error_rates) / len(error_rates)
         avg_response_time = sum(response_times) / len(response_times)
 
-        if avg_error_rate < 0.01 and avg_response_time < 500:  # <1% errors, <500ms response
+        if (
+            avg_error_rate < 0.01 and avg_response_time < 500
+        ):  # <1% errors, <500ms response
             return "EXCELLENT"
-        elif avg_error_rate < 0.05 and avg_response_time < 1000:  # <5% errors, <1s response
+        elif (
+            avg_error_rate < 0.05 and avg_response_time < 1000
+        ):  # <5% errors, <1s response
             return "GOOD"
-        elif avg_error_rate < 0.10 and avg_response_time < 2000:  # <10% errors, <2s response
+        elif (
+            avg_error_rate < 0.10 and avg_response_time < 2000
+        ):  # <10% errors, <2s response
             return "ACCEPTABLE"
         else:
             return "NEEDS_IMPROVEMENT"
+
 
 async def main():
     """Main function for Kubernetes load testing"""
@@ -542,7 +643,7 @@ async def main():
         concurrent_users_peak=500,
         ramp_up_duration=180,  # 3 minutes
         plateau_duration=300,  # 5 minutes
-        ramp_down_duration=120  # 2 minutes
+        ramp_down_duration=120,  # 2 minutes
     )
 
     tester = KubernetesLoadTester(config)
@@ -554,9 +655,9 @@ async def main():
         with open("kubernetes_load_test_results.json", "w") as f:
             json.dump(results, f, indent=2, default=str)
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("KUBERNETES DISTRIBUTED LOAD TEST RESULTS")
-        print("="*60)
+        print("=" * 60)
 
         summary = results.get("performance_summary", {})
         print(f"Performance Grade: {summary.get('performance_grade', 'N/A')}")
@@ -568,12 +669,15 @@ async def main():
         print(f"\nScaling Analysis:")
         print(f"  Min Pods: {scaling.get('min_pods', 'N/A')}")
         print(f"  Max Pods: {scaling.get('max_pods', 'N/A')}")
-        print(f"  Avg CPU: {scaling.get('scaling_efficiency', {}).get('avg_cpu_utilization', 0):.2f}%")
+        print(
+            f"  Avg CPU: {scaling.get('scaling_efficiency', {}).get('avg_cpu_utilization', 0):.2f}%"
+        )
 
         print(f"\nDetailed results saved to: kubernetes_load_test_results.json")
 
     except Exception as e:
         print(f"Load test failed: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -8,18 +8,17 @@ import aiohttp
 import time
 import json
 import logging
-import random
 import subprocess
-from typing import Dict, List, Any, Optional, Callable
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 import psutil
-import signal
-import os
+
 
 class ChaosType(Enum):
     """Types of chaos engineering tests"""
+
     CPU_STRESS = "cpu_stress"
     MEMORY_STRESS = "memory_stress"
     NETWORK_LATENCY = "network_latency"
@@ -29,9 +28,11 @@ class ChaosType(Enum):
     DATABASE_SLOW = "database_slow"
     EXTERNAL_API_FAILURE = "external_api_failure"
 
+
 @dataclass
 class ChaosExperiment:
     """Chaos engineering experiment configuration"""
+
     name: str
     chaos_type: ChaosType
     duration_seconds: int
@@ -40,9 +41,11 @@ class ChaosExperiment:
     success_criteria: Dict[str, Any]
     rollback_strategy: str
 
+
 @dataclass
 class ChaosResult:
     """Results from a chaos engineering experiment"""
+
     experiment_name: str
     chaos_type: ChaosType
     start_time: datetime
@@ -55,6 +58,7 @@ class ChaosResult:
     failure_points: List[str] = field(default_factory=list)
     recovery_time: Optional[float] = None
 
+
 class SystemMetricsCollector:
     """Collect system metrics during chaos experiments"""
 
@@ -66,27 +70,33 @@ class SystemMetricsCollector:
                 "timestamp": datetime.utcnow().isoformat(),
                 "cpu": {
                     "usage_percent": psutil.cpu_percent(interval=1),
-                    "load_avg": psutil.getloadavg() if hasattr(psutil, 'getloadavg') else [0, 0, 0],
-                    "core_count": psutil.cpu_count()
+                    "load_avg": psutil.getloadavg()
+                    if hasattr(psutil, "getloadavg")
+                    else [0, 0, 0],
+                    "core_count": psutil.cpu_count(),
                 },
                 "memory": {
                     "usage_percent": psutil.virtual_memory().percent,
                     "available_gb": psutil.virtual_memory().available / (1024**3),
-                    "used_gb": psutil.virtual_memory().used / (1024**3)
+                    "used_gb": psutil.virtual_memory().used / (1024**3),
                 },
                 "disk": {
-                    "usage_percent": psutil.disk_usage('/').percent,
-                    "free_gb": psutil.disk_usage('/').free / (1024**3),
-                    "io_stats": psutil.disk_io_counters()._asdict() if psutil.disk_io_counters() else {}
+                    "usage_percent": psutil.disk_usage("/").percent,
+                    "free_gb": psutil.disk_usage("/").free / (1024**3),
+                    "io_stats": psutil.disk_io_counters()._asdict()
+                    if psutil.disk_io_counters()
+                    else {},
                 },
                 "network": {
-                    "io_stats": psutil.net_io_counters()._asdict() if psutil.net_io_counters() else {},
-                    "connections": len(psutil.net_connections())
+                    "io_stats": psutil.net_io_counters()._asdict()
+                    if psutil.net_io_counters()
+                    else {},
+                    "connections": len(psutil.net_connections()),
                 },
                 "processes": {
                     "count": len(psutil.pids()),
-                    "api_orchestrator_processes": SystemMetricsCollector._get_api_processes()
-                }
+                    "api_orchestrator_processes": SystemMetricsCollector._get_api_processes(),
+                },
             }
         except Exception as e:
             logging.error(f"Error collecting metrics: {e}")
@@ -96,13 +106,19 @@ class SystemMetricsCollector:
     def _get_api_processes() -> List[Dict[str, Any]]:
         """Get API Orchestrator related processes"""
         processes = []
-        for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+        for proc in psutil.process_iter(
+            ["pid", "name", "cpu_percent", "memory_percent"]
+        ):
             try:
-                if 'python' in proc.info['name'].lower() or 'uvicorn' in proc.info['name'].lower():
+                if (
+                    "python" in proc.info["name"].lower()
+                    or "uvicorn" in proc.info["name"].lower()
+                ):
                     processes.append(proc.info)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
         return processes
+
 
 class ChaosInducer:
     """Induce various types of chaos in the system"""
@@ -120,16 +136,18 @@ class ChaosInducer:
             # Try to use stress-ng
             cmd = [
                 "stress-ng",
-                "--cpu", str(int(psutil.cpu_count() * intensity)),
-                "--timeout", f"{duration}s",
-                "--quiet"
+                "--cpu",
+                str(int(psutil.cpu_count() * intensity)),
+                "--timeout",
+                f"{duration}s",
+                "--quiet",
             ]
 
             process = subprocess.Popen(cmd)
             self.active_chaos[chaos_id] = {
                 "type": "cpu_stress",
                 "process": process,
-                "start_time": time.time()
+                "start_time": time.time(),
             }
 
         except FileNotFoundError:
@@ -138,7 +156,7 @@ class ChaosInducer:
             self.active_chaos[chaos_id] = {
                 "type": "cpu_stress",
                 "process": process,
-                "start_time": time.time()
+                "start_time": time.time(),
             }
 
         return chaos_id
@@ -154,17 +172,20 @@ class ChaosInducer:
         try:
             cmd = [
                 "stress-ng",
-                "--vm", "1",
-                "--vm-bytes", f"{memory_to_allocate}M",
-                "--timeout", f"{duration}s",
-                "--quiet"
+                "--vm",
+                "1",
+                "--vm-bytes",
+                f"{memory_to_allocate}M",
+                "--timeout",
+                f"{duration}s",
+                "--quiet",
             ]
 
             process = subprocess.Popen(cmd)
             self.active_chaos[chaos_id] = {
                 "type": "memory_stress",
                 "process": process,
-                "start_time": time.time()
+                "start_time": time.time(),
             }
 
         except FileNotFoundError:
@@ -173,7 +194,7 @@ class ChaosInducer:
             self.active_chaos[chaos_id] = {
                 "type": "memory_stress",
                 "process": process,
-                "start_time": time.time()
+                "start_time": time.time(),
             }
 
         return chaos_id
@@ -184,16 +205,27 @@ class ChaosInducer:
 
         try:
             # Add network latency
-            subprocess.run([
-                "sudo", "tc", "qdisc", "add", "dev", "lo", "root", "netem",
-                "delay", f"{latency_ms}ms"
-            ], check=True)
+            subprocess.run(
+                [
+                    "sudo",
+                    "tc",
+                    "qdisc",
+                    "add",
+                    "dev",
+                    "lo",
+                    "root",
+                    "netem",
+                    "delay",
+                    f"{latency_ms}ms",
+                ],
+                check=True,
+            )
 
             self.active_chaos[chaos_id] = {
                 "type": "network_latency",
                 "interface": "lo",
                 "start_time": time.time(),
-                "duration": duration
+                "duration": duration,
             }
 
             # Schedule cleanup
@@ -210,26 +242,31 @@ class ChaosInducer:
         chaos_id = f"service_kill_{int(time.time())}"
 
         killed_processes = []
-        for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        for proc in psutil.process_iter(["pid", "name", "cmdline"]):
             try:
-                if service_pattern.lower() in proc.info['name'].lower() or \
-                   any(service_pattern.lower() in arg.lower() for arg in proc.info['cmdline']):
+                if service_pattern.lower() in proc.info["name"].lower() or any(
+                    service_pattern.lower() in arg.lower()
+                    for arg in proc.info["cmdline"]
+                ):
                     proc.terminate()
-                    killed_processes.append(proc.info['pid'])
-                    self.logger.info(f"Terminated process {proc.info['pid']} ({proc.info['name']})")
+                    killed_processes.append(proc.info["pid"])
+                    self.logger.info(
+                        f"Terminated process {proc.info['pid']} ({proc.info['name']})"
+                    )
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
 
         self.active_chaos[chaos_id] = {
             "type": "service_kill",
             "killed_processes": killed_processes,
-            "start_time": time.time()
+            "start_time": time.time(),
         }
 
         return chaos_id
 
     async def _python_cpu_stress(self, intensity: float, duration: int):
         """Python-based CPU stress (fallback)"""
+
         async def cpu_stress():
             end_time = time.time() + duration
             while time.time() < end_time:
@@ -242,6 +279,7 @@ class ChaosInducer:
 
     async def _python_memory_stress(self, intensity: float, duration: int):
         """Python-based memory stress (fallback)"""
+
         async def memory_stress():
             memory_blocks = []
             block_size = 1024 * 1024  # 1MB blocks
@@ -252,7 +290,7 @@ class ChaosInducer:
             try:
                 # Allocate memory
                 for _ in range(blocks_needed):
-                    memory_blocks.append(b'0' * block_size)
+                    memory_blocks.append(b"0" * block_size)
 
                 # Hold memory for duration
                 await asyncio.sleep(duration)
@@ -267,9 +305,9 @@ class ChaosInducer:
         """Clean up network latency after duration"""
         await asyncio.sleep(duration)
         try:
-            subprocess.run([
-                "sudo", "tc", "qdisc", "del", "dev", "lo", "root"
-            ], check=True)
+            subprocess.run(
+                ["sudo", "tc", "qdisc", "del", "dev", "lo", "root"], check=True
+            )
             self.logger.info(f"Cleaned up network latency for {chaos_id}")
         except subprocess.CalledProcessError as e:
             self.logger.error(f"Failed to cleanup network latency: {e}")
@@ -283,17 +321,29 @@ class ChaosInducer:
         chaos_type = chaos_info["type"]
 
         try:
-            if chaos_type in ["cpu_stress", "memory_stress"] and "process" in chaos_info:
+            if (
+                chaos_type in ["cpu_stress", "memory_stress"]
+                and "process" in chaos_info
+            ):
                 process = chaos_info["process"]
-                if hasattr(process, 'terminate'):
+                if hasattr(process, "terminate"):
                     process.terminate()
-                elif hasattr(process, 'cancel'):
+                elif hasattr(process, "cancel"):
                     process.cancel()
 
             elif chaos_type == "network_latency":
-                subprocess.run([
-                    "sudo", "tc", "qdisc", "del", "dev", chaos_info["interface"], "root"
-                ], check=True)
+                subprocess.run(
+                    [
+                        "sudo",
+                        "tc",
+                        "qdisc",
+                        "del",
+                        "dev",
+                        chaos_info["interface"],
+                        "root",
+                    ],
+                    check=True,
+                )
 
             del self.active_chaos[chaos_id]
             self.logger.info(f"Stopped chaos experiment {chaos_id}")
@@ -305,6 +355,7 @@ class ChaosInducer:
         """Stop all active chaos experiments"""
         for chaos_id in list(self.active_chaos.keys()):
             await self.stop_chaos(chaos_id)
+
 
 class ChaosEngineer:
     """Main chaos engineering orchestrator"""
@@ -322,7 +373,7 @@ class ChaosEngineer:
         result = ChaosResult(
             experiment_name=experiment.name,
             chaos_type=experiment.chaos_type,
-            start_time=datetime.utcnow()
+            start_time=datetime.utcnow(),
         )
 
         try:
@@ -331,7 +382,9 @@ class ChaosEngineer:
 
             # Verify system health before chaos
             if not await self._verify_system_health():
-                result.observations.append("System was unhealthy before chaos injection")
+                result.observations.append(
+                    "System was unhealthy before chaos injection"
+                )
                 return result
 
             # Inject chaos based on type
@@ -339,7 +392,9 @@ class ChaosEngineer:
 
             if chaos_id:
                 # Monitor system during chaos
-                result.metrics_during = await self._monitor_during_chaos(experiment.duration_seconds)
+                result.metrics_during = await self._monitor_during_chaos(
+                    experiment.duration_seconds
+                )
 
                 # Stop chaos
                 await self.chaos_inducer.stop_chaos(chaos_id)
@@ -354,9 +409,13 @@ class ChaosEngineer:
 
                 if recovered:
                     result.recovery_time = time.time() - recovery_start
-                    result.success = await self._evaluate_success_criteria(experiment, result)
+                    result.success = await self._evaluate_success_criteria(
+                        experiment, result
+                    )
                 else:
-                    result.failure_points.append("System did not recover within timeout")
+                    result.failure_points.append(
+                        "System did not recover within timeout"
+                    )
 
             else:
                 result.failure_points.append("Failed to inject chaos")
@@ -408,10 +467,7 @@ class ChaosEngineer:
             metrics.append(await self.metrics_collector.collect_metrics())
             await asyncio.sleep(10)
 
-        return {
-            "samples": metrics,
-            "duration_seconds": duration
-        }
+        return {"samples": metrics, "duration_seconds": duration}
 
     async def _verify_system_health(self) -> bool:
         """Verify system is healthy"""
@@ -434,7 +490,9 @@ class ChaosEngineer:
 
         return False
 
-    async def _evaluate_success_criteria(self, experiment: ChaosExperiment, result: ChaosResult) -> bool:
+    async def _evaluate_success_criteria(
+        self, experiment: ChaosExperiment, result: ChaosResult
+    ) -> bool:
         """Evaluate if experiment met success criteria"""
         criteria = experiment.success_criteria
 
@@ -445,7 +503,9 @@ class ChaosEngineer:
         # Check recovery time threshold
         if "max_recovery_time" in criteria:
             if result.recovery_time > criteria["max_recovery_time"]:
-                result.failure_points.append(f"Recovery time {result.recovery_time:.2f}s exceeded threshold {criteria['max_recovery_time']}s")
+                result.failure_points.append(
+                    f"Recovery time {result.recovery_time:.2f}s exceeded threshold {criteria['max_recovery_time']}s"
+                )
                 return False
 
         # Check error rate during chaos
@@ -460,9 +520,13 @@ class ChaosEngineer:
 
         return True
 
-    async def run_experiment_suite(self, experiments: List[ChaosExperiment]) -> Dict[str, Any]:
+    async def run_experiment_suite(
+        self, experiments: List[ChaosExperiment]
+    ) -> Dict[str, Any]:
         """Run a suite of chaos engineering experiments"""
-        self.logger.info(f"Starting chaos engineering suite with {len(experiments)} experiments")
+        self.logger.info(
+            f"Starting chaos engineering suite with {len(experiments)} experiments"
+        )
 
         results = {}
         suite_start_time = datetime.utcnow()
@@ -483,7 +547,7 @@ class ChaosEngineer:
                     start_time=datetime.utcnow(),
                     end_time=datetime.utcnow(),
                     success=False,
-                    failure_points=[f"Exception: {e}"]
+                    failure_points=[f"Exception: {e}"],
                 )
 
         # Generate suite summary
@@ -494,13 +558,10 @@ class ChaosEngineer:
             "successful_experiments": sum(1 for r in results.values() if r.success),
             "failed_experiments": sum(1 for r in results.values() if not r.success),
             "resilience_score": self._calculate_resilience_score(results),
-            "recommendations": self._generate_recommendations(results)
+            "recommendations": self._generate_recommendations(results),
         }
 
-        return {
-            "suite_summary": suite_summary,
-            "experiment_results": results
-        }
+        return {"suite_summary": suite_summary, "experiment_results": results}
 
     def _calculate_resilience_score(self, results: Dict[str, ChaosResult]) -> float:
         """Calculate overall resilience score (0-100)"""
@@ -550,26 +611,35 @@ class ChaosEngineer:
         if recovery_times:
             avg_recovery = sum(recovery_times) / len(recovery_times)
             if avg_recovery > 120:
-                recommendations.append("Consider implementing faster health checks and auto-recovery mechanisms")
+                recommendations.append(
+                    "Consider implementing faster health checks and auto-recovery mechanisms"
+                )
             if max(recovery_times) > 300:
-                recommendations.append("Some experiments had very long recovery times - investigate circuit breakers")
+                recommendations.append(
+                    "Some experiments had very long recovery times - investigate circuit breakers"
+                )
 
         # Common failure recommendations
         if any("timeout" in failure.lower() for failure in failure_types):
-            recommendations.append("Implement proper timeout handling and retry mechanisms")
+            recommendations.append(
+                "Implement proper timeout handling and retry mechanisms"
+            )
 
         if any("connection" in failure.lower() for failure in failure_types):
             recommendations.append("Improve connection pooling and error handling")
 
         # General recommendations
-        recommendations.extend([
-            "Implement comprehensive monitoring and alerting",
-            "Add automated recovery procedures",
-            "Consider implementing bulkhead patterns for isolation",
-            "Regular chaos engineering testing in staging environments"
-        ])
+        recommendations.extend(
+            [
+                "Implement comprehensive monitoring and alerting",
+                "Add automated recovery procedures",
+                "Consider implementing bulkhead patterns for isolation",
+                "Regular chaos engineering testing in staging environments",
+            ]
+        )
 
         return recommendations
+
 
 def create_standard_experiment_suite() -> List[ChaosExperiment]:
     """Create a standard suite of chaos engineering experiments"""
@@ -582,9 +652,8 @@ def create_standard_experiment_suite() -> List[ChaosExperiment]:
             intensity=0.8,  # 80% CPU load
             target_components=["api-orchestrator"],
             success_criteria={"max_recovery_time": 60},
-            rollback_strategy="automatic"
+            rollback_strategy="automatic",
         ),
-
         ChaosExperiment(
             name="Memory Pressure Test",
             chaos_type=ChaosType.MEMORY_STRESS,
@@ -592,9 +661,8 @@ def create_standard_experiment_suite() -> List[ChaosExperiment]:
             intensity=0.7,  # 70% memory usage
             target_components=["api-orchestrator"],
             success_criteria={"max_recovery_time": 30},
-            rollback_strategy="automatic"
+            rollback_strategy="automatic",
         ),
-
         ChaosExperiment(
             name="Network Latency Test",
             chaos_type=ChaosType.NETWORK_LATENCY,
@@ -602,9 +670,8 @@ def create_standard_experiment_suite() -> List[ChaosExperiment]:
             intensity=0.5,  # 500ms latency
             target_components=["network"],
             success_criteria={"max_recovery_time": 15},
-            rollback_strategy="automatic"
+            rollback_strategy="automatic",
         ),
-
         ChaosExperiment(
             name="Service Kill Test",
             chaos_type=ChaosType.SERVICE_KILL,
@@ -612,9 +679,10 @@ def create_standard_experiment_suite() -> List[ChaosExperiment]:
             intensity=1.0,
             target_components=["uvicorn"],
             success_criteria={"max_recovery_time": 120},
-            rollback_strategy="manual"
-        )
+            rollback_strategy="manual",
+        ),
     ]
+
 
 async def main():
     """Main function for chaos engineering tests"""
@@ -622,7 +690,7 @@ async def main():
     # Configure logging
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Create chaos engineer
@@ -641,14 +709,16 @@ async def main():
 
         # Print summary
         summary = results["suite_summary"]
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("CHAOS ENGINEERING RESULTS")
-        print("="*60)
+        print("=" * 60)
         print(f"Resilience Score: {summary['resilience_score']:.1f}/100")
-        print(f"Successful Experiments: {summary['successful_experiments']}/{summary['total_experiments']}")
+        print(
+            f"Successful Experiments: {summary['successful_experiments']}/{summary['total_experiments']}"
+        )
 
         print(f"\nRecommendations:")
-        for rec in summary['recommendations'][:5]:
+        for rec in summary["recommendations"][:5]:
             print(f"  - {rec}")
 
         print(f"\nDetailed results saved to: chaos_engineering_results.json")
@@ -660,6 +730,7 @@ async def main():
     except Exception as e:
         print(f"Chaos engineering failed: {e}")
         await engineer.chaos_inducer.stop_all_chaos()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

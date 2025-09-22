@@ -30,26 +30,28 @@ async def delete_user(user_id: int):
     return {"deleted": user_id}
 '''
 
+
 async def test_discovery():
     # Create test file
     test_file = Path("test_api.py")
     test_file.write_text(test_content)
-    
+
     # Test discovery
     agent = DiscoveryAgent()
     apis = await agent.scan("test_api.py")
-    
+
     print("\n🔍 Discovered APIs:")
     print("-" * 50)
     for api in apis:
         print(f"{api.method:6} {api.path:20} -> {api.handler_name}")
         if api.description:
             print(f"       Description: {api.description}")
-    
+
     # Cleanup
     test_file.unlink()
-    
+
     return apis
+
 
 if __name__ == "__main__":
     apis = asyncio.run(test_discovery())

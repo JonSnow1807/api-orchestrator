@@ -3,7 +3,7 @@ Advanced Load Testing Framework for API Orchestrator
 Supports distributed load testing, performance metrics collection, and AI-powered test generation
 """
 
-from typing import Optional, Dict, Any, List, Callable, AsyncGenerator
+from typing import Optional, Dict, Any, List, Callable
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from enum import Enum
@@ -15,12 +15,11 @@ import time
 import statistics
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
-from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from sqlalchemy import Column, String, Integer, Float, DateTime, JSON, Boolean, Text
+from sqlalchemy import Column, String, Float, DateTime, JSON
 
-from src.database import Base, get_db
-from src.config import settings
+from src.database import Base
+
 
 class LoadTestType(str, Enum):
     STRESS = "stress"
@@ -30,11 +29,13 @@ class LoadTestType(str, Enum):
     BREAKPOINT = "breakpoint"
     SOAK = "soak"
 
+
 class TestPhase(str, Enum):
     RAMP_UP = "ramp_up"
     STEADY_STATE = "steady_state"
     RAMP_DOWN = "ramp_down"
     SPIKE_BURST = "spike_burst"
+
 
 class MetricType(str, Enum):
     RESPONSE_TIME = "response_time"
@@ -45,9 +46,11 @@ class MetricType(str, Enum):
     NETWORK_IO = "network_io"
     DATABASE_CONNECTIONS = "database_connections"
 
+
 @dataclass
 class LoadTestConfig:
     """Load test configuration"""
+
     test_name: str
     test_type: LoadTestType
     target_url: str
@@ -60,17 +63,21 @@ class LoadTestConfig:
     headers: Dict[str, str] = field(default_factory=dict)
     payload: Optional[Dict[str, Any]] = None
     method: str = "GET"
-    success_criteria: Dict[str, float] = field(default_factory=lambda: {
-        "max_response_time_p95": 2000,  # ms
-        "max_error_rate": 0.05,  # 5%
-        "min_throughput": 100  # requests per second
-    })
+    success_criteria: Dict[str, float] = field(
+        default_factory=lambda: {
+            "max_response_time_p95": 2000,  # ms
+            "max_error_rate": 0.05,  # 5%
+            "min_throughput": 100,  # requests per second
+        }
+    )
     geo_distribution: List[str] = field(default_factory=lambda: ["us-east-1"])
     custom_assertions: List[str] = field(default_factory=list)
+
 
 @dataclass
 class RequestMetrics:
     """Individual request metrics"""
+
     timestamp: datetime
     response_time_ms: float
     status_code: int
@@ -79,9 +86,11 @@ class RequestMetrics:
     bytes_received: int = 0
     worker_id: str = ""
 
+
 @dataclass
 class AggregatedMetrics:
     """Aggregated test metrics"""
+
     timestamp: datetime
     total_requests: int
     successful_requests: int
@@ -98,8 +107,10 @@ class AggregatedMetrics:
     active_users: int
     errors_by_type: Dict[str, int] = field(default_factory=dict)
 
+
 class LoadTestResult(Base):
     """Database model for load test results"""
+
     __tablename__ = "load_test_results"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -117,6 +128,7 @@ class LoadTestResult(Base):
     created_by = Column(String)
     tags = Column(JSON)
 
+
 class DistributedWorker:
     """Distributed load testing worker"""
 
@@ -130,16 +142,10 @@ class DistributedWorker:
     async def initialize(self):
         """Initialize HTTP session"""
         connector = aiohttp.TCPConnector(
-            limit=1000,
-            limit_per_host=100,
-            ttl_dns_cache=300,
-            use_dns_cache=True
+            limit=1000, limit_per_host=100, ttl_dns_cache=300, use_dns_cache=True
         )
         timeout = aiohttp.ClientTimeout(total=30)
-        self.session = aiohttp.ClientSession(
-            connector=connector,
-            timeout=timeout
-        )
+        self.session = aiohttp.ClientSession(connector=connector, timeout=timeout)
 
     async def cleanup(self):
         """Cleanup resources"""
@@ -147,9 +153,7 @@ class DistributedWorker:
             await self.session.close()
 
     async def execute_request(
-        self,
-        config: LoadTestConfig,
-        user_context: Dict[str, Any] = None
+        self, config: LoadTestConfig, user_context: Dict[str, Any] = None
     ) -> RequestMetrics:
         """Execute single HTTP request with metrics collection"""
         start_time = time.time()
@@ -165,7 +169,7 @@ class DistributedWorker:
                 url=config.target_url,
                 headers=headers,
                 json=config.payload,
-                timeout=aiohttp.ClientTimeout(total=config.request_timeout)
+                timeout=aiohttp.ClientTimeout(total=config.request_timeout),
             ) as response:
                 content = await response.read()
                 response_time_ms = (time.time() - start_time) * 1000
@@ -174,9 +178,11 @@ class DistributedWorker:
                     timestamp=timestamp,
                     response_time_ms=response_time_ms,
                     status_code=response.status,
-                    bytes_sent=len(json.dumps(config.payload).encode()) if config.payload else 0,
+                    bytes_sent=len(json.dumps(config.payload).encode())
+                    if config.payload
+                    else 0,
                     bytes_received=len(content),
-                    worker_id=self.worker_id
+                    worker_id=self.worker_id,
                 )
 
         except Exception as e:
@@ -186,14 +192,14 @@ class DistributedWorker:
                 response_time_ms=response_time_ms,
                 status_code=0,
                 error=str(e),
-                worker_id=self.worker_id
+                worker_id=self.worker_id,
             )
 
     async def user_session(
         self,
         config: LoadTestConfig,
         user_id: int,
-        metrics_callback: Callable[[RequestMetrics], None]
+        metrics_callback: Callable[[RequestMetrics], None],
     ):
         """Simulate single user session"""
         user_context = {"user_id": user_id, "session_start": datetime.utcnow()}
@@ -213,6 +219,7 @@ class DistributedWorker:
             except Exception as e:
                 print(f"Error in user session {user_id}: {e}")
                 await asyncio.sleep(1)
+
 
 class LoadTestOrchestrator:
     """Main load testing orchestrator"""
@@ -247,15 +254,11 @@ class LoadTestOrchestrator:
         self.metrics_buffer.append(metrics)
 
     def calculate_aggregated_metrics(
-        self,
-        window_start: datetime,
-        window_end: datetime,
-        active_users: int
+        self, window_start: datetime, window_end: datetime, active_users: int
     ) -> AggregatedMetrics:
         """Calculate aggregated metrics for time window"""
         window_metrics = [
-            m for m in self.metrics_buffer
-            if window_start <= m.timestamp <= window_end
+            m for m in self.metrics_buffer if window_start <= m.timestamp <= window_end
         ]
 
         if not window_metrics:
@@ -273,11 +276,15 @@ class LoadTestOrchestrator:
                 max_response_time=0.0,
                 throughput_rps=0.0,
                 bytes_transferred=0,
-                active_users=active_users
+                active_users=active_users,
             )
 
-        successful = [m for m in window_metrics if m.error is None and 200 <= m.status_code < 400]
-        failed = [m for m in window_metrics if m.error is not None or m.status_code >= 400]
+        successful = [
+            m for m in window_metrics if m.error is None and 200 <= m.status_code < 400
+        ]
+        failed = [
+            m for m in window_metrics if m.error is not None or m.status_code >= 400
+        ]
 
         response_times = [m.response_time_ms for m in window_metrics]
 
@@ -304,14 +311,14 @@ class LoadTestOrchestrator:
             throughput_rps=throughput,
             bytes_transferred=sum(m.bytes_received for m in window_metrics),
             active_users=active_users,
-            errors_by_type=errors_by_type
+            errors_by_type=errors_by_type,
         )
 
     async def run_load_test(
         self,
         config: LoadTestConfig,
         db: Session,
-        progress_callback: Optional[Callable[[AggregatedMetrics], None]] = None
+        progress_callback: Optional[Callable[[AggregatedMetrics], None]] = None,
     ) -> str:
         """Execute distributed load test"""
 
@@ -322,7 +329,7 @@ class LoadTestOrchestrator:
             target_url=config.target_url,
             config=config.__dict__,
             start_time=datetime.utcnow(),
-            status="running"
+            status="running",
         )
         db.add(test_result)
         db.commit()
@@ -366,11 +373,11 @@ class LoadTestOrchestrator:
     async def _execute_test_phases(
         self,
         config: LoadTestConfig,
-        progress_callback: Optional[Callable[[AggregatedMetrics], None]] = None
+        progress_callback: Optional[Callable[[AggregatedMetrics], None]] = None,
     ):
         """Execute load test phases with proper ramping"""
         self.is_running = True
-        test_start = datetime.utcnow()
+        datetime.utcnow()
         user_tasks = []
 
         # Phase 1: Ramp up
@@ -396,11 +403,15 @@ class LoadTestOrchestrator:
             if i % 10 == 0 and progress_callback:
                 current_time = datetime.utcnow()
                 window_start = current_time - timedelta(seconds=10)
-                metrics = self.calculate_aggregated_metrics(window_start, current_time, i + 1)
+                metrics = self.calculate_aggregated_metrics(
+                    window_start, current_time, i + 1
+                )
                 progress_callback(metrics)
 
         # Phase 2: Steady state
-        steady_duration = config.duration_seconds - config.ramp_up_seconds - config.ramp_down_seconds
+        steady_duration = (
+            config.duration_seconds - config.ramp_up_seconds - config.ramp_down_seconds
+        )
         if steady_duration > 0:
             await asyncio.sleep(steady_duration)
 
@@ -420,12 +431,22 @@ class LoadTestOrchestrator:
         if not self.metrics_buffer:
             return {}
 
-        successful = [m for m in self.metrics_buffer if m.error is None and 200 <= m.status_code < 400]
-        failed = [m for m in self.metrics_buffer if m.error is not None or m.status_code >= 400]
+        successful = [
+            m
+            for m in self.metrics_buffer
+            if m.error is None and 200 <= m.status_code < 400
+        ]
+        failed = [
+            m
+            for m in self.metrics_buffer
+            if m.error is not None or m.status_code >= 400
+        ]
         response_times = [m.response_time_ms for m in self.metrics_buffer]
 
-        test_duration = (max(m.timestamp for m in self.metrics_buffer) -
-                        min(m.timestamp for m in self.metrics_buffer)).total_seconds()
+        test_duration = (
+            max(m.timestamp for m in self.metrics_buffer)
+            - min(m.timestamp for m in self.metrics_buffer)
+        ).total_seconds()
 
         return {
             "total_requests": len(self.metrics_buffer),
@@ -438,19 +459,27 @@ class LoadTestOrchestrator:
             "p99_response_time_ms": np.percentile(response_times, 99),
             "min_response_time_ms": min(response_times),
             "max_response_time_ms": max(response_times),
-            "throughput_rps": len(self.metrics_buffer) / test_duration if test_duration > 0 else 0,
-            "total_bytes_transferred": sum(m.bytes_received for m in self.metrics_buffer),
+            "throughput_rps": len(self.metrics_buffer) / test_duration
+            if test_duration > 0
+            else 0,
+            "total_bytes_transferred": sum(
+                m.bytes_received for m in self.metrics_buffer
+            ),
             "test_duration_seconds": test_duration,
-            "workers_used": len(self.workers)
+            "workers_used": len(self.workers),
         }
 
-    def _calculate_performance_score(self, config: LoadTestConfig, metrics: Dict[str, Any]) -> float:
+    def _calculate_performance_score(
+        self, config: LoadTestConfig, metrics: Dict[str, Any]
+    ) -> float:
         """Calculate performance score based on success criteria"""
         score = 100.0
         criteria = config.success_criteria
 
         # Response time check
-        if metrics.get("p95_response_time_ms", 0) > criteria.get("max_response_time_p95", 2000):
+        if metrics.get("p95_response_time_ms", 0) > criteria.get(
+            "max_response_time_p95", 2000
+        ):
             score -= 30
 
         # Error rate check
@@ -463,32 +492,46 @@ class LoadTestOrchestrator:
 
         return max(0, score)
 
-    def _generate_recommendations(self, config: LoadTestConfig, metrics: Dict[str, Any]) -> List[str]:
+    def _generate_recommendations(
+        self, config: LoadTestConfig, metrics: Dict[str, Any]
+    ) -> List[str]:
         """Generate performance recommendations"""
         recommendations = []
 
         if metrics.get("p95_response_time_ms", 0) > 2000:
-            recommendations.append("Consider implementing response caching to reduce latency")
-            recommendations.append("Review database query performance and add appropriate indexes")
+            recommendations.append(
+                "Consider implementing response caching to reduce latency"
+            )
+            recommendations.append(
+                "Review database query performance and add appropriate indexes"
+            )
 
         if metrics.get("error_rate", 0) > 0.05:
-            recommendations.append("Investigate error patterns and implement circuit breakers")
+            recommendations.append(
+                "Investigate error patterns and implement circuit breakers"
+            )
             recommendations.append("Add request retry logic with exponential backoff")
 
         if metrics.get("throughput_rps", 0) < 100:
             recommendations.append("Consider horizontal scaling or load balancing")
-            recommendations.append("Review application server configuration and connection pooling")
+            recommendations.append(
+                "Review application server configuration and connection pooling"
+            )
 
         return recommendations
 
+
 # Global orchestrator instance
 load_test_orchestrator = LoadTestOrchestrator()
+
 
 class AITestGenerator:
     """AI-powered test case generation"""
 
     @staticmethod
-    def generate_realistic_test_scenarios(api_spec: Dict[str, Any]) -> List[LoadTestConfig]:
+    def generate_realistic_test_scenarios(
+        api_spec: Dict[str, Any]
+    ) -> List[LoadTestConfig]:
         """Generate realistic load test scenarios from API specification"""
         scenarios = []
 
@@ -505,7 +548,7 @@ class AITestGenerator:
                         target_url=f"{api_spec.get('servers', [{}])[0].get('url', '')}{path}",
                         duration_seconds=300,  # 5 minutes
                         max_users=100,
-                        method=method.upper()
+                        method=method.upper(),
                     )
                     scenarios.append(stress_config)
 
@@ -517,7 +560,7 @@ class AITestGenerator:
                         duration_seconds=180,  # 3 minutes
                         max_users=200,
                         ramp_up_seconds=10,  # Quick spike
-                        method=method.upper()
+                        method=method.upper(),
                     )
                     scenarios.append(spike_config)
 
@@ -530,7 +573,11 @@ class AITestGenerator:
 
         request_body = endpoint_spec.get("requestBody", {})
         if request_body:
-            schema = request_body.get("content", {}).get("application/json", {}).get("schema", {})
+            schema = (
+                request_body.get("content", {})
+                .get("application/json", {})
+                .get("schema", {})
+            )
 
             # Generate valid payload
             valid_payload = {}
@@ -561,8 +608,11 @@ class AITestGenerator:
 
         return payloads
 
+
 # Utility functions
-async def quick_stress_test(target_url: str, max_users: int = 50, duration: int = 60) -> Dict[str, Any]:
+async def quick_stress_test(
+    target_url: str, max_users: int = 50, duration: int = 60
+) -> Dict[str, Any]:
     """Quick stress test utility"""
     config = LoadTestConfig(
         test_name="Quick Stress Test",
@@ -570,13 +620,14 @@ async def quick_stress_test(target_url: str, max_users: int = 50, duration: int 
         target_url=target_url,
         duration_seconds=duration,
         max_users=max_users,
-        ramp_up_seconds=10
+        ramp_up_seconds=10,
     )
 
     orchestrator = LoadTestOrchestrator()
     orchestrator.add_worker("local")
 
     from src.database import SessionLocal
+
     db = SessionLocal()
     try:
         test_id = await orchestrator.run_load_test(config, db)
@@ -584,6 +635,7 @@ async def quick_stress_test(target_url: str, max_users: int = 50, duration: int 
         return result.summary_metrics
     finally:
         db.close()
+
 
 def create_performance_dashboard_data(test_id: str, db: Session) -> Dict[str, Any]:
     """Create dashboard data for performance visualization"""
@@ -599,14 +651,14 @@ def create_performance_dashboard_data(test_id: str, db: Session) -> Dict[str, An
             "test_type": test_result.test_type,
             "duration": metrics.get("test_duration_seconds", 0),
             "performance_score": test_result.performance_score,
-            "status": test_result.status
+            "status": test_result.status,
         },
         "key_metrics": {
             "total_requests": metrics.get("total_requests", 0),
             "error_rate": f"{metrics.get('error_rate', 0) * 100:.2f}%",
             "avg_response_time": f"{metrics.get('avg_response_time_ms', 0):.0f}ms",
             "p95_response_time": f"{metrics.get('p95_response_time_ms', 0):.0f}ms",
-            "throughput": f"{metrics.get('throughput_rps', 0):.1f} RPS"
+            "throughput": f"{metrics.get('throughput_rps', 0):.1f} RPS",
         },
         "performance_breakdown": {
             "response_times": {
@@ -614,10 +666,10 @@ def create_performance_dashboard_data(test_id: str, db: Session) -> Dict[str, An
                 "p50": metrics.get("p50_response_time_ms", 0),
                 "p95": metrics.get("p95_response_time_ms", 0),
                 "p99": metrics.get("p99_response_time_ms", 0),
-                "max": metrics.get("max_response_time_ms", 0)
+                "max": metrics.get("max_response_time_ms", 0),
             },
             "success_rate": f"{(1 - metrics.get('error_rate', 0)) * 100:.2f}%",
-            "data_transferred": f"{metrics.get('total_bytes_transferred', 0) / 1024 / 1024:.2f} MB"
+            "data_transferred": f"{metrics.get('total_bytes_transferred', 0) / 1024 / 1024:.2f} MB",
         },
-        "recommendations": test_result.recommendations or []
+        "recommendations": test_result.recommendations or [],
     }

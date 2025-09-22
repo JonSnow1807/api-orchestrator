@@ -62,70 +62,72 @@ async def create_post(title: str, content: str, user_id: str):
     return {"id": "456", "title": title, "content": content, "user_id": user_id}
 '''
 
+
 async def test_orchestration():
     # Create test file
     test_file = Path("test_api.py")
     test_file.write_text(test_content)  # noqa: F823
-    
+
     try:
         # Initialize orchestrator
         orchestrator = APIOrchestrator()
-        
+
         # Register agents
         discovery_agent = DiscoveryAgent()
         spec_agent = SpecGeneratorAgent()
         test_agent = TestGeneratorAgent()  # Add this
-        
+
         orchestrator.register_agent(AgentType.DISCOVERY, discovery_agent)
         orchestrator.register_agent(AgentType.SPEC_GENERATOR, spec_agent)
         orchestrator.register_agent(AgentType.TEST_GENERATOR, test_agent)  # Add this
-        
+
         # Run orchestration
         print("\n🚀 Starting API Orchestration...")
         print("=" * 60)
-        
+
         results = await orchestrator.orchestrate("test_api.py")
-        
+
         # Display results
         print("\n📊 Orchestration Results:")
         print("=" * 60)
         print(f"✓ Discovered {len(results['apis'])} endpoints")
         print(f"✓ Generated OpenAPI spec")
         print(f"✓ Generated {len(results.get('tests', []))} test files")
-        
+
         # Save the spec
-        if results['specs']:
+        if results["specs"]:
             spec_file = Path("generated_spec.json")
-            spec_file.write_text(json.dumps(results['specs'], indent=2))
+            spec_file.write_text(json.dumps(results["specs"], indent=2))
             print(f"✓ Spec saved to {spec_file}")
-        
+
         # Save the tests
-        if results.get('tests'):
+        if results.get("tests"):
             # Export tests to file
-            test_content = test_agent.export_tests(results['tests'], "file")
+            test_content = test_agent.export_tests(results["tests"], "file")
             test_file_path = Path("generated_tests.py")
             test_file_path.write_text(test_content)
             print(f"✓ Tests saved to {test_file_path}")
-            
+
             # Show a preview
             print("\n📝 Generated Test Preview:")
             print("-" * 60)
-            lines = test_content.split('\n')[:30]  # Show first 30 lines
+            lines = test_content.split("\n")[:30]  # Show first 30 lines
             for line in lines:
                 print(line)
             print("... (truncated)")
-        
+
         # Show any errors
-        if results['errors']:
+        if results["errors"]:
             print("\n⚠️  Errors:")
-            for error in results['errors']:
+            for error in results["errors"]:
                 print(f"  - {error}")
-        
+
         return results
-        
+
     finally:
         # Cleanup
         test_file.unlink()
+
 
 if __name__ == "__main__":
     results = asyncio.run(test_orchestration())
