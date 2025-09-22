@@ -14,6 +14,7 @@ import time
 import logging
 import re
 import hashlib
+import os
 from collections import defaultdict, deque
 import numpy as np
 from urllib.parse import urlparse, parse_qs
@@ -43,6 +44,19 @@ except ImportError:
 # Import existing systems
 from src.kill_shots.telepathic_discovery import TelepathicDiscovery, DiscoveredAPI
 from src.ai_suggestions import InlineAISuggestions, AISuggestion, SuggestionType
+
+# Import advanced ML models
+try:
+    from src.ml_models.advanced_api_discovery import (
+        AdvancedAPIDiscoveryEngine,
+        ModelPrediction,
+        initialize_advanced_models,
+        analyze_api_with_ml,
+        detect_traffic_anomalies
+    )
+    HAS_ADVANCED_ML = True
+except ImportError:
+    HAS_ADVANCED_ML = False
 
 class DiscoveryConfidence(str, Enum):
     VERY_HIGH = "very_high"      # 90-100%
@@ -146,6 +160,12 @@ class SmartAPIDiscovery:
         self.anomaly_detector = None
         self.nlp_pipeline = None
 
+        # Advanced ML engine
+        self.advanced_ml_engine = None
+        if HAS_ADVANCED_ML:
+            from src.ml_models.advanced_api_discovery import advanced_discovery_engine
+            self.advanced_ml_engine = advanced_discovery_engine
+
         # Pattern databases
         self.known_patterns = self._load_api_patterns()
         self.behavior_patterns = defaultdict(list)
@@ -168,6 +188,11 @@ class SmartAPIDiscovery:
 
         # Initialize pattern recognition
         await self._initialize_pattern_recognition()
+
+        # Initialize advanced ML models
+        if HAS_ADVANCED_ML and self.advanced_ml_engine:
+            await self.advanced_ml_engine.initialize_models()
+            logging.info("🚀 Advanced ML models initialized")
 
         self.initialized = True
         logging.info("🧠 Smart API Discovery system initialized")
@@ -293,7 +318,12 @@ class SmartAPIDiscovery:
             predicted_endpoints = await self._predict_missing_endpoints(smart_endpoints)
             smart_endpoints.extend(predicted_endpoints)
 
-        # Step 7: Generate insights
+        # Step 7: Advanced ML analysis
+        if HAS_ADVANCED_ML and self.advanced_ml_engine:
+            ml_enhanced_endpoints = await self._enhance_with_advanced_ml(smart_endpoints)
+            smart_endpoints = ml_enhanced_endpoints
+
+        # Step 8: Generate insights
         await self._generate_discovery_insights(smart_endpoints)
 
         logging.info(f"✅ Discovery complete: {len(smart_endpoints)} smart endpoints found")
@@ -830,6 +860,226 @@ class SmartAPIDiscovery:
                 "timestamp": item.get("timestamp", datetime.utcnow())
             })
 
+    async def _enhance_with_advanced_ml(self, endpoints: List[SmartAPIEndpoint]) -> List[SmartAPIEndpoint]:
+        """Enhance endpoints with advanced ML analysis"""
+        if not self.advanced_ml_engine:
+            return endpoints
+
+        logging.info("🧠 Enhancing endpoints with advanced ML analysis")
+
+        enhanced_endpoints = []
+
+        for endpoint in endpoints:
+            try:
+                # Prepare data for ML analysis
+                api_data = {
+                    'url': endpoint.url,
+                    'method': endpoint.method,
+                    'category': endpoint.category.value,
+                    'response_time': np.mean(endpoint.response_time_patterns) if endpoint.response_time_patterns else 100,
+                    'status_code': 200,  # Default
+                    'payload_size': 1024,  # Default
+                    'headers': {},
+                    'auth_required': bool(endpoint.authentication_predictions),
+                    'rate_limited': endpoint.rate_limiting_predictions is not None,
+                    'traffic_volume': endpoint.traffic_volume
+                }
+
+                # Run comprehensive ML analysis
+                ml_predictions = await self.advanced_ml_engine.comprehensive_analysis(api_data)
+
+                # Enhance endpoint with ML insights
+                enhanced_endpoint = await self._apply_ml_enhancements(endpoint, ml_predictions)
+                enhanced_endpoints.append(enhanced_endpoint)
+
+            except Exception as e:
+                logging.warning(f"ML enhancement failed for {endpoint.url}: {e}")
+                enhanced_endpoints.append(endpoint)
+
+        return enhanced_endpoints
+
+    async def _apply_ml_enhancements(self, endpoint: SmartAPIEndpoint, ml_predictions: Dict[str, Any]) -> SmartAPIEndpoint:
+        """Apply ML predictions to enhance endpoint information"""
+
+        # Update confidence based on pattern recognition
+        if 'pattern_recognition' in ml_predictions:
+            pattern_pred = ml_predictions['pattern_recognition']
+            if hasattr(pattern_pred, 'confidence') and pattern_pred.confidence > 0.8:
+                # Boost confidence for high-confidence pattern matches
+                current_confidence = self._confidence_to_float(endpoint.confidence)
+                new_confidence = min(1.0, current_confidence + 0.1)
+                endpoint.confidence = self._float_to_confidence(new_confidence)
+
+        # Update security predictions
+        if 'security_analysis' in ml_predictions:
+            security_pred = ml_predictions['security_analysis']
+            if hasattr(security_pred, 'prediction') and isinstance(security_pred.prediction, dict):
+                endpoint.tags.add(f"security_risk_{security_pred.prediction.get('risk_level', 'unknown')}")
+
+                # Add security recommendations to tags
+                recommendations = security_pred.prediction.get('recommendations', [])
+                for rec in recommendations[:2]:  # Limit to first 2 recommendations
+                    endpoint.tags.add(f"rec_{rec.replace(' ', '_')[:20]}")
+
+        # Update behavior predictions
+        if 'behavior_prediction' in ml_predictions:
+            behavior_pred = ml_predictions['behavior_prediction']
+            if hasattr(behavior_pred, 'prediction') and isinstance(behavior_pred.prediction, (int, float)):
+                endpoint.predicted_response_schema = {
+                    "predicted_response_time": float(behavior_pred.prediction),
+                    "confidence": behavior_pred.confidence
+                }
+
+        # Add ML analysis metadata
+        endpoint.tags.add("ml_enhanced")
+
+        return endpoint
+
+    def _float_to_confidence(self, value: float) -> DiscoveryConfidence:
+        """Convert float to confidence enum"""
+        if value >= 0.9:
+            return DiscoveryConfidence.VERY_HIGH
+        elif value >= 0.7:
+            return DiscoveryConfidence.HIGH
+        elif value >= 0.5:
+            return DiscoveryConfidence.MEDIUM
+        elif value >= 0.3:
+            return DiscoveryConfidence.LOW
+        else:
+            return DiscoveryConfidence.VERY_LOW
+
+    async def analyze_api_traffic_with_ml(self, traffic_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Analyze API traffic using advanced ML models"""
+        if not HAS_ADVANCED_ML or not self.advanced_ml_engine:
+            logging.warning("Advanced ML not available for traffic analysis")
+            return {"error": "Advanced ML models not available"}
+
+        # Detect anomalies
+        anomalies = await self.advanced_ml_engine.detect_api_anomalies(traffic_data)
+
+        # Analyze patterns
+        pattern_analysis = await self._analyze_traffic_patterns_ml(traffic_data)
+
+        # Generate insights
+        ml_insights = await self._generate_ml_insights(anomalies, pattern_analysis)
+
+        return {
+            "anomalies_detected": len(anomalies),
+            "anomalies": [{
+                "prediction": anom.prediction,
+                "confidence": anom.confidence,
+                "explanation": anom.explanation
+            } for anom in anomalies],
+            "pattern_analysis": pattern_analysis,
+            "ml_insights": ml_insights,
+            "analysis_timestamp": datetime.utcnow().isoformat()
+        }
+
+    async def _analyze_traffic_patterns_ml(self, traffic_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Analyze traffic patterns using ML"""
+        patterns = {
+            "peak_hours": [],
+            "common_endpoints": [],
+            "response_time_trends": {},
+            "error_patterns": {}
+        }
+
+        if not traffic_data:
+            return patterns
+
+        # Analyze peak hours
+        hour_counts = defaultdict(int)
+        for item in traffic_data:
+            timestamp = item.get('timestamp', datetime.utcnow())
+            if isinstance(timestamp, str):
+                timestamp = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+            hour_counts[timestamp.hour] += 1
+
+        # Find peak hours (top 25%)
+        sorted_hours = sorted(hour_counts.items(), key=lambda x: x[1], reverse=True)
+        peak_count = max(1, len(sorted_hours) // 4)
+        patterns["peak_hours"] = [hour for hour, count in sorted_hours[:peak_count]]
+
+        # Analyze common endpoints
+        endpoint_counts = defaultdict(int)
+        for item in traffic_data:
+            url = item.get('url', '')
+            endpoint_counts[url] += 1
+
+        patterns["common_endpoints"] = sorted(endpoint_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+
+        return patterns
+
+    async def _generate_ml_insights(self, anomalies: List[Any], pattern_analysis: Dict[str, Any]) -> List[str]:
+        """Generate insights from ML analysis"""
+        insights = []
+
+        # Anomaly insights
+        if anomalies:
+            high_confidence_anomalies = [a for a in anomalies if hasattr(a, 'confidence') and a.confidence > 0.8]
+            if high_confidence_anomalies:
+                insights.append(f"Detected {len(high_confidence_anomalies)} high-confidence anomalies requiring attention")
+
+        # Pattern insights
+        if pattern_analysis.get("peak_hours"):
+            peak_hours = pattern_analysis["peak_hours"]
+            insights.append(f"Peak traffic hours identified: {peak_hours}")
+
+        if pattern_analysis.get("common_endpoints"):
+            top_endpoint = pattern_analysis["common_endpoints"][0]
+            insights.append(f"Most accessed endpoint: {top_endpoint[0]} ({top_endpoint[1]} requests)")
+
+        if not insights:
+            insights.append("No significant patterns or anomalies detected")
+
+        return insights
+
+    async def continuous_learning_update(self, feedback_data: List[Dict[str, Any]]):
+        """Update ML models with new feedback data for continuous learning"""
+        if not HAS_ADVANCED_ML or not self.advanced_ml_engine:
+            return
+
+        logging.info("🔄 Updating ML models with new feedback data")
+
+        # Categorize feedback data
+        pattern_data = []
+        security_data = []
+        behavior_data = []
+
+        for item in feedback_data:
+            data_type = item.get('type', 'pattern')
+            if data_type == 'pattern':
+                pattern_data.append(item)
+            elif data_type == 'security':
+                security_data.append(item)
+            elif data_type == 'behavior':
+                behavior_data.append(item)
+
+        # Update training data
+        if pattern_data:
+            await self.advanced_ml_engine.update_training_data('patterns', pattern_data)
+
+        if security_data:
+            await self.advanced_ml_engine.update_training_data('security', security_data)
+
+        if behavior_data:
+            await self.advanced_ml_engine.update_training_data('behaviors', behavior_data)
+
+        logging.info("✅ ML models updated with continuous learning data")
+
+    def get_ml_model_status(self) -> Dict[str, Any]:
+        """Get status of ML models"""
+        if not HAS_ADVANCED_ML or not self.advanced_ml_engine:
+            return {
+                "advanced_ml_available": False,
+                "message": "Advanced ML models not available"
+            }
+
+        return {
+            "advanced_ml_available": True,
+            **self.advanced_ml_engine.get_model_status()
+        }
+
     def get_discovery_summary(self) -> Dict[str, Any]:
         """Get comprehensive discovery summary"""
 
@@ -853,6 +1103,12 @@ class SmartAPIDiscovery:
                 ep for ep in self.discovered_endpoints.values()
                 if ep.confidence in [DiscoveryConfidence.HIGH, DiscoveryConfidence.VERY_HIGH]
             ]),
+            "ml_enhanced_endpoints": len([
+                ep for ep in self.discovered_endpoints.values()
+                if "ml_enhanced" in ep.tags
+            ]),
+            "advanced_ml_available": HAS_ADVANCED_ML,
+            "ml_model_status": self.get_ml_model_status() if HAS_ADVANCED_ML else None,
             "last_discovery": max(
                 (ep.discovered_at for ep in self.discovered_endpoints.values()),
                 default=None
@@ -871,3 +1127,15 @@ async def initialize_smart_discovery():
 async def discover_apis_smart(target: str = None, **kwargs) -> List[SmartAPIEndpoint]:
     """Convenient function to run smart API discovery"""
     return await smart_api_discovery.discover_apis_with_ml(target, **kwargs)
+
+async def analyze_traffic_with_ml(traffic_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Analyze API traffic using advanced ML models"""
+    return await smart_api_discovery.analyze_api_traffic_with_ml(traffic_data)
+
+async def update_ml_models(feedback_data: List[Dict[str, Any]]):
+    """Update ML models with continuous learning data"""
+    await smart_api_discovery.continuous_learning_update(feedback_data)
+
+def get_discovery_ml_status() -> Dict[str, Any]:
+    """Get ML model status for discovery system"""
+    return smart_api_discovery.get_ml_model_status()

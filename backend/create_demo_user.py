@@ -22,11 +22,15 @@ def create_demo_user():
             print(f"Demo user already exists: {existing.email}")
             return existing
         
-        # Create demo user
+        # Create demo user - use environment variable for password
+        demo_password = os.getenv("DEMO_USER_PASSWORD", "ChangeMe123!")
+        if demo_password == "ChangeMe123!":
+            print("⚠️  Warning: Using default demo password. Set DEMO_USER_PASSWORD environment variable for security.")
+
         demo_data = UserCreate(
             email="demo@streamapi.dev",
             username="demo",
-            password="Demo123!",
+            password=demo_password,
             full_name="Demo User"
         )
         

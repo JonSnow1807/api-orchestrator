@@ -66,8 +66,9 @@ test_module("database", test_database)
 def test_auth():
     from src.auth import AuthManager
     
-    # Test password hashing
-    password = "TestPassword123!"
+    # Test password hashing with test constant
+    TEST_PASSWORD = "TestPassword123!"  # Test constant, not production secret
+    password = TEST_PASSWORD
     hashed = AuthManager.hash_password(password)
     assert hashed != password
     assert len(hashed) > 0

@@ -95,7 +95,9 @@ class TemplateEngine:
 
     def _load_templates(self) -> Dict[str, Dict[str, str]]:
         """Load language-specific templates"""
-        return {
+        enhanced_templates, modern_templates = self._get_enhanced_templates()
+
+        base_templates = {
             ProgrammingLanguage.PYTHON: {
                 "client": self._get_python_client_template(),
                 "model": self._get_python_model_template(),
@@ -140,8 +142,73 @@ class TemplateEngine:
                 "readme": self._get_go_readme_template(),
                 "example": self._get_go_example_template(),
                 "test": self._get_go_test_template()
+            },
+            ProgrammingLanguage.RUST: {
+                "client": enhanced_templates.get('rust', {}).get('client', "// Rust client template..."),
+                "model": enhanced_templates.get('rust', {}).get('model', "// Rust model template..."),
+                "auth": enhanced_templates.get('rust', {}).get('auth', "// Rust auth template..."),
+                "cargo": enhanced_templates.get('rust', {}).get('cargo', "# Rust Cargo.toml template..."),
+                "readme": enhanced_templates.get('rust', {}).get('readme', "# Rust README template..."),
+                "example": enhanced_templates.get('rust', {}).get('example', "// Rust example template..."),
+                "test": enhanced_templates.get('rust', {}).get('test', "// Rust test template...")
+            },
+            ProgrammingLanguage.SWIFT: {
+                "client": enhanced_templates.get('swift', {}).get('client', "// Swift client template..."),
+                "model": enhanced_templates.get('swift', {}).get('model', "// Swift model template..."),
+                "auth": enhanced_templates.get('swift', {}).get('auth', "// Swift auth template..."),
+                "package": enhanced_templates.get('swift', {}).get('package', "// Swift Package.swift template..."),
+                "readme": enhanced_templates.get('swift', {}).get('readme', "# Swift README template..."),
+                "example": enhanced_templates.get('swift', {}).get('example', "// Swift example template..."),
+                "test": enhanced_templates.get('swift', {}).get('test', "// Swift test template...")
+            },
+            ProgrammingLanguage.KOTLIN: {
+                "client": modern_templates.get('kotlin', {}).get('client', "// Kotlin client template..."),
+                "model": modern_templates.get('kotlin', {}).get('model', "// Kotlin model template..."),
+                "auth": modern_templates.get('kotlin', {}).get('auth', "// Kotlin auth template..."),
+                "gradle": modern_templates.get('kotlin', {}).get('gradle', "// Kotlin build.gradle template..."),
+                "readme": modern_templates.get('kotlin', {}).get('readme', "# Kotlin README template..."),
+                "example": modern_templates.get('kotlin', {}).get('example', "// Kotlin example template..."),
+                "test": modern_templates.get('kotlin', {}).get('test', "// Kotlin test template...")
+            },
+            ProgrammingLanguage.DART: {
+                "client": modern_templates.get('dart', {}).get('client', "// Dart client template..."),
+                "model": modern_templates.get('dart', {}).get('model', "// Dart model template..."),
+                "auth": modern_templates.get('dart', {}).get('auth', "// Dart auth template..."),
+                "pubspec": modern_templates.get('dart', {}).get('pubspec', "# Dart pubspec.yaml template..."),
+                "readme": modern_templates.get('dart', {}).get('readme', "# Dart README template..."),
+                "example": modern_templates.get('dart', {}).get('example', "// Dart example template..."),
+                "test": modern_templates.get('dart', {}).get('test', "// Dart test template...")
+            },
+            ProgrammingLanguage.CSHARP: {
+                "client": modern_templates.get('csharp', {}).get('client', "// C# client template..."),
+                "model": modern_templates.get('csharp', {}).get('model', "// C# model template..."),
+                "auth": modern_templates.get('csharp', {}).get('auth', "// C# auth template..."),
+                "csproj": modern_templates.get('csharp', {}).get('csproj', "<!-- C# .csproj template... -->"),
+                "readme": modern_templates.get('csharp', {}).get('readme', "# C# README template..."),
+                "example": modern_templates.get('csharp', {}).get('example', "// C# example template..."),
+                "test": modern_templates.get('csharp', {}).get('test', "// C# test template...")
+            },
+            ProgrammingLanguage.PHP: {
+                "client": modern_templates.get('php', {}).get('client', "<?php // PHP client template..."),
+                "model": modern_templates.get('php', {}).get('model', "<?php // PHP model template..."),
+                "auth": modern_templates.get('php', {}).get('auth', "<?php // PHP auth template..."),
+                "composer": modern_templates.get('php', {}).get('composer', "// PHP composer.json template..."),
+                "readme": modern_templates.get('php', {}).get('readme', "# PHP README template..."),
+                "example": modern_templates.get('php', {}).get('example', "<?php // PHP example template..."),
+                "test": modern_templates.get('php', {}).get('test', "<?php // PHP test template...")
+            },
+            ProgrammingLanguage.RUBY: {
+                "client": modern_templates.get('ruby', {}).get('client', "# Ruby client template..."),
+                "model": modern_templates.get('ruby', {}).get('model', "# Ruby model template..."),
+                "auth": modern_templates.get('ruby', {}).get('auth', "# Ruby auth template..."),
+                "gemspec": modern_templates.get('ruby', {}).get('gemspec', "# Ruby gemspec template..."),
+                "readme": modern_templates.get('ruby', {}).get('readme', "# Ruby README template..."),
+                "example": modern_templates.get('ruby', {}).get('example', "# Ruby example template..."),
+                "test": modern_templates.get('ruby', {}).get('test', "# Ruby test template...")
             }
         }
+
+        return base_templates
 
     def render_template(self, language: ProgrammingLanguage, template_type: str, **kwargs) -> str:
         """Render a template with given context"""
@@ -1077,71 +1144,102 @@ if (typeof module !== 'undefined' && module.exports) {
     def _get_js_auth_template(self) -> str:
         return "// JavaScript auth template..."
 
+    # Import enhanced templates
+    def _get_enhanced_templates(self):
+        """Import enhanced templates from separate modules"""
+        try:
+            from .sdk_templates.enhanced_templates import ENHANCED_TEMPLATES
+            from .sdk_templates.modern_languages import MODERN_LANGUAGE_TEMPLATES
+            return ENHANCED_TEMPLATES, MODERN_LANGUAGE_TEMPLATES
+        except ImportError:
+            return {}, {}
+
     # TypeScript templates
     def _get_ts_client_template(self) -> str:
-        return "// TypeScript client template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('typescript', {}).get('client', "// TypeScript client template...")
 
     def _get_ts_types_template(self) -> str:
-        return "// TypeScript types template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('typescript', {}).get('types', "// TypeScript types template...")
 
     def _get_ts_auth_template(self) -> str:
-        return "// TypeScript auth template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('typescript', {}).get('auth', "// TypeScript auth template...")
 
     def _get_ts_package_template(self) -> str:
-        return "// TypeScript package.json template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('typescript', {}).get('package', "// TypeScript package.json template...")
 
     def _get_ts_readme_template(self) -> str:
-        return "# TypeScript README template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('typescript', {}).get('readme', "# TypeScript README template...")
 
     def _get_ts_example_template(self) -> str:
-        return "// TypeScript example template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('typescript', {}).get('example', "// TypeScript example template...")
 
     def _get_ts_test_template(self) -> str:
-        return "// TypeScript test template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('typescript', {}).get('test', "// TypeScript test template...")
 
     # Java templates
     def _get_java_client_template(self) -> str:
-        return "// Java client template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('java', {}).get('client', "// Java client template...")
 
     def _get_java_model_template(self) -> str:
-        return "// Java model template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('java', {}).get('model', "// Java model template...")
 
     def _get_java_auth_template(self) -> str:
-        return "// Java auth template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('java', {}).get('auth', "// Java auth template...")
 
     def _get_java_pom_template(self) -> str:
-        return "<!-- Java pom.xml template... -->"
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('java', {}).get('pom', "<!-- Java pom.xml template... -->")
 
     def _get_java_readme_template(self) -> str:
-        return "# Java README template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('java', {}).get('readme', "# Java README template...")
 
     def _get_java_example_template(self) -> str:
-        return "// Java example template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('java', {}).get('example', "// Java example template...")
 
     def _get_java_test_template(self) -> str:
-        return "// Java test template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('java', {}).get('test', "// Java test template...")
 
     # Go templates
     def _get_go_client_template(self) -> str:
-        return "// Go client template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('go', {}).get('client', "// Go client template...")
 
     def _get_go_model_template(self) -> str:
-        return "// Go model template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('go', {}).get('model', "// Go model template...")
 
     def _get_go_auth_template(self) -> str:
-        return "// Go auth template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('go', {}).get('auth', "// Go auth template...")
 
     def _get_go_mod_template(self) -> str:
-        return "// Go go.mod template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('go', {}).get('mod', "// Go go.mod template...")
 
     def _get_go_readme_template(self) -> str:
-        return "# Go README template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('go', {}).get('readme', "# Go README template...")
 
     def _get_go_example_template(self) -> str:
-        return "// Go example template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('go', {}).get('example', "// Go example template...")
 
     def _get_go_test_template(self) -> str:
-        return "// Go test template..."
+        enhanced_templates, _ = self._get_enhanced_templates()
+        return enhanced_templates.get('go', {}).get('test', "// Go test template...")
 
 class MultiLanguageSDKGenerator:
     """Main SDK generator for multiple programming languages"""
@@ -1172,6 +1270,20 @@ class MultiLanguageSDKGenerator:
             files = await self._generate_java_sdk(context)
         elif language == ProgrammingLanguage.GO:
             files = await self._generate_go_sdk(context)
+        elif language == ProgrammingLanguage.RUST:
+            files = await self._generate_rust_sdk(context)
+        elif language == ProgrammingLanguage.SWIFT:
+            files = await self._generate_swift_sdk(context)
+        elif language == ProgrammingLanguage.KOTLIN:
+            files = await self._generate_kotlin_sdk(context)
+        elif language == ProgrammingLanguage.DART:
+            files = await self._generate_dart_sdk(context)
+        elif language == ProgrammingLanguage.CSHARP:
+            files = await self._generate_csharp_sdk(context)
+        elif language == ProgrammingLanguage.PHP:
+            files = await self._generate_php_sdk(context)
+        elif language == ProgrammingLanguage.RUBY:
+            files = await self._generate_ruby_sdk(context)
         else:
             raise ValueError(f"Unsupported language: {language}")
 
@@ -1386,6 +1498,62 @@ class MultiLanguageSDKGenerator:
                 "boolean": "bool",
                 "array": "[]interface{}",
                 "object": "map[string]interface{}"
+            },
+            ProgrammingLanguage.RUST: {
+                "string": "String",
+                "integer": "i64",
+                "number": "f64",
+                "boolean": "bool",
+                "array": "Vec<serde_json::Value>",
+                "object": "serde_json::Map<String, serde_json::Value>"
+            },
+            ProgrammingLanguage.SWIFT: {
+                "string": "String",
+                "integer": "Int",
+                "number": "Double",
+                "boolean": "Bool",
+                "array": "[Any]",
+                "object": "[String: Any]"
+            },
+            ProgrammingLanguage.KOTLIN: {
+                "string": "String",
+                "integer": "Int",
+                "number": "Double",
+                "boolean": "Boolean",
+                "array": "List<Any>",
+                "object": "Map<String, Any>"
+            },
+            ProgrammingLanguage.DART: {
+                "string": "String",
+                "integer": "int",
+                "number": "double",
+                "boolean": "bool",
+                "array": "List<dynamic>",
+                "object": "Map<String, dynamic>"
+            },
+            ProgrammingLanguage.CSHARP: {
+                "string": "string",
+                "integer": "int",
+                "number": "double",
+                "boolean": "bool",
+                "array": "List<object>",
+                "object": "Dictionary<string, object>"
+            },
+            ProgrammingLanguage.PHP: {
+                "string": "string",
+                "integer": "int",
+                "number": "float",
+                "boolean": "bool",
+                "array": "array",
+                "object": "array"
+            },
+            ProgrammingLanguage.RUBY: {
+                "string": "String",
+                "integer": "Integer",
+                "number": "Float",
+                "boolean": "Boolean",
+                "array": "Array",
+                "object": "Hash"
             }
         }
 
@@ -1473,19 +1641,439 @@ class MultiLanguageSDKGenerator:
     async def _generate_typescript_sdk(self, context: Dict[str, Any]) -> Dict[str, str]:
         """Generate TypeScript SDK files"""
         files = {}
-        # Implementation would be similar to JavaScript but with TypeScript templates
+
+        # Main client file
+        files["src/index.ts"] = self.template_engine.render_template(
+            ProgrammingLanguage.TYPESCRIPT, "client", **context
+        )
+
+        # Type definitions
+        files["src/types.ts"] = self.template_engine.render_template(
+            ProgrammingLanguage.TYPESCRIPT, "types", **context
+        )
+
+        # Package.json
+        files["package.json"] = self.template_engine.render_template(
+            ProgrammingLanguage.TYPESCRIPT, "package", **context
+        )
+
+        # README
+        files["README.md"] = self.template_engine.render_template(
+            ProgrammingLanguage.TYPESCRIPT, "readme", **context
+        )
+
+        # Example
+        if context["include_examples"]:
+            files["examples/example.ts"] = self.template_engine.render_template(
+                ProgrammingLanguage.TYPESCRIPT, "example", **context
+            )
+
+        # Tests
+        if context["include_tests"]:
+            files["tests/client.test.ts"] = self.template_engine.render_template(
+                ProgrammingLanguage.TYPESCRIPT, "test", **context
+            )
+
+        # Auth helpers
+        files["src/auth.ts"] = self.template_engine.render_template(
+            ProgrammingLanguage.TYPESCRIPT, "auth", **context
+        )
+
         return files
 
     async def _generate_java_sdk(self, context: Dict[str, Any]) -> Dict[str, str]:
         """Generate Java SDK files"""
         files = {}
-        # Implementation would use Java-specific templates
+        package_path = context["package_name"].replace("-", "").replace("_", "")
+
+        # Main client file
+        files[f"src/main/java/com/{package_path}/Client.java"] = self.template_engine.render_template(
+            ProgrammingLanguage.JAVA, "client", **context
+        )
+
+        # Model classes
+        files[f"src/main/java/com/{package_path}/models/BaseModel.java"] = self.template_engine.render_template(
+            ProgrammingLanguage.JAVA, "model", **context
+        )
+
+        # Auth helpers
+        files[f"src/main/java/com/{package_path}/auth/Authentication.java"] = self.template_engine.render_template(
+            ProgrammingLanguage.JAVA, "auth", **context
+        )
+
+        # pom.xml
+        files["pom.xml"] = self.template_engine.render_template(
+            ProgrammingLanguage.JAVA, "pom", **context
+        )
+
+        # README
+        files["README.md"] = self.template_engine.render_template(
+            ProgrammingLanguage.JAVA, "readme", **context
+        )
+
+        # Example
+        if context["include_examples"]:
+            files[f"src/main/java/com/{package_path}/examples/Example.java"] = self.template_engine.render_template(
+                ProgrammingLanguage.JAVA, "example", **context
+            )
+
+        # Tests
+        if context["include_tests"]:
+            files[f"src/test/java/com/{package_path}/ClientTest.java"] = self.template_engine.render_template(
+                ProgrammingLanguage.JAVA, "test", **context
+            )
+
         return files
 
     async def _generate_go_sdk(self, context: Dict[str, Any]) -> Dict[str, str]:
         """Generate Go SDK files"""
         files = {}
-        # Implementation would use Go-specific templates
+
+        # Main client file
+        files["client.go"] = self.template_engine.render_template(
+            ProgrammingLanguage.GO, "client", **context
+        )
+
+        # Model structs
+        files["models.go"] = self.template_engine.render_template(
+            ProgrammingLanguage.GO, "model", **context
+        )
+
+        # Auth helpers
+        files["auth.go"] = self.template_engine.render_template(
+            ProgrammingLanguage.GO, "auth", **context
+        )
+
+        # go.mod
+        files["go.mod"] = self.template_engine.render_template(
+            ProgrammingLanguage.GO, "mod", **context
+        )
+
+        # README
+        files["README.md"] = self.template_engine.render_template(
+            ProgrammingLanguage.GO, "readme", **context
+        )
+
+        # Example
+        if context["include_examples"]:
+            files["examples/example.go"] = self.template_engine.render_template(
+                ProgrammingLanguage.GO, "example", **context
+            )
+
+        # Tests
+        if context["include_tests"]:
+            files["client_test.go"] = self.template_engine.render_template(
+                ProgrammingLanguage.GO, "test", **context
+            )
+
+        return files
+
+    async def _generate_rust_sdk(self, context: Dict[str, Any]) -> Dict[str, str]:
+        """Generate Rust SDK files"""
+        files = {}
+
+        # Main client file
+        files["src/lib.rs"] = self.template_engine.render_template(
+            ProgrammingLanguage.RUST, "client", **context
+        )
+
+        # Model structs
+        files["src/models.rs"] = self.template_engine.render_template(
+            ProgrammingLanguage.RUST, "model", **context
+        )
+
+        # Auth helpers
+        files["src/auth.rs"] = self.template_engine.render_template(
+            ProgrammingLanguage.RUST, "auth", **context
+        )
+
+        # Cargo.toml
+        files["Cargo.toml"] = self.template_engine.render_template(
+            ProgrammingLanguage.RUST, "cargo", **context
+        )
+
+        # README
+        files["README.md"] = self.template_engine.render_template(
+            ProgrammingLanguage.RUST, "readme", **context
+        )
+
+        # Example
+        if context["include_examples"]:
+            files["examples/example.rs"] = self.template_engine.render_template(
+                ProgrammingLanguage.RUST, "example", **context
+            )
+
+        # Tests
+        if context["include_tests"]:
+            files["tests/integration_test.rs"] = self.template_engine.render_template(
+                ProgrammingLanguage.RUST, "test", **context
+            )
+
+        return files
+
+    async def _generate_swift_sdk(self, context: Dict[str, Any]) -> Dict[str, str]:
+        """Generate Swift SDK files"""
+        files = {}
+
+        # Main client file
+        files["Sources/APIClient/Client.swift"] = self.template_engine.render_template(
+            ProgrammingLanguage.SWIFT, "client", **context
+        )
+
+        # Model classes
+        files["Sources/APIClient/Models.swift"] = self.template_engine.render_template(
+            ProgrammingLanguage.SWIFT, "model", **context
+        )
+
+        # Auth helpers
+        files["Sources/APIClient/Auth.swift"] = self.template_engine.render_template(
+            ProgrammingLanguage.SWIFT, "auth", **context
+        )
+
+        # Package.swift
+        files["Package.swift"] = self.template_engine.render_template(
+            ProgrammingLanguage.SWIFT, "package", **context
+        )
+
+        # README
+        files["README.md"] = self.template_engine.render_template(
+            ProgrammingLanguage.SWIFT, "readme", **context
+        )
+
+        # Example
+        if context["include_examples"]:
+            files["Examples/Example.swift"] = self.template_engine.render_template(
+                ProgrammingLanguage.SWIFT, "example", **context
+            )
+
+        # Tests
+        if context["include_tests"]:
+            files["Tests/APIClientTests/ClientTests.swift"] = self.template_engine.render_template(
+                ProgrammingLanguage.SWIFT, "test", **context
+            )
+
+        return files
+
+    async def _generate_kotlin_sdk(self, context: Dict[str, Any]) -> Dict[str, str]:
+        """Generate Kotlin SDK files"""
+        files = {}
+        package_path = context["package_name"].replace("-", "").replace("_", "")
+
+        # Main client file
+        files[f"src/main/kotlin/com/{package_path}/Client.kt"] = self.template_engine.render_template(
+            ProgrammingLanguage.KOTLIN, "client", **context
+        )
+
+        # Model classes
+        files[f"src/main/kotlin/com/{package_path}/models/Models.kt"] = self.template_engine.render_template(
+            ProgrammingLanguage.KOTLIN, "model", **context
+        )
+
+        # Auth helpers
+        files[f"src/main/kotlin/com/{package_path}/auth/Auth.kt"] = self.template_engine.render_template(
+            ProgrammingLanguage.KOTLIN, "auth", **context
+        )
+
+        # build.gradle.kts
+        files["build.gradle.kts"] = self.template_engine.render_template(
+            ProgrammingLanguage.KOTLIN, "gradle", **context
+        )
+
+        # README
+        files["README.md"] = self.template_engine.render_template(
+            ProgrammingLanguage.KOTLIN, "readme", **context
+        )
+
+        # Example
+        if context["include_examples"]:
+            files[f"src/main/kotlin/com/{package_path}/examples/Example.kt"] = self.template_engine.render_template(
+                ProgrammingLanguage.KOTLIN, "example", **context
+            )
+
+        # Tests
+        if context["include_tests"]:
+            files[f"src/test/kotlin/com/{package_path}/ClientTest.kt"] = self.template_engine.render_template(
+                ProgrammingLanguage.KOTLIN, "test", **context
+            )
+
+        return files
+
+    async def _generate_dart_sdk(self, context: Dict[str, Any]) -> Dict[str, str]:
+        """Generate Dart SDK files"""
+        files = {}
+
+        # Main client file
+        files["lib/client.dart"] = self.template_engine.render_template(
+            ProgrammingLanguage.DART, "client", **context
+        )
+
+        # Model classes
+        files["lib/models.dart"] = self.template_engine.render_template(
+            ProgrammingLanguage.DART, "model", **context
+        )
+
+        # Auth helpers
+        files["lib/auth.dart"] = self.template_engine.render_template(
+            ProgrammingLanguage.DART, "auth", **context
+        )
+
+        # pubspec.yaml
+        files["pubspec.yaml"] = self.template_engine.render_template(
+            ProgrammingLanguage.DART, "pubspec", **context
+        )
+
+        # README
+        files["README.md"] = self.template_engine.render_template(
+            ProgrammingLanguage.DART, "readme", **context
+        )
+
+        # Example
+        if context["include_examples"]:
+            files["example/example.dart"] = self.template_engine.render_template(
+                ProgrammingLanguage.DART, "example", **context
+            )
+
+        # Tests
+        if context["include_tests"]:
+            files["test/client_test.dart"] = self.template_engine.render_template(
+                ProgrammingLanguage.DART, "test", **context
+            )
+
+        return files
+
+    async def _generate_csharp_sdk(self, context: Dict[str, Any]) -> Dict[str, str]:
+        """Generate C# SDK files"""
+        files = {}
+        namespace = context["package_name"].replace("-", "").replace("_", "")
+
+        # Main client file
+        files[f"{namespace}Client/Client.cs"] = self.template_engine.render_template(
+            ProgrammingLanguage.CSHARP, "client", **context
+        )
+
+        # Model classes
+        files[f"{namespace}Client/Models/Models.cs"] = self.template_engine.render_template(
+            ProgrammingLanguage.CSHARP, "model", **context
+        )
+
+        # Auth helpers
+        files[f"{namespace}Client/Auth/Authentication.cs"] = self.template_engine.render_template(
+            ProgrammingLanguage.CSHARP, "auth", **context
+        )
+
+        # .csproj
+        files[f"{namespace}Client/{namespace}Client.csproj"] = self.template_engine.render_template(
+            ProgrammingLanguage.CSHARP, "csproj", **context
+        )
+
+        # README
+        files["README.md"] = self.template_engine.render_template(
+            ProgrammingLanguage.CSHARP, "readme", **context
+        )
+
+        # Example
+        if context["include_examples"]:
+            files[f"Examples/Example.cs"] = self.template_engine.render_template(
+                ProgrammingLanguage.CSHARP, "example", **context
+            )
+
+        # Tests
+        if context["include_tests"]:
+            files[f"{namespace}Client.Tests/ClientTests.cs"] = self.template_engine.render_template(
+                ProgrammingLanguage.CSHARP, "test", **context
+            )
+
+        return files
+
+    async def _generate_php_sdk(self, context: Dict[str, Any]) -> Dict[str, str]:
+        """Generate PHP SDK files"""
+        files = {}
+        namespace = context["package_name"].replace("-", "").title()
+
+        # Main client file
+        files["src/Client.php"] = self.template_engine.render_template(
+            ProgrammingLanguage.PHP, "client", **context
+        )
+
+        # Model classes
+        files["src/Models/BaseModel.php"] = self.template_engine.render_template(
+            ProgrammingLanguage.PHP, "model", **context
+        )
+
+        # Auth helpers
+        files["src/Auth/Authentication.php"] = self.template_engine.render_template(
+            ProgrammingLanguage.PHP, "auth", **context
+        )
+
+        # composer.json
+        files["composer.json"] = self.template_engine.render_template(
+            ProgrammingLanguage.PHP, "composer", **context
+        )
+
+        # README
+        files["README.md"] = self.template_engine.render_template(
+            ProgrammingLanguage.PHP, "readme", **context
+        )
+
+        # Example
+        if context["include_examples"]:
+            files["examples/example.php"] = self.template_engine.render_template(
+                ProgrammingLanguage.PHP, "example", **context
+            )
+
+        # Tests
+        if context["include_tests"]:
+            files["tests/ClientTest.php"] = self.template_engine.render_template(
+                ProgrammingLanguage.PHP, "test", **context
+            )
+
+        return files
+
+    async def _generate_ruby_sdk(self, context: Dict[str, Any]) -> Dict[str, str]:
+        """Generate Ruby SDK files"""
+        files = {}
+        gem_name = context["package_name"].replace("-", "_")
+
+        # Main client file
+        files[f"lib/{gem_name}/client.rb"] = self.template_engine.render_template(
+            ProgrammingLanguage.RUBY, "client", **context
+        )
+
+        # Model classes
+        files[f"lib/{gem_name}/models.rb"] = self.template_engine.render_template(
+            ProgrammingLanguage.RUBY, "model", **context
+        )
+
+        # Auth helpers
+        files[f"lib/{gem_name}/auth.rb"] = self.template_engine.render_template(
+            ProgrammingLanguage.RUBY, "auth", **context
+        )
+
+        # Main gem file
+        files[f"lib/{gem_name}.rb"] = f'require "{gem_name}/client"\nrequire "{gem_name}/models"\nrequire "{gem_name}/auth"'
+
+        # Gemspec
+        files[f"{gem_name}.gemspec"] = self.template_engine.render_template(
+            ProgrammingLanguage.RUBY, "gemspec", **context
+        )
+
+        # README
+        files["README.md"] = self.template_engine.render_template(
+            ProgrammingLanguage.RUBY, "readme", **context
+        )
+
+        # Example
+        if context["include_examples"]:
+            files["examples/example.rb"] = self.template_engine.render_template(
+                ProgrammingLanguage.RUBY, "example", **context
+            )
+
+        # Tests
+        if context["include_tests"]:
+            files["spec/client_spec.rb"] = self.template_engine.render_template(
+                ProgrammingLanguage.RUBY, "test", **context
+            )
+
         return files
 
     async def _create_zip_package(self, sdk: GeneratedSDK) -> str:

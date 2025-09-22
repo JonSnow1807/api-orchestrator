@@ -1,0 +1,101 @@
+{
+  "total_endpoints_tested": 7,
+  "total_requests": 140,
+  "total_successful": 140,
+  "overall_success_rate": 100.0,
+  "overall_requests_per_second": 20623.583442581377,
+  "overall_avg_response_time": 0.0067762085369655065,
+  "endpoint_results": [
+    {
+      "endpoint": "GET /",
+      "total_requests": 20,
+      "successful_requests": 20,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "total_time": 0.01586294174194336,
+      "requests_per_second": 1260.800192382842,
+      "avg_response_time": 0.014027011394500733,
+      "median_response_time": 0.014580965042114258,
+      "min_response_time": 0.0015590190887451172,
+      "max_response_time": 0.015542030334472656
+    },
+    {
+      "endpoint": "GET /health",
+      "total_requests": 20,
+      "successful_requests": 20,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "total_time": 0.006376028060913086,
+      "requests_per_second": 3136.749055827693,
+      "avg_response_time": 0.00538402795791626,
+      "median_response_time": 0.005445957183837891,
+      "min_response_time": 0.004755973815917969,
+      "max_response_time": 0.005877971649169922
+    },
+    {
+      "endpoint": "GET /docs",
+      "total_requests": 20,
+      "successful_requests": 20,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "total_time": 0.00416111946105957,
+      "requests_per_second": 4806.398899902596,
+      "avg_response_time": 0.003179192543029785,
+      "median_response_time": 0.003206014633178711,
+      "min_response_time": 0.002366781234741211,
+      "max_response_time": 0.003595113754272461
+    },
+    {
+      "endpoint": "GET /api/status",
+      "total_requests": 20,
+      "successful_requests": 20,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "total_time": 0.007431983947753906,
+      "requests_per_second": 2691.0714744001025,
+      "avg_response_time": 0.006635594367980957,
+      "median_response_time": 0.0066225528717041016,
+      "min_response_time": 0.0060160160064697266,
+      "max_response_time": 0.007001161575317383
+    },
+    {
+      "endpoint": "GET /api/endpoints",
+      "total_requests": 20,
+      "successful_requests": 20,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "total_time": 0.006878852844238281,
+      "requests_per_second": 2907.4615277970333,
+      "avg_response_time": 0.006095016002655029,
+      "median_response_time": 0.006110072135925293,
+      "min_response_time": 0.005434989929199219,
+      "max_response_time": 0.006469249725341797
+    },
+    {
+      "endpoint": "POST /api/test",
+      "total_requests": 20,
+      "successful_requests": 20,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "total_time": 0.006449222564697266,
+      "requests_per_second": 3101.1489833641403,
+      "avg_response_time": 0.005523979663848877,
+      "median_response_time": 0.005566954612731934,
+      "min_response_time": 0.005059957504272461,
+      "max_response_time": 0.005847930908203125
+    },
+    {
+      "endpoint": "GET /api/metrics",
+      "total_requests": 20,
+      "successful_requests": 20,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "total_time": 0.007353067398071289,
+      "requests_per_second": 2719.9533089069746,
+      "avg_response_time": 0.006588637828826904,
+      "median_response_time": 0.006618618965148926,
+      "min_response_time": 0.005806922912597656,
+      "max_response_time": 0.0069081783294677734
+    }
+  ]
+}

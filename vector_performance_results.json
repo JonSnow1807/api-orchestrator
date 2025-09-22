@@ -1,0 +1,371 @@
+{
+  "single_query": {
+    "query": "healthcare security compliance requirements",
+    "results_count": 0,
+    "processing_time": 9.5367431640625e-07,
+    "success": true,
+    "cache_size": 0,
+    "doc_embeddings_count": 0
+  },
+  "batch_performance": {
+    "concurrency_1": {
+      "total_queries": 1,
+      "successful_queries": 1,
+      "failed_queries": 0,
+      "success_rate": 100.0,
+      "total_time": 6.890296936035156e-05,
+      "queries_per_second": 14513.162629757786,
+      "avg_processing_time": 0.0,
+      "median_processing_time": 0.0,
+      "min_processing_time": 0.0,
+      "max_processing_time": 0.0,
+      "cache_efficiency": 0,
+      "results": [
+        {
+          "query": "healthcare security compliance requirements",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        }
+      ]
+    },
+    "concurrency_5": {
+      "total_queries": 5,
+      "successful_queries": 5,
+      "failed_queries": 0,
+      "success_rate": 100.0,
+      "total_time": 6.890296936035156e-05,
+      "queries_per_second": 72565.81314878893,
+      "avg_processing_time": 7.62939453125e-07,
+      "median_processing_time": 9.5367431640625e-07,
+      "min_processing_time": 0.0,
+      "max_processing_time": 1.1920928955078125e-06,
+      "cache_efficiency": 0,
+      "results": [
+        {
+          "query": "healthcare security compliance requirements",
+          "results_count": 0,
+          "processing_time": 7.152557373046875e-07,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "financial services payment card security",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "API security authentication and authorization",
+          "results_count": 0,
+          "processing_time": 1.1920928955078125e-06,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "zero trust architecture implementation",
+          "results_count": 0,
+          "processing_time": 9.5367431640625e-07,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "cryptocurrency wallet security best practices",
+          "results_count": 0,
+          "processing_time": 9.5367431640625e-07,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        }
+      ]
+    },
+    "concurrency_10": {
+      "total_queries": 10,
+      "successful_queries": 10,
+      "failed_queries": 0,
+      "success_rate": 100.0,
+      "total_time": 8.106231689453125e-05,
+      "queries_per_second": 123361.88235294117,
+      "avg_processing_time": 7.62939453125e-07,
+      "median_processing_time": 0.0,
+      "min_processing_time": 0.0,
+      "max_processing_time": 5.9604644775390625e-06,
+      "cache_efficiency": 0,
+      "results": [
+        {
+          "query": "healthcare security compliance requirements",
+          "results_count": 0,
+          "processing_time": 5.9604644775390625e-06,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "financial services payment card security",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "API security authentication and authorization",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "zero trust architecture implementation",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "cryptocurrency wallet security best practices",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "cloud infrastructure security monitoring",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "DevSecOps pipeline security automation",
+          "results_count": 0,
+          "processing_time": 7.152557373046875e-07,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "GDPR privacy data protection compliance",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "blockchain smart contract vulnerabilities",
+          "results_count": 0,
+          "processing_time": 9.5367431640625e-07,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "incident response security procedures",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        }
+      ]
+    },
+    "concurrency_20": {
+      "total_queries": 20,
+      "successful_queries": 20,
+      "failed_queries": 0,
+      "success_rate": 100.0,
+      "total_time": 9.703636169433594e-05,
+      "queries_per_second": 206108.30466830466,
+      "avg_processing_time": 1.7881393432617188e-07,
+      "median_processing_time": 0.0,
+      "min_processing_time": 0.0,
+      "max_processing_time": 9.5367431640625e-07,
+      "cache_efficiency": 0,
+      "results": [
+        {
+          "query": "healthcare security compliance requirements",
+          "results_count": 0,
+          "processing_time": 9.5367431640625e-07,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "financial services payment card security",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "API security authentication and authorization",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "zero trust architecture implementation",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "cryptocurrency wallet security best practices",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "cloud infrastructure security monitoring",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "DevSecOps pipeline security automation",
+          "results_count": 0,
+          "processing_time": 9.5367431640625e-07,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "GDPR privacy data protection compliance",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "blockchain smart contract vulnerabilities",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "incident response security procedures",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "healthcare security compliance requirements",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "financial services payment card security",
+          "results_count": 0,
+          "processing_time": 9.5367431640625e-07,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "API security authentication and authorization",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "zero trust architecture implementation",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "cryptocurrency wallet security best practices",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "cloud infrastructure security monitoring",
+          "results_count": 0,
+          "processing_time": 7.152557373046875e-07,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "DevSecOps pipeline security automation",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "GDPR privacy data protection compliance",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "blockchain smart contract vulnerabilities",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        },
+        {
+          "query": "incident response security procedures",
+          "results_count": 0,
+          "processing_time": 0.0,
+          "success": true,
+          "cache_size": 0,
+          "doc_embeddings_count": 0
+        }
+      ]
+    }
+  },
+  "cache_performance": {
+    "cache_miss_avg": 3.973642985026042e-07,
+    "cache_hit_avg": 0.0,
+    "cache_speedup": Infinity,
+    "cache_size": 0
+  },
+  "memory_usage": {
+    "embeddings_cache_size": 0,
+    "document_embeddings_count": 0,
+    "knowledge_base_size": 9
+  }
+}
