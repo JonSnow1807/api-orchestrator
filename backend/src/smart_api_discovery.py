@@ -3,25 +3,19 @@ Smart AI-Powered API Discovery System
 Advanced ML-driven API discovery with pattern recognition, behavioral analysis, and predictive recommendations
 """
 
-from typing import Optional, Dict, Any, List, Set, Tuple, Union
-from datetime import datetime, timedelta
+from typing import Optional, Dict, Any, List, Set
+from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
-import asyncio
-import json
-import uuid
-import time
 import logging
 import re
-import hashlib
 import os
 from collections import defaultdict, deque
 import numpy as np
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
 
 # Optional ML imports with graceful fallbacks
 try:
-    import pandas as pd
     HAS_PANDAS = True
 except ImportError:
     HAS_PANDAS = False
@@ -29,41 +23,37 @@ except ImportError:
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.cluster import DBSCAN
-    from sklearn.metrics.pairwise import cosine_similarity
     from sklearn.ensemble import IsolationForest
+
     HAS_SKLEARN = True
 except ImportError:
     HAS_SKLEARN = False
 
 try:
-    from transformers import pipeline, AutoTokenizer, AutoModel
+    from transformers import pipeline
+
     HAS_TRANSFORMERS = True
 except ImportError:
     HAS_TRANSFORMERS = False
 
 # Import existing systems
 from src.kill_shots.telepathic_discovery import TelepathicDiscovery, DiscoveredAPI
-from src.ai_suggestions import InlineAISuggestions, AISuggestion, SuggestionType
+from src.ai_suggestions import InlineAISuggestions
 
 # Import advanced ML models
 try:
-    from src.ml_models.advanced_api_discovery import (
-        AdvancedAPIDiscoveryEngine,
-        ModelPrediction,
-        initialize_advanced_models,
-        analyze_api_with_ml,
-        detect_traffic_anomalies
-    )
     HAS_ADVANCED_ML = True
 except ImportError:
     HAS_ADVANCED_ML = False
 
+
 class DiscoveryConfidence(str, Enum):
-    VERY_HIGH = "very_high"      # 90-100%
-    HIGH = "high"                # 70-89%
-    MEDIUM = "medium"            # 50-69%
-    LOW = "low"                  # 30-49%
-    VERY_LOW = "very_low"        # 0-29%
+    VERY_HIGH = "very_high"  # 90-100%
+    HIGH = "high"  # 70-89%
+    MEDIUM = "medium"  # 50-69%
+    LOW = "low"  # 30-49%
+    VERY_LOW = "very_low"  # 0-29%
+
 
 class APICategory(str, Enum):
     REST_API = "rest_api"
@@ -76,6 +66,7 @@ class APICategory(str, Enum):
     MICROSERVICE = "microservice"
     THIRD_PARTY = "third_party"
     INTERNAL = "internal"
+
 
 class DiscoveryMethod(str, Enum):
     ML_PATTERN_ANALYSIS = "ml_pattern_analysis"
@@ -90,9 +81,11 @@ class DiscoveryMethod(str, Enum):
     WEB_CRAWLING = "web_crawling"
     AI_PREDICTION = "ai_prediction"
 
+
 @dataclass
 class SmartAPIEndpoint:
     """Enhanced API endpoint with ML-derived insights"""
+
     url: str
     method: str
     category: APICategory
@@ -122,9 +115,11 @@ class SmartAPIEndpoint:
     verification_status: str = "unverified"
     tags: Set[str] = field(default_factory=set)
 
+
 @dataclass
 class APICluster:
     """Cluster of related APIs discovered through ML"""
+
     cluster_id: str
     category: APICategory
     endpoints: List[SmartAPIEndpoint]
@@ -132,15 +127,18 @@ class APICluster:
     cluster_confidence: float
     potential_base_url: Optional[str] = None
 
+
 @dataclass
 class DiscoveryInsight:
     """ML-generated insight about discovered APIs"""
+
     insight_type: str
     description: str
     confidence: float
     related_endpoints: List[str]
     actionable_recommendation: str
     supporting_data: Dict[str, Any] = field(default_factory=dict)
+
 
 class SmartAPIDiscovery:
     """AI/ML-powered API discovery with advanced pattern recognition"""
@@ -164,6 +162,7 @@ class SmartAPIDiscovery:
         self.advanced_ml_engine = None
         if HAS_ADVANCED_ML:
             from src.ml_models.advanced_api_discovery import advanced_discovery_engine
+
             self.advanced_ml_engine = advanced_discovery_engine
 
         # Pattern databases
@@ -202,23 +201,14 @@ class SmartAPIDiscovery:
 
         # TF-IDF for API URL pattern analysis
         self.tfidf_vectorizer = TfidfVectorizer(
-            max_features=1000,
-            ngram_range=(1, 3),
-            analyzer='char_wb'
+            max_features=1000, ngram_range=(1, 3), analyzer="char_wb"
         )
 
         # DBSCAN for clustering similar APIs
-        self.clustering_model = DBSCAN(
-            eps=0.3,
-            min_samples=2,
-            metric='cosine'
-        )
+        self.clustering_model = DBSCAN(eps=0.3, min_samples=2, metric="cosine")
 
         # Isolation Forest for anomaly detection
-        self.anomaly_detector = IsolationForest(
-            contamination=0.1,
-            random_state=42
-        )
+        self.anomaly_detector = IsolationForest(contamination=0.1, random_state=42)
 
     async def _initialize_nlp_models(self):
         """Initialize NLP models for semantic understanding"""
@@ -227,7 +217,7 @@ class SmartAPIDiscovery:
             self.nlp_pipeline = pipeline(
                 "text-classification",
                 model="microsoft/DialoGPT-medium",
-                return_all_scores=True
+                return_all_scores=True,
             )
         except Exception as e:
             logging.warning(f"Could not initialize NLP models: {e}")
@@ -260,30 +250,55 @@ class SmartAPIDiscovery:
                 r"/login",
                 r"/oauth/",
                 r"/token",
-            ]
+            ],
         }
 
     def _load_api_patterns(self) -> Dict[str, List[str]]:
         """Load known API URL patterns"""
         return {
             "common_endpoints": [
-                "/api/users", "/api/auth", "/api/products", "/api/orders",
-                "/api/health", "/api/status", "/api/version", "/api/docs"
+                "/api/users",
+                "/api/auth",
+                "/api/products",
+                "/api/orders",
+                "/api/health",
+                "/api/status",
+                "/api/version",
+                "/api/docs",
             ],
             "parameter_patterns": [
-                "id", "user_id", "product_id", "limit", "offset", "page",
-                "sort", "filter", "search", "q", "format", "callback"
+                "id",
+                "user_id",
+                "product_id",
+                "limit",
+                "offset",
+                "page",
+                "sort",
+                "filter",
+                "search",
+                "q",
+                "format",
+                "callback",
             ],
             "auth_indicators": [
-                "authorization", "bearer", "token", "api_key", "x-api-key",
-                "authentication", "auth", "login", "oauth"
-            ]
+                "authorization",
+                "bearer",
+                "token",
+                "api_key",
+                "x-api-key",
+                "authentication",
+                "auth",
+                "login",
+                "oauth",
+            ],
         }
 
-    async def discover_apis_with_ml(self,
-                                  target: Optional[str] = None,
-                                  deep_analysis: bool = True,
-                                  include_predictions: bool = True) -> List[SmartAPIEndpoint]:
+    async def discover_apis_with_ml(
+        self,
+        target: Optional[str] = None,
+        deep_analysis: bool = True,
+        include_predictions: bool = True,
+    ) -> List[SmartAPIEndpoint]:
         """
         Comprehensive ML-powered API discovery
         """
@@ -291,7 +306,9 @@ class SmartAPIDiscovery:
         logging.info("🚀 Starting ML-powered API discovery")
 
         # Step 1: Use existing telepathic discovery
-        base_discoveries = await self.telepathic_discovery.full_telepathic_scan(target or "localhost")
+        base_discoveries = await self.telepathic_discovery.full_telepathic_scan(
+            target or "localhost"
+        )
 
         # Step 2: Convert to smart endpoints with ML analysis
         smart_endpoints = []
@@ -320,16 +337,22 @@ class SmartAPIDiscovery:
 
         # Step 7: Advanced ML analysis
         if HAS_ADVANCED_ML and self.advanced_ml_engine:
-            ml_enhanced_endpoints = await self._enhance_with_advanced_ml(smart_endpoints)
+            ml_enhanced_endpoints = await self._enhance_with_advanced_ml(
+                smart_endpoints
+            )
             smart_endpoints = ml_enhanced_endpoints
 
         # Step 8: Generate insights
         await self._generate_discovery_insights(smart_endpoints)
 
-        logging.info(f"✅ Discovery complete: {len(smart_endpoints)} smart endpoints found")
+        logging.info(
+            f"✅ Discovery complete: {len(smart_endpoints)} smart endpoints found"
+        )
         return smart_endpoints
 
-    async def _enhance_with_ml_analysis(self, base_api: DiscoveredAPI) -> SmartAPIEndpoint:
+    async def _enhance_with_ml_analysis(
+        self, base_api: DiscoveredAPI
+    ) -> SmartAPIEndpoint:
         """Enhance basic API discovery with ML analysis"""
 
         # Categorize API
@@ -353,7 +376,7 @@ class SmartAPIDiscovery:
             discovery_method=DiscoveryMethod.ML_PATTERN_ANALYSIS,
             predicted_parameters=predicted_params,
             authentication_predictions=auth_predictions,
-            tags={"source": "telepathic_discovery"}
+            tags={"source": "telepathic_discovery"},
         )
 
         return smart_endpoint
@@ -366,7 +389,9 @@ class SmartAPIDiscovery:
         # Pattern-based categorization
         if any(pattern in url_lower for pattern in ["/graphql", "/graph", "/gql"]):
             return APICategory.GRAPHQL
-        elif any(pattern in url_lower for pattern in ["/ws/", "/websocket", "/socket.io"]):
+        elif any(
+            pattern in url_lower for pattern in ["/ws/", "/websocket", "/socket.io"]
+        ):
             return APICategory.WEBSOCKET
         elif "grpc" in url_lower or ":50051" in url:
             return APICategory.GRPC
@@ -378,12 +403,17 @@ class SmartAPIDiscovery:
             return APICategory.STREAMING
         elif "localhost" in url or "127.0.0.1" in url or "internal" in url_lower:
             return APICategory.INTERNAL
-        elif any(domain in url_lower for domain in ["api.github.com", "api.stripe.com", "graph.facebook.com"]):
+        elif any(
+            domain in url_lower
+            for domain in ["api.github.com", "api.stripe.com", "graph.facebook.com"]
+        ):
             return APICategory.THIRD_PARTY
         else:
             return APICategory.REST_API
 
-    async def _calculate_confidence(self, base_api: DiscoveredAPI) -> DiscoveryConfidence:
+    async def _calculate_confidence(
+        self, base_api: DiscoveredAPI
+    ) -> DiscoveryConfidence:
         """Calculate confidence level using multiple factors"""
 
         confidence_score = base_api.confidence
@@ -393,7 +423,7 @@ class SmartAPIDiscovery:
             "code_analysis": 0.2,
             "network_scan": 0.15,
             "dns_enum": 0.1,
-            "swagger_scan": 0.25
+            "swagger_scan": 0.25,
         }
 
         confidence_score += method_boost.get(base_api.discovered_via, 0)
@@ -427,30 +457,64 @@ class SmartAPIDiscovery:
 
         # Pattern-based parameter prediction
         if "users" in url_lower:
-            predicted_params.extend([
-                {"name": "user_id", "type": "integer", "required": True, "location": "path"},
-                {"name": "limit", "type": "integer", "required": False, "location": "query"},
-                {"name": "offset", "type": "integer", "required": False, "location": "query"}
-            ])
+            predicted_params.extend(
+                [
+                    {
+                        "name": "user_id",
+                        "type": "integer",
+                        "required": True,
+                        "location": "path",
+                    },
+                    {
+                        "name": "limit",
+                        "type": "integer",
+                        "required": False,
+                        "location": "query",
+                    },
+                    {
+                        "name": "offset",
+                        "type": "integer",
+                        "required": False,
+                        "location": "query",
+                    },
+                ]
+            )
 
         if "search" in url_lower or method == "GET":
-            predicted_params.extend([
-                {"name": "q", "type": "string", "required": False, "location": "query"},
-                {"name": "sort", "type": "string", "required": False, "location": "query"},
-                {"name": "filter", "type": "string", "required": False, "location": "query"}
-            ])
+            predicted_params.extend(
+                [
+                    {
+                        "name": "q",
+                        "type": "string",
+                        "required": False,
+                        "location": "query",
+                    },
+                    {
+                        "name": "sort",
+                        "type": "string",
+                        "required": False,
+                        "location": "query",
+                    },
+                    {
+                        "name": "filter",
+                        "type": "string",
+                        "required": False,
+                        "location": "query",
+                    },
+                ]
+            )
 
         if method in ["POST", "PUT", "PATCH"]:
-            predicted_params.append({
-                "name": "body", "type": "object", "required": True, "location": "body"
-            })
+            predicted_params.append(
+                {"name": "body", "type": "object", "required": True, "location": "body"}
+            )
 
         # Extract path parameters
-        path_params = re.findall(r'/\{(\w+)\}', url)
+        path_params = re.findall(r"/\{(\w+)\}", url)
         for param in path_params:
-            predicted_params.append({
-                "name": param, "type": "string", "required": True, "location": "path"
-            })
+            predicted_params.append(
+                {"name": param, "type": "string", "required": True, "location": "path"}
+            )
 
         return predicted_params
 
@@ -461,7 +525,10 @@ class SmartAPIDiscovery:
         url_lower = url.lower()
 
         # Pattern-based auth prediction
-        if any(auth_pattern in url_lower for auth_pattern in ["auth", "login", "oauth", "token"]):
+        if any(
+            auth_pattern in url_lower
+            for auth_pattern in ["auth", "login", "oauth", "token"]
+        ):
             auth_predictions.extend(["bearer_token", "oauth2", "api_key"])
 
         if "api" in url_lower:
@@ -471,12 +538,16 @@ class SmartAPIDiscovery:
             auth_predictions.extend(["bearer_token", "jwt"])
 
         # Default predictions for secure endpoints
-        if "https" in url or any(secure_path in url_lower for secure_path in ["admin", "user", "account"]):
+        if "https" in url or any(
+            secure_path in url_lower for secure_path in ["admin", "user", "account"]
+        ):
             auth_predictions.append("bearer_token")
 
         return list(set(auth_predictions))  # Remove duplicates
 
-    async def _discover_by_patterns(self, target: Optional[str]) -> List[SmartAPIEndpoint]:
+    async def _discover_by_patterns(
+        self, target: Optional[str]
+    ) -> List[SmartAPIEndpoint]:
         """Discover APIs using learned patterns"""
 
         pattern_endpoints = []
@@ -486,12 +557,25 @@ class SmartAPIDiscovery:
 
         # Common API path patterns
         common_paths = [
-            "/api/v1/users", "/api/v1/auth", "/api/v1/products",
-            "/api/v2/users", "/api/v2/auth", "/api/v2/products",
-            "/rest/users", "/rest/auth", "/rest/products",
-            "/graphql", "/api/graphql",
-            "/health", "/status", "/metrics", "/docs", "/swagger",
-            "/ws", "/websocket", "/socket.io"
+            "/api/v1/users",
+            "/api/v1/auth",
+            "/api/v1/products",
+            "/api/v2/users",
+            "/api/v2/auth",
+            "/api/v2/products",
+            "/rest/users",
+            "/rest/auth",
+            "/rest/products",
+            "/graphql",
+            "/api/graphql",
+            "/health",
+            "/status",
+            "/metrics",
+            "/docs",
+            "/swagger",
+            "/ws",
+            "/websocket",
+            "/socket.io",
         ]
 
         base_url = f"http://{target}" if not target.startswith("http") else target
@@ -513,7 +597,7 @@ class SmartAPIDiscovery:
                 discovery_method=DiscoveryMethod.ML_PATTERN_ANALYSIS,
                 predicted_parameters=await self._predict_parameters(url, "GET"),
                 authentication_predictions=await self._predict_authentication(url),
-                tags={"source": "pattern_discovery"}
+                tags={"source": "pattern_discovery"},
             )
 
             pattern_endpoints.append(endpoint)
@@ -546,7 +630,7 @@ class SmartAPIDiscovery:
                     confidence=DiscoveryConfidence.HIGH,
                     discovery_method=DiscoveryMethod.BEHAVIORAL_ANALYSIS,
                     traffic_volume=len(requests),
-                    tags={"source": "behavioral_analysis"}
+                    tags={"source": "behavioral_analysis"},
                 )
 
                 behavioral_endpoints.append(endpoint)
@@ -556,9 +640,9 @@ class SmartAPIDiscovery:
     def _extract_url_pattern(self, url: str) -> str:
         """Extract pattern from URL by replacing dynamic parts"""
         # Replace numbers with {id}
-        pattern = re.sub(r'/\d+', '/{id}', url)
+        pattern = re.sub(r"/\d+", "/{id}", url)
         # Replace UUIDs with {uuid}
-        pattern = re.sub(r'/[a-f0-9-]{36}', '/{uuid}', pattern)
+        pattern = re.sub(r"/[a-f0-9-]{36}", "/{uuid}", pattern)
         return pattern
 
     def _looks_like_api(self, url: str) -> bool:
@@ -599,7 +683,12 @@ class SmartAPIDiscovery:
                         category=self._determine_cluster_category(cluster_endpoints),
                         endpoints=cluster_endpoints,
                         common_patterns=common_patterns,
-                        cluster_confidence=np.mean([self._confidence_to_float(ep.confidence) for ep in cluster_endpoints])
+                        cluster_confidence=np.mean(
+                            [
+                                self._confidence_to_float(ep.confidence)
+                                for ep in cluster_endpoints
+                            ]
+                        ),
                     )
 
                     self.api_clusters[api_cluster.cluster_id] = api_cluster
@@ -607,14 +696,16 @@ class SmartAPIDiscovery:
         except Exception as e:
             logging.warning(f"Clustering analysis failed: {e}")
 
-    def _extract_common_patterns(self, endpoints: List[SmartAPIEndpoint]) -> Dict[str, Any]:
+    def _extract_common_patterns(
+        self, endpoints: List[SmartAPIEndpoint]
+    ) -> Dict[str, Any]:
         """Extract common patterns from clustered endpoints"""
 
         patterns = {
             "common_base_path": "",
             "common_parameters": [],
             "common_methods": [],
-            "common_auth": []
+            "common_auth": [],
         }
 
         # Find common base path
@@ -633,13 +724,16 @@ class SmartAPIDiscovery:
             param_counts[param] += 1
 
         patterns["common_parameters"] = [
-            param for param, count in param_counts.items()
+            param
+            for param, count in param_counts.items()
             if count >= len(endpoints) / 2
         ]
 
         return patterns
 
-    def _determine_cluster_category(self, endpoints: List[SmartAPIEndpoint]) -> APICategory:
+    def _determine_cluster_category(
+        self, endpoints: List[SmartAPIEndpoint]
+    ) -> APICategory:
         """Determine category for a cluster of endpoints"""
         categories = [ep.category for ep in endpoints]
         return max(set(categories), key=categories.count)
@@ -651,28 +745,36 @@ class SmartAPIDiscovery:
             DiscoveryConfidence.HIGH: 0.8,
             DiscoveryConfidence.MEDIUM: 0.6,
             DiscoveryConfidence.LOW: 0.4,
-            DiscoveryConfidence.VERY_LOW: 0.2
+            DiscoveryConfidence.VERY_LOW: 0.2,
         }
         return mapping.get(confidence, 0.5)
 
-    async def _predict_missing_endpoints(self, existing_endpoints: List[SmartAPIEndpoint]) -> List[SmartAPIEndpoint]:
+    async def _predict_missing_endpoints(
+        self, existing_endpoints: List[SmartAPIEndpoint]
+    ) -> List[SmartAPIEndpoint]:
         """Use ML to predict likely missing endpoints"""
 
         predicted_endpoints = []
 
         # Analyze patterns in existing endpoints
-        rest_apis = [ep for ep in existing_endpoints if ep.category == APICategory.REST_API]
+        rest_apis = [
+            ep for ep in existing_endpoints if ep.category == APICategory.REST_API
+        ]
 
         if len(rest_apis) >= 3:
             # Predict CRUD endpoints
             predicted_endpoints.extend(await self._predict_crud_endpoints(rest_apis))
 
             # Predict versioned endpoints
-            predicted_endpoints.extend(await self._predict_versioned_endpoints(rest_apis))
+            predicted_endpoints.extend(
+                await self._predict_versioned_endpoints(rest_apis)
+            )
 
         return predicted_endpoints
 
-    async def _predict_crud_endpoints(self, rest_apis: List[SmartAPIEndpoint]) -> List[SmartAPIEndpoint]:
+    async def _predict_crud_endpoints(
+        self, rest_apis: List[SmartAPIEndpoint]
+    ) -> List[SmartAPIEndpoint]:
         """Predict missing CRUD endpoints"""
 
         predicted = []
@@ -689,11 +791,11 @@ class SmartAPIDiscovery:
             base_url = self._extract_base_url_from_resource(rest_apis, resource)
 
             crud_operations = [
-                ("GET", f"{base_url}/{resource}"),           # List
-                ("POST", f"{base_url}/{resource}"),          # Create
-                ("GET", f"{base_url}/{resource}/{{id}}"),    # Read
-                ("PUT", f"{base_url}/{resource}/{{id}}"),    # Update
-                ("DELETE", f"{base_url}/{resource}/{{id}}")  # Delete
+                ("GET", f"{base_url}/{resource}"),  # List
+                ("POST", f"{base_url}/{resource}"),  # Create
+                ("GET", f"{base_url}/{resource}/{{id}}"),  # Read
+                ("PUT", f"{base_url}/{resource}/{{id}}"),  # Update
+                ("DELETE", f"{base_url}/{resource}/{{id}}"),  # Delete
             ]
 
             for method, url in crud_operations:
@@ -704,9 +806,13 @@ class SmartAPIDiscovery:
                         category=APICategory.REST_API,
                         confidence=DiscoveryConfidence.MEDIUM,
                         discovery_method=DiscoveryMethod.AI_PREDICTION,
-                        predicted_parameters=await self._predict_parameters(url, method),
-                        authentication_predictions=await self._predict_authentication(url),
-                        tags={"source": "crud_prediction", "resource": resource}
+                        predicted_parameters=await self._predict_parameters(
+                            url, method
+                        ),
+                        authentication_predictions=await self._predict_authentication(
+                            url
+                        ),
+                        tags={"source": "crud_prediction", "resource": resource},
                     )
                     predicted.append(predicted_endpoint)
 
@@ -716,38 +822,44 @@ class SmartAPIDiscovery:
         """Extract resource name from API URL"""
         # Simple extraction - find the last path segment that looks like a resource
         path = urlparse(url).path
-        segments = [s for s in path.split('/') if s and not s.isdigit() and '{' not in s]
+        segments = [
+            s for s in path.split("/") if s and not s.isdigit() and "{" not in s
+        ]
 
         # Common resource patterns
         if segments:
             last_segment = segments[-1]
-            if last_segment in ['users', 'products', 'orders', 'items', 'accounts']:
+            if last_segment in ["users", "products", "orders", "items", "accounts"]:
                 return last_segment
 
         return None
 
-    def _extract_base_url_from_resource(self, apis: List[SmartAPIEndpoint], resource: str) -> str:
+    def _extract_base_url_from_resource(
+        self, apis: List[SmartAPIEndpoint], resource: str
+    ) -> str:
         """Extract base URL for a resource"""
         for api in apis:
             if resource in api.url:
                 parts = api.url.split(resource)[0]
-                return parts.rstrip('/')
+                return parts.rstrip("/")
 
         return "http://localhost/api/v1"  # Default fallback
 
-    async def _predict_versioned_endpoints(self, rest_apis: List[SmartAPIEndpoint]) -> List[SmartAPIEndpoint]:
+    async def _predict_versioned_endpoints(
+        self, rest_apis: List[SmartAPIEndpoint]
+    ) -> List[SmartAPIEndpoint]:
         """Predict endpoints in different API versions"""
 
         predicted = []
 
         # Find version patterns
-        v1_apis = [api for api in rest_apis if '/v1/' in api.url]
-        v2_apis = [api for api in rest_apis if '/v2/' in api.url]
+        v1_apis = [api for api in rest_apis if "/v1/" in api.url]
+        v2_apis = [api for api in rest_apis if "/v2/" in api.url]
 
         # If we have v1 but not v2, predict v2 endpoints
         if v1_apis and not v2_apis:
             for v1_api in v1_apis:
-                v2_url = v1_api.url.replace('/v1/', '/v2/')
+                v2_url = v1_api.url.replace("/v1/", "/v2/")
 
                 predicted_endpoint = SmartAPIEndpoint(
                     url=v2_url,
@@ -757,7 +869,7 @@ class SmartAPIDiscovery:
                     discovery_method=DiscoveryMethod.AI_PREDICTION,
                     predicted_parameters=v1_api.predicted_parameters,
                     authentication_predictions=v1_api.authentication_predictions,
-                    tags={"source": "version_prediction", "base_version": "v1"}
+                    tags={"source": "version_prediction", "base_version": "v1"},
                 )
                 predicted.append(predicted_endpoint)
 
@@ -771,49 +883,57 @@ class SmartAPIDiscovery:
         # Security insights
         unauth_endpoints = [ep for ep in endpoints if not ep.authentication_predictions]
         if unauth_endpoints:
-            insights.append(DiscoveryInsight(
-                insight_type="security",
-                description=f"Found {len(unauth_endpoints)} endpoints without predicted authentication",
-                confidence=0.8,
-                related_endpoints=[ep.url for ep in unauth_endpoints[:5]],
-                actionable_recommendation="Review these endpoints for security requirements",
-                supporting_data={"count": len(unauth_endpoints)}
-            ))
+            insights.append(
+                DiscoveryInsight(
+                    insight_type="security",
+                    description=f"Found {len(unauth_endpoints)} endpoints without predicted authentication",
+                    confidence=0.8,
+                    related_endpoints=[ep.url for ep in unauth_endpoints[:5]],
+                    actionable_recommendation="Review these endpoints for security requirements",
+                    supporting_data={"count": len(unauth_endpoints)},
+                )
+            )
 
         # API versioning insights
         versioned_apis = defaultdict(list)
         for ep in endpoints:
-            version_match = re.search(r'/v(\d+)/', ep.url)
+            version_match = re.search(r"/v(\d+)/", ep.url)
             if version_match:
                 versioned_apis[version_match.group(1)].append(ep)
 
         if len(versioned_apis) > 1:
-            insights.append(DiscoveryInsight(
-                insight_type="versioning",
-                description=f"Multiple API versions detected: {list(versioned_apis.keys())}",
-                confidence=0.9,
-                related_endpoints=[],
-                actionable_recommendation="Consider API version deprecation strategy",
-                supporting_data={"versions": dict(versioned_apis)}
-            ))
+            insights.append(
+                DiscoveryInsight(
+                    insight_type="versioning",
+                    description=f"Multiple API versions detected: {list(versioned_apis.keys())}",
+                    confidence=0.9,
+                    related_endpoints=[],
+                    actionable_recommendation="Consider API version deprecation strategy",
+                    supporting_data={"versions": dict(versioned_apis)},
+                )
+            )
 
         # Coverage insights
         rest_endpoints = [ep for ep in endpoints if ep.category == APICategory.REST_API]
         crud_coverage = self._analyze_crud_coverage(rest_endpoints)
 
         if crud_coverage["incomplete_resources"]:
-            insights.append(DiscoveryInsight(
-                insight_type="coverage",
-                description=f"Incomplete CRUD operations for {len(crud_coverage['incomplete_resources'])} resources",
-                confidence=0.7,
-                related_endpoints=[],
-                actionable_recommendation="Consider implementing missing CRUD operations",
-                supporting_data=crud_coverage
-            ))
+            insights.append(
+                DiscoveryInsight(
+                    insight_type="coverage",
+                    description=f"Incomplete CRUD operations for {len(crud_coverage['incomplete_resources'])} resources",
+                    confidence=0.7,
+                    related_endpoints=[],
+                    actionable_recommendation="Consider implementing missing CRUD operations",
+                    supporting_data=crud_coverage,
+                )
+            )
 
         self.discovery_insights.extend(insights)
 
-    def _analyze_crud_coverage(self, rest_endpoints: List[SmartAPIEndpoint]) -> Dict[str, Any]:
+    def _analyze_crud_coverage(
+        self, rest_endpoints: List[SmartAPIEndpoint]
+    ) -> Dict[str, Any]:
         """Analyze CRUD operation coverage"""
 
         resources = defaultdict(set)
@@ -828,16 +948,22 @@ class SmartAPIDiscovery:
             expected_methods = {"GET", "POST", "PUT", "DELETE"}
             if not expected_methods.issubset(methods):
                 missing = expected_methods - methods
-                incomplete_resources.append({
-                    "resource": resource,
-                    "missing_methods": list(missing),
-                    "available_methods": list(methods)
-                })
+                incomplete_resources.append(
+                    {
+                        "resource": resource,
+                        "missing_methods": list(missing),
+                        "available_methods": list(methods),
+                    }
+                )
 
         return {
             "total_resources": len(resources),
             "incomplete_resources": incomplete_resources,
-            "coverage_percentage": (len(resources) - len(incomplete_resources)) / len(resources) * 100 if resources else 0
+            "coverage_percentage": (len(resources) - len(incomplete_resources))
+            / len(resources)
+            * 100
+            if resources
+            else 0,
         }
 
     async def analyze_api_traffic(self, traffic_data: List[Dict[str, Any]]):
@@ -854,13 +980,17 @@ class SmartAPIDiscovery:
 
             # Store behavioral patterns
             pattern_key = self._extract_url_pattern(url)
-            self.behavior_patterns[pattern_key].append({
-                "method": method,
-                "response_time": response_time,
-                "timestamp": item.get("timestamp", datetime.utcnow())
-            })
+            self.behavior_patterns[pattern_key].append(
+                {
+                    "method": method,
+                    "response_time": response_time,
+                    "timestamp": item.get("timestamp", datetime.utcnow()),
+                }
+            )
 
-    async def _enhance_with_advanced_ml(self, endpoints: List[SmartAPIEndpoint]) -> List[SmartAPIEndpoint]:
+    async def _enhance_with_advanced_ml(
+        self, endpoints: List[SmartAPIEndpoint]
+    ) -> List[SmartAPIEndpoint]:
         """Enhance endpoints with advanced ML analysis"""
         if not self.advanced_ml_engine:
             return endpoints
@@ -873,23 +1003,29 @@ class SmartAPIDiscovery:
             try:
                 # Prepare data for ML analysis
                 api_data = {
-                    'url': endpoint.url,
-                    'method': endpoint.method,
-                    'category': endpoint.category.value,
-                    'response_time': np.mean(endpoint.response_time_patterns) if endpoint.response_time_patterns else 100,
-                    'status_code': 200,  # Default
-                    'payload_size': 1024,  # Default
-                    'headers': {},
-                    'auth_required': bool(endpoint.authentication_predictions),
-                    'rate_limited': endpoint.rate_limiting_predictions is not None,
-                    'traffic_volume': endpoint.traffic_volume
+                    "url": endpoint.url,
+                    "method": endpoint.method,
+                    "category": endpoint.category.value,
+                    "response_time": np.mean(endpoint.response_time_patterns)
+                    if endpoint.response_time_patterns
+                    else 100,
+                    "status_code": 200,  # Default
+                    "payload_size": 1024,  # Default
+                    "headers": {},
+                    "auth_required": bool(endpoint.authentication_predictions),
+                    "rate_limited": endpoint.rate_limiting_predictions is not None,
+                    "traffic_volume": endpoint.traffic_volume,
                 }
 
                 # Run comprehensive ML analysis
-                ml_predictions = await self.advanced_ml_engine.comprehensive_analysis(api_data)
+                ml_predictions = await self.advanced_ml_engine.comprehensive_analysis(
+                    api_data
+                )
 
                 # Enhance endpoint with ML insights
-                enhanced_endpoint = await self._apply_ml_enhancements(endpoint, ml_predictions)
+                enhanced_endpoint = await self._apply_ml_enhancements(
+                    endpoint, ml_predictions
+                )
                 enhanced_endpoints.append(enhanced_endpoint)
 
             except Exception as e:
@@ -898,36 +1034,44 @@ class SmartAPIDiscovery:
 
         return enhanced_endpoints
 
-    async def _apply_ml_enhancements(self, endpoint: SmartAPIEndpoint, ml_predictions: Dict[str, Any]) -> SmartAPIEndpoint:
+    async def _apply_ml_enhancements(
+        self, endpoint: SmartAPIEndpoint, ml_predictions: Dict[str, Any]
+    ) -> SmartAPIEndpoint:
         """Apply ML predictions to enhance endpoint information"""
 
         # Update confidence based on pattern recognition
-        if 'pattern_recognition' in ml_predictions:
-            pattern_pred = ml_predictions['pattern_recognition']
-            if hasattr(pattern_pred, 'confidence') and pattern_pred.confidence > 0.8:
+        if "pattern_recognition" in ml_predictions:
+            pattern_pred = ml_predictions["pattern_recognition"]
+            if hasattr(pattern_pred, "confidence") and pattern_pred.confidence > 0.8:
                 # Boost confidence for high-confidence pattern matches
                 current_confidence = self._confidence_to_float(endpoint.confidence)
                 new_confidence = min(1.0, current_confidence + 0.1)
                 endpoint.confidence = self._float_to_confidence(new_confidence)
 
         # Update security predictions
-        if 'security_analysis' in ml_predictions:
-            security_pred = ml_predictions['security_analysis']
-            if hasattr(security_pred, 'prediction') and isinstance(security_pred.prediction, dict):
-                endpoint.tags.add(f"security_risk_{security_pred.prediction.get('risk_level', 'unknown')}")
+        if "security_analysis" in ml_predictions:
+            security_pred = ml_predictions["security_analysis"]
+            if hasattr(security_pred, "prediction") and isinstance(
+                security_pred.prediction, dict
+            ):
+                endpoint.tags.add(
+                    f"security_risk_{security_pred.prediction.get('risk_level', 'unknown')}"
+                )
 
                 # Add security recommendations to tags
-                recommendations = security_pred.prediction.get('recommendations', [])
+                recommendations = security_pred.prediction.get("recommendations", [])
                 for rec in recommendations[:2]:  # Limit to first 2 recommendations
                     endpoint.tags.add(f"rec_{rec.replace(' ', '_')[:20]}")
 
         # Update behavior predictions
-        if 'behavior_prediction' in ml_predictions:
-            behavior_pred = ml_predictions['behavior_prediction']
-            if hasattr(behavior_pred, 'prediction') and isinstance(behavior_pred.prediction, (int, float)):
+        if "behavior_prediction" in ml_predictions:
+            behavior_pred = ml_predictions["behavior_prediction"]
+            if hasattr(behavior_pred, "prediction") and isinstance(
+                behavior_pred.prediction, (int, float)
+            ):
                 endpoint.predicted_response_schema = {
                     "predicted_response_time": float(behavior_pred.prediction),
-                    "confidence": behavior_pred.confidence
+                    "confidence": behavior_pred.confidence,
                 }
 
         # Add ML analysis metadata
@@ -948,7 +1092,9 @@ class SmartAPIDiscovery:
         else:
             return DiscoveryConfidence.VERY_LOW
 
-    async def analyze_api_traffic_with_ml(self, traffic_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def analyze_api_traffic_with_ml(
+        self, traffic_data: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze API traffic using advanced ML models"""
         if not HAS_ADVANCED_ML or not self.advanced_ml_engine:
             logging.warning("Advanced ML not available for traffic analysis")
@@ -965,23 +1111,28 @@ class SmartAPIDiscovery:
 
         return {
             "anomalies_detected": len(anomalies),
-            "anomalies": [{
-                "prediction": anom.prediction,
-                "confidence": anom.confidence,
-                "explanation": anom.explanation
-            } for anom in anomalies],
+            "anomalies": [
+                {
+                    "prediction": anom.prediction,
+                    "confidence": anom.confidence,
+                    "explanation": anom.explanation,
+                }
+                for anom in anomalies
+            ],
             "pattern_analysis": pattern_analysis,
             "ml_insights": ml_insights,
-            "analysis_timestamp": datetime.utcnow().isoformat()
+            "analysis_timestamp": datetime.utcnow().isoformat(),
         }
 
-    async def _analyze_traffic_patterns_ml(self, traffic_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_traffic_patterns_ml(
+        self, traffic_data: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze traffic patterns using ML"""
         patterns = {
             "peak_hours": [],
             "common_endpoints": [],
             "response_time_trends": {},
-            "error_patterns": {}
+            "error_patterns": {},
         }
 
         if not traffic_data:
@@ -990,9 +1141,9 @@ class SmartAPIDiscovery:
         # Analyze peak hours
         hour_counts = defaultdict(int)
         for item in traffic_data:
-            timestamp = item.get('timestamp', datetime.utcnow())
+            timestamp = item.get("timestamp", datetime.utcnow())
             if isinstance(timestamp, str):
-                timestamp = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
             hour_counts[timestamp.hour] += 1
 
         # Find peak hours (top 25%)
@@ -1003,22 +1154,30 @@ class SmartAPIDiscovery:
         # Analyze common endpoints
         endpoint_counts = defaultdict(int)
         for item in traffic_data:
-            url = item.get('url', '')
+            url = item.get("url", "")
             endpoint_counts[url] += 1
 
-        patterns["common_endpoints"] = sorted(endpoint_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+        patterns["common_endpoints"] = sorted(
+            endpoint_counts.items(), key=lambda x: x[1], reverse=True
+        )[:10]
 
         return patterns
 
-    async def _generate_ml_insights(self, anomalies: List[Any], pattern_analysis: Dict[str, Any]) -> List[str]:
+    async def _generate_ml_insights(
+        self, anomalies: List[Any], pattern_analysis: Dict[str, Any]
+    ) -> List[str]:
         """Generate insights from ML analysis"""
         insights = []
 
         # Anomaly insights
         if anomalies:
-            high_confidence_anomalies = [a for a in anomalies if hasattr(a, 'confidence') and a.confidence > 0.8]
+            high_confidence_anomalies = [
+                a for a in anomalies if hasattr(a, "confidence") and a.confidence > 0.8
+            ]
             if high_confidence_anomalies:
-                insights.append(f"Detected {len(high_confidence_anomalies)} high-confidence anomalies requiring attention")
+                insights.append(
+                    f"Detected {len(high_confidence_anomalies)} high-confidence anomalies requiring attention"
+                )
 
         # Pattern insights
         if pattern_analysis.get("peak_hours"):
@@ -1027,7 +1186,9 @@ class SmartAPIDiscovery:
 
         if pattern_analysis.get("common_endpoints"):
             top_endpoint = pattern_analysis["common_endpoints"][0]
-            insights.append(f"Most accessed endpoint: {top_endpoint[0]} ({top_endpoint[1]} requests)")
+            insights.append(
+                f"Most accessed endpoint: {top_endpoint[0]} ({top_endpoint[1]} requests)"
+            )
 
         if not insights:
             insights.append("No significant patterns or anomalies detected")
@@ -1047,23 +1208,27 @@ class SmartAPIDiscovery:
         behavior_data = []
 
         for item in feedback_data:
-            data_type = item.get('type', 'pattern')
-            if data_type == 'pattern':
+            data_type = item.get("type", "pattern")
+            if data_type == "pattern":
                 pattern_data.append(item)
-            elif data_type == 'security':
+            elif data_type == "security":
                 security_data.append(item)
-            elif data_type == 'behavior':
+            elif data_type == "behavior":
                 behavior_data.append(item)
 
         # Update training data
         if pattern_data:
-            await self.advanced_ml_engine.update_training_data('patterns', pattern_data)
+            await self.advanced_ml_engine.update_training_data("patterns", pattern_data)
 
         if security_data:
-            await self.advanced_ml_engine.update_training_data('security', security_data)
+            await self.advanced_ml_engine.update_training_data(
+                "security", security_data
+            )
 
         if behavior_data:
-            await self.advanced_ml_engine.update_training_data('behaviors', behavior_data)
+            await self.advanced_ml_engine.update_training_data(
+                "behaviors", behavior_data
+            )
 
         logging.info("✅ ML models updated with continuous learning data")
 
@@ -1072,12 +1237,12 @@ class SmartAPIDiscovery:
         if not HAS_ADVANCED_ML or not self.advanced_ml_engine:
             return {
                 "advanced_ml_available": False,
-                "message": "Advanced ML models not available"
+                "message": "Advanced ML models not available",
             }
 
         return {
             "advanced_ml_available": True,
-            **self.advanced_ml_engine.get_model_status()
+            **self.advanced_ml_engine.get_model_status(),
         }
 
     def get_discovery_summary(self) -> Dict[str, Any]:
@@ -1099,24 +1264,33 @@ class SmartAPIDiscovery:
             "discovery_methods": dict(endpoints_by_method),
             "clusters": len(self.api_clusters),
             "insights": len(self.discovery_insights),
-            "high_confidence_endpoints": len([
-                ep for ep in self.discovered_endpoints.values()
-                if ep.confidence in [DiscoveryConfidence.HIGH, DiscoveryConfidence.VERY_HIGH]
-            ]),
-            "ml_enhanced_endpoints": len([
-                ep for ep in self.discovered_endpoints.values()
-                if "ml_enhanced" in ep.tags
-            ]),
+            "high_confidence_endpoints": len(
+                [
+                    ep
+                    for ep in self.discovered_endpoints.values()
+                    if ep.confidence
+                    in [DiscoveryConfidence.HIGH, DiscoveryConfidence.VERY_HIGH]
+                ]
+            ),
+            "ml_enhanced_endpoints": len(
+                [
+                    ep
+                    for ep in self.discovered_endpoints.values()
+                    if "ml_enhanced" in ep.tags
+                ]
+            ),
             "advanced_ml_available": HAS_ADVANCED_ML,
             "ml_model_status": self.get_ml_model_status() if HAS_ADVANCED_ML else None,
             "last_discovery": max(
                 (ep.discovered_at for ep in self.discovered_endpoints.values()),
-                default=None
-            )
+                default=None,
+            ),
         }
+
 
 # Global smart discovery instance
 smart_api_discovery = SmartAPIDiscovery()
+
 
 # Utility functions
 async def initialize_smart_discovery():
@@ -1124,17 +1298,21 @@ async def initialize_smart_discovery():
     await smart_api_discovery.initialize()
     logging.info("🧠 Smart API Discovery system ready")
 
+
 async def discover_apis_smart(target: str = None, **kwargs) -> List[SmartAPIEndpoint]:
     """Convenient function to run smart API discovery"""
     return await smart_api_discovery.discover_apis_with_ml(target, **kwargs)
+
 
 async def analyze_traffic_with_ml(traffic_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Analyze API traffic using advanced ML models"""
     return await smart_api_discovery.analyze_api_traffic_with_ml(traffic_data)
 
+
 async def update_ml_models(feedback_data: List[Dict[str, Any]]):
     """Update ML models with continuous learning data"""
     await smart_api_discovery.continuous_learning_update(feedback_data)
+
 
 def get_discovery_ml_status() -> Dict[str, Any]:
     """Get ML model status for discovery system"""

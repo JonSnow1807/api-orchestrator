@@ -10,12 +10,14 @@ import logging
 import uuid
 from typing import Dict, List, Any, Optional, Callable
 from datetime import datetime
-from fastapi import WebSocket, WebSocketDisconnect
-from dataclasses import dataclass, asdict
+from fastapi import WebSocket
+from dataclasses import dataclass
+
 
 @dataclass
 class WebSocketMessage:
     """Standard WebSocket message format"""
+
     id: str
     type: str
     data: Any
@@ -23,15 +25,18 @@ class WebSocketMessage:
     user_id: Optional[str] = None
     session_id: Optional[str] = None
 
+
 @dataclass
 class ActiveConnection:
     """Active WebSocket connection info"""
+
     websocket: WebSocket
     user_id: str
     session_id: str
     connected_at: datetime
     last_activity: datetime
     subscriptions: List[str]
+
 
 class WebSocketManager:
     """
@@ -55,21 +60,23 @@ class WebSocketManager:
             "total_messages": 0,
             "messages_per_type": {},
             "active_sessions": 0,
-            "peak_connections": 0
+            "peak_connections": 0,
         }
 
         self._setup_default_handlers()
 
     def _setup_default_handlers(self):
         """Setup default message handlers"""
-        self.message_handlers.update({
-            "code_generation_request": self._handle_code_generation,
-            "rag_query": self._handle_rag_query,
-            "subscribe": self._handle_subscription,
-            "unsubscribe": self._handle_unsubscription,
-            "ping": self._handle_ping,
-            "get_stats": self._handle_get_stats
-        })
+        self.message_handlers.update(
+            {
+                "code_generation_request": self._handle_code_generation,
+                "rag_query": self._handle_rag_query,
+                "subscribe": self._handle_subscription,
+                "unsubscribe": self._handle_unsubscription,
+                "ping": self._handle_ping,
+                "get_stats": self._handle_get_stats,
+            }
+        )
 
     async def connect(self, websocket: WebSocket, user_id: str) -> str:
         """Accept a new WebSocket connection"""
@@ -84,7 +91,7 @@ class WebSocketManager:
             session_id=session_id,
             connected_at=datetime.now(),
             last_activity=datetime.now(),
-            subscriptions=[]
+            subscriptions=[],
         )
 
         self.active_connections[connection_id] = connection
@@ -102,15 +109,18 @@ class WebSocketManager:
         self.logger.info(f"✅ WebSocket connected: {connection_id} (user: {user_id})")
 
         # Send welcome message
-        await self._send_message(connection_id, {
-            "type": "connection_established",
-            "data": {
-                "connection_id": connection_id,
-                "session_id": session_id,
-                "timestamp": datetime.now().isoformat(),
-                "features": ["code_generation", "rag_queries", "live_updates"]
-            }
-        })
+        await self._send_message(
+            connection_id,
+            {
+                "type": "connection_established",
+                "data": {
+                    "connection_id": connection_id,
+                    "session_id": session_id,
+                    "timestamp": datetime.now().isoformat(),
+                    "features": ["code_generation", "rag_queries", "live_updates"],
+                },
+            },
+        )
 
         return connection_id
 
@@ -138,7 +148,9 @@ class WebSocketManager:
             # Update stats
             self.message_stats["active_sessions"] = len(self.active_connections)
 
-            self.logger.info(f"❌ WebSocket disconnected: {connection_id} (user: {user_id})")
+            self.logger.info(
+                f"❌ WebSocket disconnected: {connection_id} (user: {user_id})"
+            )
 
     async def handle_message(self, connection_id: str, message: Dict[str, Any]):
         """Handle incoming WebSocket message"""
@@ -162,33 +174,51 @@ class WebSocketManager:
 
             # Route message to appropriate handler
             if message_type in self.message_handlers:
-                await self.message_handlers[message_type](connection_id, message_data, message_id)
+                await self.message_handlers[message_type](
+                    connection_id, message_data, message_id
+                )
             else:
-                await self._send_error(connection_id, f"Unknown message type: {message_type}", message_id)
+                await self._send_error(
+                    connection_id, f"Unknown message type: {message_type}", message_id
+                )
 
         except Exception as e:
             self.logger.error(f"Error handling message from {connection_id}: {e}")
-            await self._send_error(connection_id, "Internal server error", message.get("id"))
+            await self._send_error(
+                connection_id, "Internal server error", message.get("id")
+            )
 
-    async def _handle_code_generation(self, connection_id: str, data: Dict[str, Any], message_id: str):
+    async def _handle_code_generation(
+        self, connection_id: str, data: Dict[str, Any], message_id: str
+    ):
         """Handle streaming code generation request"""
         try:
-            from autonomous_code_generation import AutonomousCodeGenerator, CodeLanguage, CodeType, QualityLevel
+            from autonomous_code_generation import (
+                AutonomousCodeGenerator,
+                CodeLanguage,
+                CodeType,
+                QualityLevel,
+            )
 
             description = data.get("description", "")
             language = data.get("language", "python")
             code_type = data.get("code_type", "utility_function")
 
             if not description:
-                await self._send_error(connection_id, "Description is required", message_id)
+                await self._send_error(
+                    connection_id, "Description is required", message_id
+                )
                 return
 
             # Send acknowledgment
-            await self._send_message(connection_id, {
-                "type": "code_generation_started",
-                "data": {"message_id": message_id, "description": description},
-                "id": message_id
-            })
+            await self._send_message(
+                connection_id,
+                {
+                    "type": "code_generation_started",
+                    "data": {"message_id": message_id, "description": description},
+                    "id": message_id,
+                },
+            )
 
             # Initialize code generator
             generator = AutonomousCodeGenerator()
@@ -198,7 +228,7 @@ class WebSocketManager:
                 description=description,
                 language=CodeLanguage(language.lower()),
                 code_type=CodeType(code_type.lower()),
-                quality_level=QualityLevel.PRODUCTION
+                quality_level=QualityLevel.PRODUCTION,
             )
 
             # Send streaming updates (simulate streaming for now)
@@ -207,37 +237,47 @@ class WebSocketManager:
                 {"step": "generating_structure", "progress": 40},
                 {"step": "adding_business_logic", "progress": 60},
                 {"step": "adding_error_handling", "progress": 80},
-                {"step": "finalizing_code", "progress": 100}
+                {"step": "finalizing_code", "progress": 100},
             ]
 
             for step in progress_steps:
-                await self._send_message(connection_id, {
-                    "type": "code_generation_progress",
-                    "data": step,
-                    "id": message_id
-                })
+                await self._send_message(
+                    connection_id,
+                    {
+                        "type": "code_generation_progress",
+                        "data": step,
+                        "id": message_id,
+                    },
+                )
                 await asyncio.sleep(0.5)  # Simulate processing time
 
             # Send final result
-            await self._send_message(connection_id, {
-                "type": "code_generation_complete",
-                "data": {
-                    "code": result.generated_code,
-                    "documentation": result.documentation,
-                    "test_code": result.test_code,
-                    "quality_score": result.quality_score,
-                    "security_score": result.security_score,
-                    "dependencies": result.dependencies,
-                    "generation_time": result.generation_time
+            await self._send_message(
+                connection_id,
+                {
+                    "type": "code_generation_complete",
+                    "data": {
+                        "code": result.generated_code,
+                        "documentation": result.documentation,
+                        "test_code": result.test_code,
+                        "quality_score": result.quality_score,
+                        "security_score": result.security_score,
+                        "dependencies": result.dependencies,
+                        "generation_time": result.generation_time,
+                    },
+                    "id": message_id,
                 },
-                "id": message_id
-            })
+            )
 
         except Exception as e:
             self.logger.error(f"Code generation error: {e}")
-            await self._send_error(connection_id, f"Code generation failed: {str(e)}", message_id)
+            await self._send_error(
+                connection_id, f"Code generation failed: {str(e)}", message_id
+            )
 
-    async def _handle_rag_query(self, connection_id: str, data: Dict[str, Any], message_id: str):
+    async def _handle_rag_query(
+        self, connection_id: str, data: Dict[str, Any], message_id: str
+    ):
         """Handle RAG knowledge query"""
         try:
             from rag_knowledge_system import EnhancedRAGKnowledgeSystem
@@ -250,11 +290,14 @@ class WebSocketManager:
                 return
 
             # Send acknowledgment
-            await self._send_message(connection_id, {
-                "type": "rag_query_started",
-                "data": {"message_id": message_id, "query": query},
-                "id": message_id
-            })
+            await self._send_message(
+                connection_id,
+                {
+                    "type": "rag_query_started",
+                    "data": {"message_id": message_id, "query": query},
+                    "id": message_id,
+                },
+            )
 
             # Initialize RAG system
             rag = EnhancedRAGKnowledgeSystem()
@@ -263,27 +306,32 @@ class WebSocketManager:
             rag.update_conversation_memory(user_id, query)
 
             # Perform semantic search
-            results = await rag.get_industry_intelligence(query, {"endpoint": "/api/query"}, user_id)
+            results = await rag.get_industry_intelligence(
+                query, {"endpoint": "/api/query"}, user_id
+            )
 
             # Get conversation context
             context = rag.get_conversation_context(user_id)
 
             # Send results
-            await self._send_message(connection_id, {
-                "type": "rag_query_complete",
-                "data": {
-                    "results": results,
-                    "context": context,
-                    "query": query
+            await self._send_message(
+                connection_id,
+                {
+                    "type": "rag_query_complete",
+                    "data": {"results": results, "context": context, "query": query},
+                    "id": message_id,
                 },
-                "id": message_id
-            })
+            )
 
         except Exception as e:
             self.logger.error(f"RAG query error: {e}")
-            await self._send_error(connection_id, f"RAG query failed: {str(e)}", message_id)
+            await self._send_error(
+                connection_id, f"RAG query failed: {str(e)}", message_id
+            )
 
-    async def _handle_subscription(self, connection_id: str, data: Dict[str, Any], message_id: str):
+    async def _handle_subscription(
+        self, connection_id: str, data: Dict[str, Any], message_id: str
+    ):
         """Handle topic subscription"""
         topic = data.get("topic")
         if not topic:
@@ -301,13 +349,18 @@ class WebSocketManager:
         if connection_id not in self.subscription_handlers[topic]:
             self.subscription_handlers[topic].append(connection_id)
 
-        await self._send_message(connection_id, {
-            "type": "subscription_confirmed",
-            "data": {"topic": topic},
-            "id": message_id
-        })
+        await self._send_message(
+            connection_id,
+            {
+                "type": "subscription_confirmed",
+                "data": {"topic": topic},
+                "id": message_id,
+            },
+        )
 
-    async def _handle_unsubscription(self, connection_id: str, data: Dict[str, Any], message_id: str):
+    async def _handle_unsubscription(
+        self, connection_id: str, data: Dict[str, Any], message_id: str
+    ):
         """Handle topic unsubscription"""
         topic = data.get("topic")
         if not topic:
@@ -319,30 +372,42 @@ class WebSocketManager:
         if topic in connection.subscriptions:
             connection.subscriptions.remove(topic)
 
-        if topic in self.subscription_handlers and connection_id in self.subscription_handlers[topic]:
+        if (
+            topic in self.subscription_handlers
+            and connection_id in self.subscription_handlers[topic]
+        ):
             self.subscription_handlers[topic].remove(connection_id)
 
-        await self._send_message(connection_id, {
-            "type": "unsubscription_confirmed",
-            "data": {"topic": topic},
-            "id": message_id
-        })
+        await self._send_message(
+            connection_id,
+            {
+                "type": "unsubscription_confirmed",
+                "data": {"topic": topic},
+                "id": message_id,
+            },
+        )
 
-    async def _handle_ping(self, connection_id: str, data: Dict[str, Any], message_id: str):
+    async def _handle_ping(
+        self, connection_id: str, data: Dict[str, Any], message_id: str
+    ):
         """Handle ping message"""
-        await self._send_message(connection_id, {
-            "type": "pong",
-            "data": {"timestamp": datetime.now().isoformat()},
-            "id": message_id
-        })
+        await self._send_message(
+            connection_id,
+            {
+                "type": "pong",
+                "data": {"timestamp": datetime.now().isoformat()},
+                "id": message_id,
+            },
+        )
 
-    async def _handle_get_stats(self, connection_id: str, data: Dict[str, Any], message_id: str):
+    async def _handle_get_stats(
+        self, connection_id: str, data: Dict[str, Any], message_id: str
+    ):
         """Handle stats request"""
-        await self._send_message(connection_id, {
-            "type": "stats",
-            "data": self.message_stats.copy(),
-            "id": message_id
-        })
+        await self._send_message(
+            connection_id,
+            {"type": "stats", "data": self.message_stats.copy(), "id": message_id},
+        )
 
     async def _send_message(self, connection_id: str, message: Dict[str, Any]):
         """Send message to specific connection"""
@@ -356,11 +421,9 @@ class WebSocketManager:
 
     async def _send_error(self, connection_id: str, error: str, message_id: str = None):
         """Send error message"""
-        await self._send_message(connection_id, {
-            "type": "error",
-            "data": {"error": error},
-            "id": message_id
-        })
+        await self._send_message(
+            connection_id, {"type": "error", "data": {"error": error}, "id": message_id}
+        )
 
     async def broadcast_to_topic(self, topic: str, message: Dict[str, Any]):
         """Broadcast message to all subscribers of a topic"""
@@ -381,8 +444,9 @@ class WebSocketManager:
             "current_connections": len(self.active_connections),
             "unique_users": len(self.user_connections),
             "topics": list(self.subscription_handlers.keys()),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
+
 
 # Global WebSocket manager instance
 websocket_manager = WebSocketManager()

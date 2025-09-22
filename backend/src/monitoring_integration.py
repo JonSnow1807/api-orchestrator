@@ -5,40 +5,42 @@ Connects Kill Shot predictive features to live monitoring systems
 """
 
 import asyncio
-import json
 import time
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 import logging
 from enum import Enum
 
 # System metrics dependencies
 try:
     import psutil
+
     PSUTIL_AVAILABLE = True
 except ImportError:
     PSUTIL_AVAILABLE = False
 
 # Import our Kill Shot features
-from kill_shots.predictive_failure_analysis import PredictiveFailureAnalysis, FailurePrediction, FailureType
+from kill_shots.predictive_failure_analysis import (
+    PredictiveFailureAnalysis,
+    FailurePrediction,
+)
 from kill_shots.api_time_machine import APITimeMachine
 from kill_shots.quantum_test_generation import QuantumTestGeneration
 from kill_shots.telepathic_discovery import TelepathicAPIDiscovery
 
 # Import monitoring backends
 try:
-    import prometheus_client
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False
 
 try:
-    import grafana_api
     GRAFANA_AVAILABLE = True
 except ImportError:
     GRAFANA_AVAILABLE = False
+
 
 class MonitoringBackend(Enum):
     PROMETHEUS = "prometheus"
@@ -46,6 +48,7 @@ class MonitoringBackend(Enum):
     ELASTICSEARCH = "elasticsearch"
     INFLUXDB = "influxdb"
     CUSTOM = "custom"
+
 
 @dataclass
 class MonitoringMetric:
@@ -55,6 +58,7 @@ class MonitoringMetric:
     labels: Dict[str, str]
     source: str
 
+
 @dataclass
 class AlertRule:
     name: str
@@ -62,6 +66,7 @@ class AlertRule:
     threshold: float
     severity: str
     notification_channels: List[str]
+
 
 class RealTimeMonitoringIntegration:
     """
@@ -141,7 +146,7 @@ class RealTimeMonitoringIntegration:
                 # Run 24-hour prediction
                 predictions = await self.predictive_analyzer.predict_next_24_hours(
                     historical_data=historical_data,
-                    current_metrics=self._get_current_metrics()
+                    current_metrics=self._get_current_metrics(),
                 )
 
                 # Process predictions and create alerts
@@ -168,40 +173,49 @@ class RealTimeMonitoringIntegration:
             # In production, this would connect to actual monitoring systems
 
             endpoints = [
-                "/api/v1/projects", "/api/v1/tests", "/api/v1/users",
-                "/api/v1/auth/login", "/api/v1/workspaces"
+                "/api/v1/projects",
+                "/api/v1/tests",
+                "/api/v1/users",
+                "/api/v1/auth/login",
+                "/api/v1/workspaces",
             ]
 
             for endpoint in endpoints:
                 # Response time metric
                 response_time = await self._get_endpoint_response_time(endpoint)
-                metrics.append(MonitoringMetric(
-                    name="api_response_time",
-                    value=response_time,
-                    timestamp=datetime.now(),
-                    labels={"endpoint": endpoint, "method": "GET"},
-                    source="api_monitor"
-                ))
+                metrics.append(
+                    MonitoringMetric(
+                        name="api_response_time",
+                        value=response_time,
+                        timestamp=datetime.now(),
+                        labels={"endpoint": endpoint, "method": "GET"},
+                        source="api_monitor",
+                    )
+                )
 
                 # Request rate metric
                 request_rate = await self._get_endpoint_request_rate(endpoint)
-                metrics.append(MonitoringMetric(
-                    name="api_request_rate",
-                    value=request_rate,
-                    timestamp=datetime.now(),
-                    labels={"endpoint": endpoint},
-                    source="api_monitor"
-                ))
+                metrics.append(
+                    MonitoringMetric(
+                        name="api_request_rate",
+                        value=request_rate,
+                        timestamp=datetime.now(),
+                        labels={"endpoint": endpoint},
+                        source="api_monitor",
+                    )
+                )
 
                 # Error rate metric
                 error_rate = await self._get_endpoint_error_rate(endpoint)
-                metrics.append(MonitoringMetric(
-                    name="api_error_rate",
-                    value=error_rate,
-                    timestamp=datetime.now(),
-                    labels={"endpoint": endpoint},
-                    source="api_monitor"
-                ))
+                metrics.append(
+                    MonitoringMetric(
+                        name="api_error_rate",
+                        value=error_rate,
+                        timestamp=datetime.now(),
+                        labels={"endpoint": endpoint},
+                        source="api_monitor",
+                    )
+                )
 
         except Exception as e:
             self.logger.error(f"Error collecting API metrics: {e}")
@@ -218,43 +232,51 @@ class RealTimeMonitoringIntegration:
 
             # CPU usage
             cpu_percent = psutil.cpu_percent(interval=1)
-            metrics.append(MonitoringMetric(
-                name="system_cpu_usage",
-                value=cpu_percent,
-                timestamp=datetime.now(),
-                labels={"resource": "cpu"},
-                source="system_monitor"
-            ))
+            metrics.append(
+                MonitoringMetric(
+                    name="system_cpu_usage",
+                    value=cpu_percent,
+                    timestamp=datetime.now(),
+                    labels={"resource": "cpu"},
+                    source="system_monitor",
+                )
+            )
 
             # Memory usage
             memory = psutil.virtual_memory()
-            metrics.append(MonitoringMetric(
-                name="system_memory_usage",
-                value=memory.percent,
-                timestamp=datetime.now(),
-                labels={"resource": "memory"},
-                source="system_monitor"
-            ))
+            metrics.append(
+                MonitoringMetric(
+                    name="system_memory_usage",
+                    value=memory.percent,
+                    timestamp=datetime.now(),
+                    labels={"resource": "memory"},
+                    source="system_monitor",
+                )
+            )
 
             # Disk usage
-            disk = psutil.disk_usage('/')
-            metrics.append(MonitoringMetric(
-                name="system_disk_usage",
-                value=(disk.used / disk.total) * 100,
-                timestamp=datetime.now(),
-                labels={"resource": "disk"},
-                source="system_monitor"
-            ))
+            disk = psutil.disk_usage("/")
+            metrics.append(
+                MonitoringMetric(
+                    name="system_disk_usage",
+                    value=(disk.used / disk.total) * 100,
+                    timestamp=datetime.now(),
+                    labels={"resource": "disk"},
+                    source="system_monitor",
+                )
+            )
 
         except ImportError:
             # Fallback if psutil not available
-            metrics.append(MonitoringMetric(
-                name="system_cpu_usage",
-                value=15.5,  # Simulated value
-                timestamp=datetime.now(),
-                labels={"resource": "cpu"},
-                source="system_monitor_fallback"
-            ))
+            metrics.append(
+                MonitoringMetric(
+                    name="system_cpu_usage",
+                    value=15.5,  # Simulated value
+                    timestamp=datetime.now(),
+                    labels={"resource": "cpu"},
+                    source="system_monitor_fallback",
+                )
+            )
 
         return metrics
 
@@ -264,31 +286,37 @@ class RealTimeMonitoringIntegration:
 
         try:
             # Database connection count
-            metrics.append(MonitoringMetric(
-                name="db_connections",
-                value=await self._get_db_connection_count(),
-                timestamp=datetime.now(),
-                labels={"database": "postgresql"},
-                source="db_monitor"
-            ))
+            metrics.append(
+                MonitoringMetric(
+                    name="db_connections",
+                    value=await self._get_db_connection_count(),
+                    timestamp=datetime.now(),
+                    labels={"database": "postgresql"},
+                    source="db_monitor",
+                )
+            )
 
             # Query execution time
-            metrics.append(MonitoringMetric(
-                name="db_query_time",
-                value=await self._get_avg_query_time(),
-                timestamp=datetime.now(),
-                labels={"database": "postgresql"},
-                source="db_monitor"
-            ))
+            metrics.append(
+                MonitoringMetric(
+                    name="db_query_time",
+                    value=await self._get_avg_query_time(),
+                    timestamp=datetime.now(),
+                    labels={"database": "postgresql"},
+                    source="db_monitor",
+                )
+            )
 
             # Database size
-            metrics.append(MonitoringMetric(
-                name="db_size",
-                value=await self._get_db_size(),
-                timestamp=datetime.now(),
-                labels={"database": "postgresql"},
-                source="db_monitor"
-            ))
+            metrics.append(
+                MonitoringMetric(
+                    name="db_size",
+                    value=await self._get_db_size(),
+                    timestamp=datetime.now(),
+                    labels={"database": "postgresql"},
+                    source="db_monitor",
+                )
+            )
 
         except Exception as e:
             self.logger.error(f"Error collecting database metrics: {e}")
@@ -310,7 +338,7 @@ class RealTimeMonitoringIntegration:
                 "impact_score": prediction.impact_score,
                 "preventive_actions": prediction.preventive_actions,
                 "timestamp": datetime.now().isoformat(),
-                "status": "active"
+                "status": "active",
             }
 
             self.active_alerts[alert_id] = alert
@@ -340,7 +368,7 @@ class RealTimeMonitoringIntegration:
             "error_rates": [],
             "cpu_usage": [],
             "memory_usage": [],
-            "request_rates": []
+            "request_rates": [],
         }
 
         for metric in self.metrics_buffer:
@@ -364,8 +392,11 @@ class RealTimeMonitoringIntegration:
 
         # Get latest metrics
         latest_metrics = {}
-        recent_metrics = [m for m in self.metrics_buffer if
-                         (datetime.now() - m.timestamp).seconds < 60]
+        recent_metrics = [
+            m
+            for m in self.metrics_buffer
+            if (datetime.now() - m.timestamp).seconds < 60
+        ]
 
         for metric in recent_metrics:
             latest_metrics[metric.name] = metric.value
@@ -428,7 +459,7 @@ class RealTimeMonitoringIntegration:
                 "type": pred.failure_type.value,
                 "probability": pred.probability,
                 "time_until_failure": str(pred.time_until_failure),
-                "impact_score": pred.impact_score
+                "impact_score": pred.impact_score,
             }
             for pred in self.prediction_cache.values()
             if pred.probability > 0.3
@@ -436,7 +467,8 @@ class RealTimeMonitoringIntegration:
 
         # Active alerts
         active_alerts_list = [
-            alert for alert in self.active_alerts.values()
+            alert
+            for alert in self.active_alerts.values()
             if alert["status"] == "active"
         ]
 
@@ -446,7 +478,7 @@ class RealTimeMonitoringIntegration:
             "active_predictions": active_predictions,
             "active_alerts": active_alerts_list,
             "metrics_collected": len(self.metrics_buffer),
-            "system_status": "healthy" if len(active_alerts_list) == 0 else "warning"
+            "system_status": "healthy" if len(active_alerts_list) == 0 else "warning",
         }
 
     async def shutdown(self):
@@ -458,12 +490,15 @@ class RealTimeMonitoringIntegration:
         if self.prediction_task:
             self.prediction_task.cancel()
 
+
 # Global monitoring integration instance
 monitoring_integration = RealTimeMonitoringIntegration()
+
 
 async def initialize_monitoring():
     """Initialize the monitoring integration"""
     await monitoring_integration.initialize()
+
 
 def get_monitoring_data():
     """Get current monitoring dashboard data"""

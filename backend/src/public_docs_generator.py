@@ -4,45 +4,54 @@ Generate beautiful, interactive API documentation pages
 """
 
 import json
-import yaml
-from typing import Dict, List, Optional, Any
+from typing import Dict, List
 from datetime import datetime
 from jinja2 import Template
 from markdown import markdown
-import re
-from sqlalchemy import Column, Integer, String, JSON, Boolean, DateTime, ForeignKey, Text, func
-from sqlalchemy.orm import Session, relationship
-from pydantic import BaseModel, Field
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    JSON,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Text,
+    func,
+)
+from sqlalchemy.orm import relationship
 
-from src.database import Base, get_db
+from src.database import Base
+
 
 class PublicDocumentation(Base):
     """Database model for public API documentation"""
+
     __tablename__ = "public_docs"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
-    
+
     # Documentation details
     title = Column(String(255), nullable=False)
     description = Column(Text)
     version = Column(String(50), default="1.0.0")
     base_url = Column(String(500))
-    
+
     # OpenAPI spec
     openapi_spec = Column(JSON)
-    
+
     # Customization
     theme = Column(String(50), default="default")  # default, dark, minimal, corporate
     logo_url = Column(String(500))
     favicon_url = Column(String(500))
     custom_css = Column(Text)
     custom_js = Column(Text)
-    
+
     # Authentication docs
     auth_description = Column(Text)
     auth_examples = Column(JSON)
-    
+
     # Additional sections
     getting_started = Column(Text)  # Markdown
     tutorials = Column(JSON)  # List of tutorial objects
@@ -63,10 +72,11 @@ class PublicDocumentation(Base):
     # Timestamps
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    
+
     # Access control
     is_public_orig = Column(Boolean, default=True)
     requires_auth = Column(Boolean, default=False)
+
 
 class DocumentationGenerator:
     """Generates public API documentation"""
@@ -139,12 +149,12 @@ class DocumentationGenerator:
 
     def _generate_endpoints_section(self, docs: PublicDocumentation) -> str:
         """Generate endpoints section from OpenAPI spec"""
-        if not docs.openapi_spec or 'paths' not in docs.openapi_spec:
+        if not docs.openapi_spec or "paths" not in docs.openapi_spec:
             return ""
 
         endpoints_html = "<div class='endpoints'><h2>API Endpoints</h2>"
 
-        for path, methods in docs.openapi_spec['paths'].items():
+        for path, methods in docs.openapi_spec["paths"].items():
             for method, spec in methods.items():
                 endpoints_html += f"""
                 <div class="endpoint">
@@ -201,57 +211,61 @@ Sitemap: {base_url}/sitemap.xml"""
 </body>
 </html>
         """
+
     allowed_domains = Column(JSON, default=[])  # Domain whitelist
-    
+
     # SEO
     meta_description = Column(Text)
     meta_keywords = Column(JSON)
     og_image = Column(String(500))
-    
+
     # Analytics
     analytics_id = Column(String(100))  # Google Analytics, etc.
-    
+
     # Publishing
     slug = Column(String(100), unique=True, index=True)
     custom_domain = Column(String(255))
     published_at = Column(DateTime)
     last_updated = Column(DateTime, default=datetime.utcnow)
-    
+
     # Relationships
     project = relationship("Project", backref="public_docs")
 
+
 class DocGenerator:
     """Generate beautiful API documentation"""
-    
+
     def __init__(self):
         self.themes = self._load_themes()
-    
+
     def _load_themes(self) -> Dict[str, str]:
         """Load documentation themes"""
         return {
             "default": self._get_default_theme(),
             "dark": self._get_dark_theme(),
             "minimal": self._get_minimal_theme(),
-            "corporate": self._get_corporate_theme()
+            "corporate": self._get_corporate_theme(),
         }
-    
+
     def generate_docs(self, doc_config: PublicDocumentation) -> str:
         """Generate HTML documentation from OpenAPI spec"""
-        
+
         # Parse OpenAPI spec
         spec = doc_config.openapi_spec
         if isinstance(spec, str):
             spec = json.loads(spec)
-        
+
         # Get theme
         theme = self.themes.get(doc_config.theme, self.themes["default"])
-        
+
         # Generate HTML
         template = Template(theme)
-        
+
         html = template.render(
-            title=doc_config.title or spec.get("info", {}).get("title", "API Documentation"),
-            description=doc_config.description or spec.get("info", {}).get("description", ""),
+            title=doc_config.title
+            or spec.get("info", {}).get("title", "API Documentation"),
+            description=doc_config.description
+            or spec.get("info", {}).get("description", ""),
             version=doc_config.version or spec.get("info", {}).get("version", "1.0.0"),
             base_url=doc_config.base_url or spec.get("servers", [{}])[0].get("url", ""),
             logo_url=doc_config.logo_url,
@@ -261,26 +275,36 @@ class DocGenerator:
             endpoints=self._parse_endpoints(spec),
             models=self._parse_models(spec),
             auth_info=self._parse_auth(spec, doc_config),
-            getting_started=markdown(doc_config.getting_started) if doc_config.getting_started else "",
+            getting_started=markdown(doc_config.getting_started)
+            if doc_config.getting_started
+            else "",
             tutorials=doc_config.tutorials or [],
             code_examples=doc_config.code_examples or {},
             sdks=doc_config.sdks or [],
             meta_description=doc_config.meta_description,
             meta_keywords=doc_config.meta_keywords,
             og_image=doc_config.og_image,
-            analytics_id=doc_config.analytics_id
+            analytics_id=doc_config.analytics_id,
         )
-        
+
         return html
-    
+
     def _parse_endpoints(self, spec: Dict) -> List[Dict]:
         """Parse endpoints from OpenAPI spec"""
         endpoints = []
         paths = spec.get("paths", {})
-        
+
         for path, methods in paths.items():
             for method, details in methods.items():
-                if method in ["get", "post", "put", "delete", "patch", "options", "head"]:
+                if method in [
+                    "get",
+                    "post",
+                    "put",
+                    "delete",
+                    "patch",
+                    "options",
+                    "head",
+                ]:
                     endpoint = {
                         "path": path,
                         "method": method.upper(),
@@ -288,90 +312,98 @@ class DocGenerator:
                         "description": details.get("description", ""),
                         "operationId": details.get("operationId", ""),
                         "tags": details.get("tags", []),
-                        "parameters": self._parse_parameters(details.get("parameters", [])),
-                        "requestBody": self._parse_request_body(details.get("requestBody", {})),
-                        "responses": self._parse_responses(details.get("responses", {})),
+                        "parameters": self._parse_parameters(
+                            details.get("parameters", [])
+                        ),
+                        "requestBody": self._parse_request_body(
+                            details.get("requestBody", {})
+                        ),
+                        "responses": self._parse_responses(
+                            details.get("responses", {})
+                        ),
                         "security": details.get("security", []),
-                        "deprecated": details.get("deprecated", False)
+                        "deprecated": details.get("deprecated", False),
                     }
                     endpoints.append(endpoint)
-        
+
         return endpoints
-    
+
     def _parse_parameters(self, parameters: List) -> List[Dict]:
         """Parse parameters from OpenAPI spec"""
         parsed = []
         for param in parameters:
-            parsed.append({
-                "name": param.get("name"),
-                "in": param.get("in"),
-                "description": param.get("description", ""),
-                "required": param.get("required", False),
-                "schema": param.get("schema", {}),
-                "example": param.get("example")
-            })
+            parsed.append(
+                {
+                    "name": param.get("name"),
+                    "in": param.get("in"),
+                    "description": param.get("description", ""),
+                    "required": param.get("required", False),
+                    "schema": param.get("schema", {}),
+                    "example": param.get("example"),
+                }
+            )
         return parsed
-    
+
     def _parse_request_body(self, request_body: Dict) -> Dict:
         """Parse request body from OpenAPI spec"""
         if not request_body:
             return {}
-        
+
         content = request_body.get("content", {})
         parsed = {
             "description": request_body.get("description", ""),
             "required": request_body.get("required", False),
-            "content": {}
+            "content": {},
         }
-        
+
         for content_type, schema_info in content.items():
             parsed["content"][content_type] = {
                 "schema": schema_info.get("schema", {}),
                 "example": schema_info.get("example"),
-                "examples": schema_info.get("examples", {})
+                "examples": schema_info.get("examples", {}),
             }
-        
+
         return parsed
-    
+
     def _parse_responses(self, responses: Dict) -> Dict:
         """Parse responses from OpenAPI spec"""
         parsed = {}
         for status_code, response in responses.items():
             parsed[status_code] = {
                 "description": response.get("description", ""),
-                "content": {}
+                "content": {},
             }
-            
+
             content = response.get("content", {})
             for content_type, schema_info in content.items():
                 parsed[status_code]["content"][content_type] = {
                     "schema": schema_info.get("schema", {}),
                     "example": schema_info.get("example"),
-                    "examples": schema_info.get("examples", {})
+                    "examples": schema_info.get("examples", {}),
                 }
-        
+
         return parsed
-    
+
     def _parse_models(self, spec: Dict) -> Dict:
         """Parse data models from OpenAPI spec"""
         components = spec.get("components", {})
         schemas = components.get("schemas", {})
         return schemas
-    
+
     def _parse_auth(self, spec: Dict, doc_config: PublicDocumentation) -> Dict:
         """Parse authentication information"""
         components = spec.get("components", {})
         security_schemes = components.get("securitySchemes", {})
-        
+
         return {
             "schemes": security_schemes,
             "description": doc_config.auth_description,
-            "examples": doc_config.auth_examples or {}
+            "examples": doc_config.auth_examples or {},
         }
-    
+
     def _get_default_theme(self) -> str:
         """Get default documentation theme"""
-        return '''
+        return """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -643,17 +675,17 @@ class DocGenerator:
     </script>
 </body>
 </html>
-        '''
-    
+        """
+
     def _get_dark_theme(self) -> str:
         """Get dark theme (similar structure with dark colors)"""
         # Dark theme implementation
         return self._get_default_theme()  # Placeholder
-    
+
     def _get_minimal_theme(self) -> str:
         """Get minimal theme"""
         return self._get_default_theme()  # Placeholder
-    
+
     def _get_corporate_theme(self) -> str:
         """Get corporate theme"""
         return self._get_default_theme()  # Placeholder

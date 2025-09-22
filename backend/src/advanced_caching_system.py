@@ -3,8 +3,8 @@ Advanced Caching System for API Orchestrator
 Multi-tier caching with Redis, memory, and intelligent cache invalidation
 """
 
-from typing import Optional, Dict, Any, List, Set, Union, Callable
-from datetime import datetime, timedelta
+from typing import Optional, Dict, Any, List, Set, Callable
+from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
 import asyncio
@@ -13,13 +13,12 @@ import hashlib
 import pickle
 import time
 import logging
-from contextlib import asynccontextmanager
-import weakref
 from collections import OrderedDict, defaultdict
 
 # Optional imports with graceful fallbacks
 try:
     import aioredis
+
     HAS_REDIS = True
 except ImportError:
     aioredis = None
@@ -27,27 +26,29 @@ except ImportError:
 
 try:
     import memcache
+
     HAS_MEMCACHED = True
 except ImportError:
     memcache = None
     HAS_MEMCACHED = False
 
-from src.config import settings
 
 class CacheLevel(str, Enum):
     L1_MEMORY = "l1_memory"  # Local in-memory cache
-    L2_REDIS = "l2_redis"    # Redis distributed cache
+    L2_REDIS = "l2_redis"  # Redis distributed cache
     L3_MEMCACHED = "l3_memcached"  # Memcached cluster
-    L4_DATABASE = "l4_database"    # Database-backed cache
+    L4_DATABASE = "l4_database"  # Database-backed cache
+
 
 class CacheStrategy(str, Enum):
-    LRU = "lru"              # Least Recently Used
-    LFU = "lfu"              # Least Frequently Used
-    TTL = "ttl"              # Time To Live
-    ADAPTIVE = "adaptive"     # AI-powered adaptive caching
+    LRU = "lru"  # Least Recently Used
+    LFU = "lfu"  # Least Frequently Used
+    TTL = "ttl"  # Time To Live
+    ADAPTIVE = "adaptive"  # AI-powered adaptive caching
     WRITE_THROUGH = "write_through"
     WRITE_BACK = "write_back"
     WRITE_AROUND = "write_around"
+
 
 class InvalidationStrategy(str, Enum):
     TTL_BASED = "ttl_based"
@@ -56,9 +57,11 @@ class InvalidationStrategy(str, Enum):
     DEPENDENCY_BASED = "dependency_based"
     AI_PREDICTED = "ai_predicted"
 
+
 @dataclass
 class CacheEntry:
     """Cache entry with metadata"""
+
     key: str
     value: Any
     created_at: datetime
@@ -71,9 +74,11 @@ class CacheEntry:
     compression_ratio: float = 1.0
     hit_rate: float = 0.0
 
+
 @dataclass
 class CacheStats:
     """Cache performance statistics"""
+
     total_requests: int = 0
     cache_hits: int = 0
     cache_misses: int = 0
@@ -83,6 +88,7 @@ class CacheStats:
     avg_response_time_ms: float = 0.0
     hit_rate_by_level: Dict[CacheLevel, float] = field(default_factory=dict)
     popular_keys: List[str] = field(default_factory=list)
+
 
 class LRUCache:
     """Thread-safe LRU cache implementation"""
@@ -137,6 +143,7 @@ class LRUCache:
     async def size(self) -> int:
         return len(self.cache)
 
+
 class RedisCache:
     """Redis-based distributed cache"""
 
@@ -166,14 +173,14 @@ class RedisCache:
                 entry_dict = json.loads(data)
                 entry = CacheEntry(
                     key=key,
-                    value=entry_dict['value'],
-                    created_at=datetime.fromisoformat(entry_dict['created_at']),
+                    value=entry_dict["value"],
+                    created_at=datetime.fromisoformat(entry_dict["created_at"]),
                     accessed_at=datetime.utcnow(),
-                    access_count=entry_dict.get('access_count', 0) + 1,
-                    ttl_seconds=entry_dict.get('ttl_seconds'),
-                    size_bytes=entry_dict.get('size_bytes', 0),
-                    tags=set(entry_dict.get('tags', [])),
-                    dependencies=set(entry_dict.get('dependencies', []))
+                    access_count=entry_dict.get("access_count", 0) + 1,
+                    ttl_seconds=entry_dict.get("ttl_seconds"),
+                    size_bytes=entry_dict.get("size_bytes", 0),
+                    tags=set(entry_dict.get("tags", [])),
+                    dependencies=set(entry_dict.get("dependencies", [])),
                 )
                 self.stats.cache_hits += 1
 
@@ -193,22 +200,20 @@ class RedisCache:
 
         try:
             entry_dict = {
-                'value': entry.value,
-                'created_at': entry.created_at.isoformat(),
-                'access_count': entry.access_count,
-                'ttl_seconds': entry.ttl_seconds,
-                'size_bytes': entry.size_bytes,
-                'tags': list(entry.tags),
-                'dependencies': list(entry.dependencies)
+                "value": entry.value,
+                "created_at": entry.created_at.isoformat(),
+                "access_count": entry.access_count,
+                "ttl_seconds": entry.ttl_seconds,
+                "size_bytes": entry.size_bytes,
+                "tags": list(entry.tags),
+                "dependencies": list(entry.dependencies),
             }
 
             data = json.dumps(entry_dict)
 
             if ttl_seconds or entry.ttl_seconds:
                 await self.redis_client.setex(
-                    key,
-                    ttl_seconds or entry.ttl_seconds,
-                    data
+                    key, ttl_seconds or entry.ttl_seconds, data
                 )
             else:
                 await self.redis_client.set(key, data)
@@ -244,9 +249,12 @@ class RedisCache:
         try:
             stats_key = f"stats:{key}"
             await self.redis_client.hincrby(stats_key, "access_count", 1)
-            await self.redis_client.hset(stats_key, "last_accessed", datetime.utcnow().isoformat())
+            await self.redis_client.hset(
+                stats_key, "last_accessed", datetime.utcnow().isoformat()
+            )
         except Exception as e:
             logging.debug(f"Stats update error: {e}")
+
 
 class AdvancedCacheManager:
     """Multi-tier cache manager with intelligent strategies"""
@@ -262,7 +270,7 @@ class AdvancedCacheManager:
         self.adaptive_weights = {
             CacheLevel.L1_MEMORY: 1.0,
             CacheLevel.L2_REDIS: 0.8,
-            CacheLevel.L3_MEMCACHED: 0.6
+            CacheLevel.L3_MEMCACHED: 0.6,
         }
 
         # Performance monitoring
@@ -276,7 +284,7 @@ class AdvancedCacheManager:
 
         if HAS_MEMCACHED:
             try:
-                self.l3_cache = memcache.Client(['127.0.0.1:11211'])
+                self.l3_cache = memcache.Client(["127.0.0.1:11211"])
                 logging.info("✅ Connected to Memcached")
             except Exception as e:
                 logging.warning(f"⚠️ Memcached connection failed: {e}")
@@ -313,17 +321,11 @@ class AdvancedCacheManager:
             # Try decompressing first
             decompressed = gzip.decompress(data)
             return pickle.loads(decompressed)
-        except:
+        except Exception:
             # Fallback to direct pickle loading
             return pickle.loads(data)
 
-    async def get(
-        self,
-        namespace: str,
-        key: str,
-        default: Any = None,
-        **kwargs
-    ) -> Any:
+    async def get(self, namespace: str, key: str, default: Any = None, **kwargs) -> Any:
         """Get value from multi-tier cache"""
         cache_key = self._generate_cache_key(namespace, key, **kwargs)
         start_time = time.time()
@@ -355,7 +357,7 @@ class AdvancedCacheManager:
                         value=value,
                         created_at=datetime.utcnow(),
                         accessed_at=datetime.utcnow(),
-                        access_count=1
+                        access_count=1,
                     )
 
                     await self.l1_cache.set(cache_key, entry)
@@ -377,7 +379,7 @@ class AdvancedCacheManager:
         ttl_seconds: Optional[int] = None,
         tags: Optional[Set[str]] = None,
         strategy: CacheStrategy = CacheStrategy.LRU,
-        **kwargs
+        **kwargs,
     ):
         """Set value in multi-tier cache"""
         cache_key = self._generate_cache_key(namespace, key, **kwargs)
@@ -391,7 +393,7 @@ class AdvancedCacheManager:
             access_count=1,
             ttl_seconds=ttl_seconds,
             size_bytes=len(str(value).encode()),
-            tags=tags or set()
+            tags=tags or set(),
         )
 
         # Set in all cache levels
@@ -449,7 +451,7 @@ class AdvancedCacheManager:
         l1_keys_to_delete = []
         async with self.l1_cache._lock:
             for key in self.l1_cache.cache.keys():
-                if pattern.replace('*', '') in key:
+                if pattern.replace("*", "") in key:
                     l1_keys_to_delete.append(key)
 
         for key in l1_keys_to_delete:
@@ -465,14 +467,15 @@ class AdvancedCacheManager:
 
         # Update hit rate for level
         current_hits = self.global_stats.hit_rate_by_level[level]
-        self.global_stats.hit_rate_by_level[level] = (current_hits + 1) / self.global_stats.total_requests
+        self.global_stats.hit_rate_by_level[level] = (
+            current_hits + 1
+        ) / self.global_stats.total_requests
 
         # Update average response time
         current_avg = self.global_stats.avg_response_time_ms
         self.global_stats.avg_response_time_ms = (
-            (current_avg * (self.global_stats.total_requests - 1) + response_time * 1000) /
-            self.global_stats.total_requests
-        )
+            current_avg * (self.global_stats.total_requests - 1) + response_time * 1000
+        ) / self.global_stats.total_requests
 
     def _record_miss(self, response_time: float):
         """Record cache miss statistics"""
@@ -485,7 +488,8 @@ class AdvancedCacheManager:
 
         overall_hit_rate = (
             self.global_stats.cache_hits / self.global_stats.total_requests
-            if self.global_stats.total_requests > 0 else 0
+            if self.global_stats.total_requests > 0
+            else 0
         )
 
         return {
@@ -499,7 +503,7 @@ class AdvancedCacheManager:
             "l1_max_size": self.l1_cache.max_size,
             "invalidation_rules_count": len(self.invalidation_rules),
             "hot_keys_count": len(self.hot_keys),
-            "cold_keys_count": len(self.cold_keys)
+            "cold_keys_count": len(self.cold_keys),
         }
 
     async def optimize_cache_performance(self):
@@ -517,20 +521,27 @@ class AdvancedCacheManager:
         # Adaptive TTL adjustment based on access patterns
         # Implementation would analyze access frequency and adjust TTLs
 
-        logging.info(f"Cache optimization completed. Hit rate: {stats['overall_hit_rate']:.2%}")
+        logging.info(
+            f"Cache optimization completed. Hit rate: {stats['overall_hit_rate']:.2%}"
+        )
+
 
 # Decorators for easy caching integration
+
 
 def cached(
     namespace: str = "default",
     ttl_seconds: Optional[int] = 3600,
     tags: Optional[Set[str]] = None,
-    strategy: CacheStrategy = CacheStrategy.LRU
+    strategy: CacheStrategy = CacheStrategy.LRU,
 ):
     """Decorator for caching function results"""
+
     def decorator(func: Callable):
         async def async_wrapper(*args, **kwargs):
-            cache_key = f"{func.__name__}_{hash(str(args) + str(sorted(kwargs.items())))}"
+            cache_key = (
+                f"{func.__name__}_{hash(str(args) + str(sorted(kwargs.items())))}"
+            )
 
             # Try to get from cache
             cached_result = await cache_manager.get(namespace, cache_key)
@@ -540,14 +551,18 @@ def cached(
             # Execute function and cache result
             result = await func(*args, **kwargs)
             await cache_manager.set(
-                namespace, cache_key, result,
-                ttl_seconds=ttl_seconds, tags=tags, strategy=strategy
+                namespace,
+                cache_key,
+                result,
+                ttl_seconds=ttl_seconds,
+                tags=tags,
+                strategy=strategy,
             )
             return result
 
         def sync_wrapper(*args, **kwargs):
             # For synchronous functions, we'll need to handle differently
-            cache_key = f"{func.__name__}_{hash(str(args) + str(sorted(kwargs.items())))}"
+            f"{func.__name__}_{hash(str(args) + str(sorted(kwargs.items())))}"
             # This would require a synchronous cache interface
             return func(*args, **kwargs)
 
@@ -555,8 +570,10 @@ def cached(
 
     return decorator
 
+
 # Global cache manager instance
 cache_manager = AdvancedCacheManager()
+
 
 # Specialized cache helpers
 class APIResponseCache:
@@ -565,18 +582,11 @@ class APIResponseCache:
     @staticmethod
     async def get_api_response(endpoint: str, params: Dict[str, Any]) -> Optional[Any]:
         """Get cached API response"""
-        return await cache_manager.get(
-            "api_responses",
-            endpoint,
-            **params
-        )
+        return await cache_manager.get("api_responses", endpoint, **params)
 
     @staticmethod
     async def cache_api_response(
-        endpoint: str,
-        params: Dict[str, Any],
-        response: Any,
-        ttl_seconds: int = 300
+        endpoint: str, params: Dict[str, Any], response: Any, ttl_seconds: int = 300
     ):
         """Cache API response"""
         await cache_manager.set(
@@ -585,8 +595,9 @@ class APIResponseCache:
             response,
             ttl_seconds=ttl_seconds,
             tags={"api_cache"},
-            **params
+            **params,
         )
+
 
 class DatabaseQueryCache:
     """Specialized cache for database queries"""
@@ -601,7 +612,7 @@ class DatabaseQueryCache:
         query_hash: str,
         result: Any,
         ttl_seconds: int = 600,
-        tables: Optional[Set[str]] = None
+        tables: Optional[Set[str]] = None,
     ):
         """Cache database query result"""
         tags = {"db_cache"}
@@ -609,17 +620,14 @@ class DatabaseQueryCache:
             tags.update(f"table:{table}" for table in tables)
 
         await cache_manager.set(
-            "db_queries",
-            query_hash,
-            result,
-            ttl_seconds=ttl_seconds,
-            tags=tags
+            "db_queries", query_hash, result, ttl_seconds=ttl_seconds, tags=tags
         )
 
     @staticmethod
     async def invalidate_table_cache(table_name: str):
         """Invalidate all cached queries for a table"""
         await cache_manager.invalidate_by_tag(f"table:{table_name}")
+
 
 # Performance monitoring integration
 class CachePerformanceMonitor:
@@ -639,9 +647,13 @@ class CachePerformanceMonitor:
         # Performance recommendations
         recommendations = []
         if stats["overall_hit_rate"] < 0.7:
-            recommendations.append("Consider increasing cache TTL for frequently accessed data")
+            recommendations.append(
+                "Consider increasing cache TTL for frequently accessed data"
+            )
         if stats["avg_response_time_ms"] > 10:
-            recommendations.append("Optimize cache storage or consider using faster cache backend")
+            recommendations.append(
+                "Optimize cache storage or consider using faster cache backend"
+            )
         if stats["l1_cache_size"] >= stats["l1_max_size"] * 0.9:
             recommendations.append("Consider increasing L1 cache size")
 
@@ -649,7 +661,7 @@ class CachePerformanceMonitor:
             "performance_score": efficiency_score,
             "statistics": stats,
             "recommendations": recommendations,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def monitor_real_time(self, duration_seconds: int = 60):
@@ -659,16 +671,19 @@ class CachePerformanceMonitor:
 
         while time.time() - start_time < duration_seconds and self.monitoring_enabled:
             stats = await self.cache_manager.get_stats()
-            monitoring_data.append({
-                "timestamp": datetime.utcnow().isoformat(),
-                "hit_rate": stats["overall_hit_rate"],
-                "response_time": stats["avg_response_time_ms"],
-                "total_requests": stats["total_requests"]
-            })
+            monitoring_data.append(
+                {
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "hit_rate": stats["overall_hit_rate"],
+                    "response_time": stats["avg_response_time_ms"],
+                    "total_requests": stats["total_requests"],
+                }
+            )
 
             await asyncio.sleep(5)  # Sample every 5 seconds
 
         return monitoring_data
+
 
 # Initialize global cache manager
 async def initialize_cache_system():
@@ -676,9 +691,9 @@ async def initialize_cache_system():
     await cache_manager.initialize()
     logging.info("🚀 Advanced caching system initialized")
 
+
 # Cache warming utilities
 async def warm_cache_with_popular_data():
     """Pre-populate cache with frequently accessed data"""
     # This would be implemented based on usage analytics
     # Pre-load popular API endpoints, user data, etc.
-    pass

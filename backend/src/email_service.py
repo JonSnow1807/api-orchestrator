@@ -11,80 +11,87 @@ from src.config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class EmailService:
     """Email service for sending transactional emails"""
-    
+
     @staticmethod
     def send_email(
         to_email: str,
         subject: str,
         html_content: str,
-        text_content: Optional[str] = None
+        text_content: Optional[str] = None,
     ) -> bool:
         """
         Send an email using SMTP
-        
+
         Args:
             to_email: Recipient email address
             subject: Email subject
             html_content: HTML content of the email
             text_content: Plain text content (optional)
-            
+
         Returns:
             True if email sent successfully, False otherwise
         """
         if not settings.EMAIL_ENABLED:
-            logger.warning("Email service is disabled. Enable it by setting EMAIL_ENABLED=true")
+            logger.warning(
+                "Email service is disabled. Enable it by setting EMAIL_ENABLED=true"
+            )
             return False
-            
-        if not all([settings.SMTP_HOST, settings.SMTP_USERNAME, settings.SMTP_PASSWORD]):
-            logger.error("Email configuration incomplete. Please set SMTP_HOST, SMTP_USERNAME, and SMTP_PASSWORD")
+
+        if not all(
+            [settings.SMTP_HOST, settings.SMTP_USERNAME, settings.SMTP_PASSWORD]
+        ):
+            logger.error(
+                "Email configuration incomplete. Please set SMTP_HOST, SMTP_USERNAME, and SMTP_PASSWORD"
+            )
             return False
-            
+
         try:
             # Create message
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
-            msg['From'] = f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM}>"
-            msg['To'] = to_email
-            
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM}>"
+            msg["To"] = to_email
+
             # Add text and HTML parts
             if text_content:
-                part1 = MIMEText(text_content, 'plain')
+                part1 = MIMEText(text_content, "plain")
                 msg.attach(part1)
-            
-            part2 = MIMEText(html_content, 'html')
+
+            part2 = MIMEText(html_content, "html")
             msg.attach(part2)
-            
+
             # Send email
             with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
                 server.starttls()
                 server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
                 server.send_message(msg)
-            
+
             logger.info(f"Email sent successfully to {to_email}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to send email to {to_email}: {str(e)}")
             return False
-    
+
     @staticmethod
     def send_password_reset_email(to_email: str, reset_token: str) -> bool:
         """
         Send password reset email
-        
+
         Args:
             to_email: Recipient email address
             reset_token: Password reset token
-            
+
         Returns:
             True if email sent successfully, False otherwise
         """
         reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
-        
+
         subject = "Reset Your StreamAPI Password"
-        
+
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -160,7 +167,7 @@ class EmailService:
         </body>
         </html>
         """
-        
+
         text_content = f"""
         StreamAPI Password Reset
         
@@ -176,23 +183,23 @@ class EmailService:
         
         © 2024 StreamAPI. All rights reserved.
         """
-        
+
         return EmailService.send_email(to_email, subject, html_content, text_content)
-    
+
     @staticmethod
     def send_welcome_email(to_email: str, username: str) -> bool:
         """
         Send welcome email to new users
-        
+
         Args:
             to_email: Recipient email address
             username: User's username
-            
+
         Returns:
             True if email sent successfully, False otherwise
         """
         subject = "Welcome to StreamAPI!"
-        
+
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -260,7 +267,7 @@ class EmailService:
         </body>
         </html>
         """
-        
+
         text_content = f"""
         Welcome to StreamAPI!
         
@@ -279,11 +286,13 @@ class EmailService:
         
         Need help? Check out our documentation or contact support.
         """
-        
+
         return EmailService.send_email(to_email, subject, html_content, text_content)
+
 
 # Export the service
 email_service = EmailService()
+
 
 # Additional functions for workspace invitations
 async def send_invitation_email(
@@ -291,13 +300,13 @@ async def send_invitation_email(
     workspace_name: str,
     inviter_name: str,
     token: str,
-    message: Optional[str] = None
+    message: Optional[str] = None,
 ) -> bool:
     """Send workspace invitation email"""
     invite_url = f"{settings.FRONTEND_URL}/invite/{token}"
-    
+
     subject = f"You're invited to join {workspace_name} on StreamAPI"
-    
+
     html_content = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>You're invited to join {workspace_name}!</h2>
@@ -307,13 +316,10 @@ async def send_invitation_email(
         <p>This invitation expires in 7 days.</p>
     </div>
     """
-    
+
     return email_service.send_email(email, subject, html_content)
 
-async def send_notification_email(
-    email: str,
-    subject: str,
-    body: str
-) -> bool:
+
+async def send_notification_email(email: str, subject: str, body: str) -> bool:
     """Send general notification email"""
     return email_service.send_email(email, subject, f"<div>{body}</div>", body)

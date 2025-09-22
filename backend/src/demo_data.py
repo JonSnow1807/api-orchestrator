@@ -4,15 +4,14 @@ Creates sample projects, APIs, and tests for new users
 """
 
 import json
-from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from datetime import datetime
 
 SAMPLE_OPENAPI_SPEC = {
     "openapi": "3.0.0",
     "info": {
         "title": "Pet Store API",
         "version": "1.0.0",
-        "description": "A sample Pet Store API to demonstrate API Orchestrator features"
+        "description": "A sample Pet Store API to demonstrate API Orchestrator features",
     },
     "servers": [
         {"url": "https://petstore.api-orchestrator.demo", "description": "Demo server"}
@@ -29,7 +28,7 @@ SAMPLE_OPENAPI_SPEC = {
                         "in": "query",
                         "description": "How many items to return",
                         "required": False,
-                        "schema": {"type": "integer", "format": "int32"}
+                        "schema": {"type": "integer", "format": "int32"},
                     }
                 ],
                 "responses": {
@@ -39,12 +38,12 @@ SAMPLE_OPENAPI_SPEC = {
                             "application/json": {
                                 "schema": {
                                     "type": "array",
-                                    "items": {"$ref": "#/components/schemas/Pet"}
+                                    "items": {"$ref": "#/components/schemas/Pet"},
                                 }
                             }
-                        }
+                        },
                     }
-                }
+                },
             },
             "post": {
                 "summary": "Create a pet",
@@ -56,7 +55,7 @@ SAMPLE_OPENAPI_SPEC = {
                             "schema": {"$ref": "#/components/schemas/Pet"}
                         }
                     },
-                    "required": True
+                    "required": True,
                 },
                 "responses": {
                     "201": {
@@ -65,10 +64,10 @@ SAMPLE_OPENAPI_SPEC = {
                             "application/json": {
                                 "schema": {"$ref": "#/components/schemas/Pet"}
                             }
-                        }
+                        },
                     }
-                }
-            }
+                },
+            },
         },
         "/pets/{petId}": {
             "get": {
@@ -81,7 +80,7 @@ SAMPLE_OPENAPI_SPEC = {
                         "in": "path",
                         "required": True,
                         "description": "The id of the pet",
-                        "schema": {"type": "string"}
+                        "schema": {"type": "string"},
                     }
                 ],
                 "responses": {
@@ -91,12 +90,10 @@ SAMPLE_OPENAPI_SPEC = {
                             "application/json": {
                                 "schema": {"$ref": "#/components/schemas/Pet"}
                             }
-                        }
+                        },
                     },
-                    "404": {
-                        "description": "Pet not found"
-                    }
-                }
+                    "404": {"description": "Pet not found"},
+                },
             },
             "put": {
                 "summary": "Update a pet",
@@ -107,7 +104,7 @@ SAMPLE_OPENAPI_SPEC = {
                         "name": "petId",
                         "in": "path",
                         "required": True,
-                        "schema": {"type": "string"}
+                        "schema": {"type": "string"},
                     }
                 ],
                 "requestBody": {
@@ -117,11 +114,7 @@ SAMPLE_OPENAPI_SPEC = {
                         }
                     }
                 },
-                "responses": {
-                    "200": {
-                        "description": "Pet updated"
-                    }
-                }
+                "responses": {"200": {"description": "Pet updated"}},
             },
             "delete": {
                 "summary": "Delete a pet",
@@ -132,15 +125,11 @@ SAMPLE_OPENAPI_SPEC = {
                         "name": "petId",
                         "in": "path",
                         "required": True,
-                        "schema": {"type": "string"}
+                        "schema": {"type": "string"},
                     }
                 ],
-                "responses": {
-                    "204": {
-                        "description": "Pet deleted"
-                    }
-                }
-            }
+                "responses": {"204": {"description": "Pet deleted"}},
+            },
         },
         "/users": {
             "get": {
@@ -154,12 +143,12 @@ SAMPLE_OPENAPI_SPEC = {
                             "application/json": {
                                 "schema": {
                                     "type": "array",
-                                    "items": {"$ref": "#/components/schemas/User"}
+                                    "items": {"$ref": "#/components/schemas/User"},
                                 }
                             }
-                        }
+                        },
                     }
-                }
+                },
             }
         },
         "/users/login": {
@@ -174,9 +163,9 @@ SAMPLE_OPENAPI_SPEC = {
                                 "type": "object",
                                 "properties": {
                                     "username": {"type": "string"},
-                                    "password": {"type": "string"}
+                                    "password": {"type": "string"},
                                 },
-                                "required": ["username", "password"]
+                                "required": ["username", "password"],
                             }
                         }
                     }
@@ -190,18 +179,16 @@ SAMPLE_OPENAPI_SPEC = {
                                     "type": "object",
                                     "properties": {
                                         "token": {"type": "string"},
-                                        "user": {"$ref": "#/components/schemas/User"}
-                                    }
+                                        "user": {"$ref": "#/components/schemas/User"},
+                                    },
                                 }
                             }
-                        }
+                        },
                     },
-                    "401": {
-                        "description": "Invalid credentials"
-                    }
-                }
+                    "401": {"description": "Invalid credentials"},
+                },
             }
-        }
+        },
     },
     "components": {
         "schemas": {
@@ -214,13 +201,10 @@ SAMPLE_OPENAPI_SPEC = {
                     "category": {"type": "string"},
                     "status": {
                         "type": "string",
-                        "enum": ["available", "pending", "sold"]
+                        "enum": ["available", "pending", "sold"],
                     },
-                    "tags": {
-                        "type": "array",
-                        "items": {"type": "string"}
-                    }
-                }
+                    "tags": {"type": "array", "items": {"type": "string"}},
+                },
             },
             "User": {
                 "type": "object",
@@ -230,19 +214,19 @@ SAMPLE_OPENAPI_SPEC = {
                     "email": {"type": "string", "format": "email"},
                     "firstName": {"type": "string"},
                     "lastName": {"type": "string"},
-                    "phone": {"type": "string"}
-                }
+                    "phone": {"type": "string"},
+                },
             },
             "Error": {
                 "type": "object",
                 "required": ["code", "message"],
                 "properties": {
                     "code": {"type": "integer", "format": "int32"},
-                    "message": {"type": "string"}
-                }
-            }
+                    "message": {"type": "string"},
+                },
+            },
         }
-    }
+    },
 }
 
 SAMPLE_TESTS = [
@@ -253,8 +237,8 @@ SAMPLE_TESTS = [
         "assertions": [
             {"type": "STATUS_CODE", "expected": 200, "operator": "equals"},
             {"type": "RESPONSE_TIME", "expected": 1000, "operator": "less_than"},
-            {"type": "IS_JSON", "expected": True}
-        ]
+            {"type": "IS_JSON", "expected": True},
+        ],
     },
     {
         "name": "Test POST /pets - Create a pet",
@@ -264,13 +248,16 @@ SAMPLE_TESTS = [
             "name": "Fluffy",
             "category": "cat",
             "status": "available",
-            "tags": ["cute", "fluffy"]
+            "tags": ["cute", "fluffy"],
         },
         "assertions": [
             {"type": "STATUS_CODE", "expected": 201, "operator": "equals"},
-            {"type": "BODY_JSON_PATH", "expected": {"path": "$.name", "value": "Fluffy"}},
-            {"type": "HEADER_EXISTS", "expected": "Content-Type"}
-        ]
+            {
+                "type": "BODY_JSON_PATH",
+                "expected": {"path": "$.name", "value": "Fluffy"},
+            },
+            {"type": "HEADER_EXISTS", "expected": "Content-Type"},
+        ],
     },
     {
         "name": "Test GET /pets/{id} - Get pet by ID",
@@ -278,8 +265,8 @@ SAMPLE_TESTS = [
         "method": "GET",
         "assertions": [
             {"type": "STATUS_CODE", "expected": 200, "operator": "equals"},
-            {"type": "BODY_JSON_PATH", "expected": {"path": "$.id", "value": 123}}
-        ]
+            {"type": "BODY_JSON_PATH", "expected": {"path": "$.id", "value": 123}},
+        ],
     },
     {
         "name": "Test DELETE /pets/{id} - Delete pet",
@@ -287,23 +274,27 @@ SAMPLE_TESTS = [
         "method": "DELETE",
         "assertions": [
             {"type": "STATUS_CODE", "expected": 204, "operator": "equals"},
-            {"type": "RESPONSE_TIME", "expected": 500, "operator": "less_than"}
-        ]
+            {"type": "RESPONSE_TIME", "expected": 500, "operator": "less_than"},
+        ],
     },
     {
         "name": "Test User Login",
         "endpoint": "/users/login",
         "method": "POST",
-        "body": {
-            "username": "testuser",
-            "password": "testpass123"
-        },
+        "body": {"username": "testuser", "password": "testpass123"},
         "assertions": [
             {"type": "STATUS_CODE", "expected": 200, "operator": "equals"},
-            {"type": "BODY_JSON_PATH", "expected": {"path": "$.token"}, "operator": "exists"},
-            {"type": "BODY_JSON_PATH", "expected": {"path": "$.user.username", "value": "testuser"}}
-        ]
-    }
+            {
+                "type": "BODY_JSON_PATH",
+                "expected": {"path": "$.token"},
+                "operator": "exists",
+            },
+            {
+                "type": "BODY_JSON_PATH",
+                "expected": {"path": "$.user.username", "value": "testuser"},
+            },
+        ],
+    },
 ]
 
 SAMPLE_COLLECTIONS = [
@@ -315,9 +306,7 @@ SAMPLE_COLLECTIONS = [
                 "name": "List Pets",
                 "method": "GET",
                 "url": "{{base_url}}/pets",
-                "headers": {
-                    "Accept": "application/json"
-                }
+                "headers": {"Accept": "application/json"},
             },
             {
                 "name": "Create Pet",
@@ -325,21 +314,19 @@ SAMPLE_COLLECTIONS = [
                 "url": "{{base_url}}/pets",
                 "headers": {
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer {{token}}"
+                    "Authorization": "Bearer {{token}}",
                 },
                 "body": {
                     "name": "{{pet_name}}",
                     "category": "dog",
-                    "status": "available"
-                }
+                    "status": "available",
+                },
             },
             {
                 "name": "Get Pet Details",
                 "method": "GET",
                 "url": "{{base_url}}/pets/{{pet_id}}",
-                "headers": {
-                    "Accept": "application/json"
-                }
+                "headers": {"Accept": "application/json"},
             },
             {
                 "name": "Update Pet",
@@ -347,14 +334,11 @@ SAMPLE_COLLECTIONS = [
                 "url": "{{base_url}}/pets/{{pet_id}}",
                 "headers": {
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer {{token}}"
+                    "Authorization": "Bearer {{token}}",
                 },
-                "body": {
-                    "name": "{{pet_name}}",
-                    "status": "sold"
-                }
-            }
-        ]
+                "body": {"name": "{{pet_name}}", "status": "sold"},
+            },
+        ],
     },
     {
         "name": "User Authentication",
@@ -364,24 +348,17 @@ SAMPLE_COLLECTIONS = [
                 "name": "User Login",
                 "method": "POST",
                 "url": "{{base_url}}/users/login",
-                "headers": {
-                    "Content-Type": "application/json"
-                },
-                "body": {
-                    "username": "{{username}}",
-                    "password": "{{password}}"
-                }
+                "headers": {"Content-Type": "application/json"},
+                "body": {"username": "{{username}}", "password": "{{password}}"},
             },
             {
                 "name": "Get User Profile",
                 "method": "GET",
                 "url": "{{base_url}}/users/me",
-                "headers": {
-                    "Authorization": "Bearer {{token}}"
-                }
-            }
-        ]
-    }
+                "headers": {"Authorization": "Bearer {{token}}"},
+            },
+        ],
+    },
 ]
 
 SAMPLE_ENVIRONMENTS = [
@@ -393,8 +370,8 @@ SAMPLE_ENVIRONMENTS = [
             "pet_id": "1",
             "pet_name": "Max",
             "username": "devuser",
-            "password": "devpass123"
-        }
+            "password": "devpass123",
+        },
     },
     {
         "name": "Staging",
@@ -404,8 +381,8 @@ SAMPLE_ENVIRONMENTS = [
             "pet_id": "",
             "pet_name": "Buddy",
             "username": "testuser",
-            "password": "testpass123"
-        }
+            "password": "testpass123",
+        },
     },
     {
         "name": "Production",
@@ -415,70 +392,80 @@ SAMPLE_ENVIRONMENTS = [
             "pet_id": "",
             "pet_name": "",
             "username": "",
-            "password": ""
-        }
-    }
+            "password": "",
+        },
+    },
 ]
+
 
 def create_demo_project(db, user_id: int):
     """Create a demo project with sample data"""
     from src.database import Project, API, Test, MockServer, Collection, Environment
-    
+
     # Create demo project
     project = Project(
         user_id=user_id,
         name="Pet Store API Demo",
         description="A sample Pet Store API to explore API Orchestrator features. This demo includes endpoints for managing pets and users, complete with tests and mock servers.",
         source_type="openapi",
-        github_url="https://github.com/api-orchestrator/petstore-demo"
+        github_url="https://github.com/api-orchestrator/petstore-demo",
     )
     db.add(project)
     db.flush()
-    
+
     # Create APIs from OpenAPI spec
     api_count = 0
-    for path, methods in SAMPLE_OPENAPI_SPEC['paths'].items():
+    for path, methods in SAMPLE_OPENAPI_SPEC["paths"].items():
         for method, operation in methods.items():
             api = API(
                 project_id=project.id,
                 path=path,
                 method=method.upper(),
-                handler_name=operation.get('operationId', ''),
-                description=operation.get('summary', ''),
-                parameters=operation.get('parameters', []),
-                response_schema=operation.get('responses', {}),
-                auth_required='security' in operation
+                handler_name=operation.get("operationId", ""),
+                description=operation.get("summary", ""),
+                parameters=operation.get("parameters", []),
+                response_schema=operation.get("responses", {}),
+                auth_required="security" in operation,
             )
             db.add(api)
             api_count += 1
-    
+
     db.flush()
-    
+
     # Create sample tests
     apis = db.query(API).filter(API.project_id == project.id).all()
     test_count = 0
     for test_data in SAMPLE_TESTS:
         # Find matching API
-        api = next((a for a in apis if a.path == test_data['endpoint'] and a.method == test_data['method']), None)
+        api = next(
+            (
+                a
+                for a in apis
+                if a.path == test_data["endpoint"] and a.method == test_data["method"]
+            ),
+            None,
+        )
         if api:
             test = Test(
                 api_id=api.id,
-                name=test_data['name'],
-                test_type='functional',
-                framework='api-orchestrator',
-                code=json.dumps({
-                    'url': test_data['endpoint'],
-                    'method': test_data['method'],
-                    'body': test_data.get('body'),
-                    'assertions': test_data['assertions']
-                }),
+                name=test_data["name"],
+                test_type="functional",
+                framework="api-orchestrator",
+                code=json.dumps(
+                    {
+                        "url": test_data["endpoint"],
+                        "method": test_data["method"],
+                        "body": test_data.get("body"),
+                        "assertions": test_data["assertions"],
+                    }
+                ),
                 description=f"Automated test for {test_data['method']} {test_data['endpoint']}",
-                severity='medium',
-                status='pending'
+                severity="medium",
+                status="pending",
             )
             db.add(test)
             test_count += 1
-    
+
     # Create mock server
     mock_server = MockServer(
         project_id=project.id,
@@ -486,64 +473,61 @@ def create_demo_project(db, user_id: int):
         port=3001,
         host="localhost",
         status="stopped",
-        config={
-            "spec": SAMPLE_OPENAPI_SPEC,
-            "delay": 0,
-            "error_rate": 0
-        },
-        created_at=datetime.utcnow()
+        config={"spec": SAMPLE_OPENAPI_SPEC, "delay": 0, "error_rate": 0},
+        created_at=datetime.utcnow(),
     )
     db.add(mock_server)
-    
+
     # Create collections
     collection_count = 0
     for coll_data in SAMPLE_COLLECTIONS:
         collection = Collection(
             project_id=project.id,
-            name=coll_data['name'],
-            description=coll_data['description'],
-            requests=coll_data['requests'],
+            name=coll_data["name"],
+            description=coll_data["description"],
+            requests=coll_data["requests"],
             structure={
                 "folders": [],
-                "requests": [req['name'] for req in coll_data['requests']]
+                "requests": [req["name"] for req in coll_data["requests"]],
             },
             variables={},
-            created_by=user_id
+            created_by=user_id,
         )
         db.add(collection)
         collection_count += 1
-    
+
     # Create environments
     environment_count = 0
     for env_data in SAMPLE_ENVIRONMENTS:
         environment = Environment(
             project_id=project.id,
-            name=env_data['name'],
-            variables=env_data['variables'],
-            initial_variables=env_data['variables'],
-            current_variables=env_data['variables'],
-            is_default=env_data['name'] == 'Development',
-            created_by=user_id
+            name=env_data["name"],
+            variables=env_data["variables"],
+            initial_variables=env_data["variables"],
+            current_variables=env_data["variables"],
+            is_default=env_data["name"] == "Development",
+            created_by=user_id,
         )
         db.add(environment)
         environment_count += 1
-    
+
     db.commit()
-    
+
     return {
         "project": project,
         "stats": {
             "apis": api_count,
             "tests": test_count,
             "collections": collection_count,
-            "environments": environment_count
-        }
+            "environments": environment_count,
+        },
     }
+
 
 def create_demo_workspace(db, user_id: int):
     """Create a demo workspace with sample data"""
     from src.models.workspace import Workspace
-    
+
     workspace = Workspace(
         name="Demo Workspace",
         slug="demo-workspace",
@@ -552,39 +536,37 @@ def create_demo_workspace(db, user_id: int):
         subscription_tier="professional",
         max_members=10,
         max_projects=50,
-        max_api_calls=10000
+        max_api_calls=10000,
     )
     db.add(workspace)
     db.flush()
-    
+
     # Add the user as owner
     workspace.add_member(user_id, "owner")
-    
+
     db.commit()
     return workspace
+
 
 def initialize_demo_for_user(db, user_id: int):
     """Initialize demo data for a new user"""
     try:
         # Create demo workspace
         workspace = create_demo_workspace(db, user_id)
-        
+
         # Create demo project
         result = create_demo_project(db, user_id)
-        
+
         # Note: Project doesn't have workspace_id field yet
         # This would need to be added to the Project model
         db.commit()
-        
+
         return {
             "success": True,
             "workspace": workspace,
-            "project": result['project'],
-            "stats": result['stats']
+            "project": result["project"],
+            "stats": result["stats"],
         }
     except Exception as e:
         db.rollback()
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}

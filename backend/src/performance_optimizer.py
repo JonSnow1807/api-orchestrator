@@ -10,18 +10,19 @@ import aiohttp
 import statistics
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict
-from concurrent.futures import ThreadPoolExecutor
 import logging
 from datetime import datetime
-import json
 import psutil
-import resource
 
 # Import advanced caching system
 from src.advanced_caching_system import (
-    cache_manager, APIResponseCache, CachePerformanceMonitor,
-    initialize_cache_system, cached
+    cache_manager,
+    APIResponseCache,
+    CachePerformanceMonitor,
+    initialize_cache_system,
+    cached,
 )
+
 
 @dataclass
 class EndpointMetrics:
@@ -37,6 +38,7 @@ class EndpointMetrics:
     percentile_95: float
     percentile_99: float
 
+
 @dataclass
 class SystemMetrics:
     cpu_usage: float
@@ -44,6 +46,7 @@ class SystemMetrics:
     network_io: Dict[str, int]
     disk_io: Dict[str, int]
     open_file_descriptors: int
+
 
 class PerformanceOptimizer:
     """
@@ -73,7 +76,6 @@ class PerformanceOptimizer:
             {"path": "/api/v1/auth/logout", "method": "POST"},
             {"path": "/api/v1/users/me", "method": "GET"},
             {"path": "/api/v1/users/profile", "method": "PUT"},
-
             # Projects & Workspaces
             {"path": "/api/v1/projects", "method": "GET"},
             {"path": "/api/v1/projects", "method": "POST"},
@@ -83,7 +85,6 @@ class PerformanceOptimizer:
             {"path": "/api/v1/workspaces", "method": "GET"},
             {"path": "/api/v1/workspaces", "method": "POST"},
             {"path": "/api/v1/workspaces/{id}", "method": "GET"},
-
             # API Testing & Orchestration
             {"path": "/api/v1/tests", "method": "GET"},
             {"path": "/api/v1/tests", "method": "POST"},
@@ -91,7 +92,6 @@ class PerformanceOptimizer:
             {"path": "/api/v1/tests/{id}/results", "method": "GET"},
             {"path": "/api/v1/orchestrate", "method": "POST"},
             {"path": "/api/v1/orchestrate/{id}/status", "method": "GET"},
-
             # Kill Shot Features
             {"path": "/api/v1/kill-shots/api-time-machine", "method": "GET"},
             {"path": "/api/v1/kill-shots/api-time-machine/snapshot", "method": "POST"},
@@ -99,33 +99,28 @@ class PerformanceOptimizer:
             {"path": "/api/v1/kill-shots/quantum-test-generation", "method": "POST"},
             {"path": "/api/v1/kill-shots/predictive-analysis", "method": "GET"},
             {"path": "/api/v1/kill-shots/dashboard", "method": "GET"},
-
             # AI Agents
             {"path": "/api/v1/agents", "method": "GET"},
             {"path": "/api/v1/agents/{type}/analyze", "method": "POST"},
             {"path": "/api/v1/agents/ai/intelligence", "method": "POST"},
             {"path": "/api/v1/agents/security/scan", "method": "POST"},
             {"path": "/api/v1/agents/performance/analyze", "method": "POST"},
-
             # Mock Servers
             {"path": "/api/v1/mock-servers", "method": "GET"},
             {"path": "/api/v1/mock-servers", "method": "POST"},
             {"path": "/api/v1/mock-servers/{id}", "method": "GET"},
             {"path": "/api/v1/mock-servers/{id}/start", "method": "POST"},
             {"path": "/api/v1/mock-servers/{id}/stop", "method": "POST"},
-
             # Billing & Subscriptions
             {"path": "/api/v1/billing/info", "method": "GET"},
             {"path": "/api/v1/billing/subscribe", "method": "POST"},
             {"path": "/api/v1/billing/usage", "method": "GET"},
             {"path": "/api/v1/billing/webhooks/stripe", "method": "POST"},
-
             # System & Health
             {"path": "/health", "method": "GET"},
             {"path": "/metrics", "method": "GET"},
             {"path": "/docs", "method": "GET"},
             {"path": "/openapi.json", "method": "GET"},
-
             # Export/Import
             {"path": "/api/v1/export", "method": "POST"},
             {"path": "/api/v1/import", "method": "POST"},
@@ -136,16 +131,27 @@ class PerformanceOptimizer:
         additional_endpoints = []
 
         # API versioning endpoints
-        for version in ['v1', 'v2']:
-            for resource in ['collections', 'environments', 'monitors', 'mocks', 'apis']:
+        for version in ["v1", "v2"]:
+            for resource in [
+                "collections",
+                "environments",
+                "monitors",
+                "mocks",
+                "apis",
+            ]:
                 for i in range(10):  # 10 endpoints per resource
-                    additional_endpoints.extend([
-                        {"path": f"/api/{version}/{resource}", "method": "GET"},
-                        {"path": f"/api/{version}/{resource}", "method": "POST"},
-                        {"path": f"/api/{version}/{resource}/{i}", "method": "GET"},
-                        {"path": f"/api/{version}/{resource}/{i}", "method": "PUT"},
-                        {"path": f"/api/{version}/{resource}/{i}", "method": "DELETE"},
-                    ])
+                    additional_endpoints.extend(
+                        [
+                            {"path": f"/api/{version}/{resource}", "method": "GET"},
+                            {"path": f"/api/{version}/{resource}", "method": "POST"},
+                            {"path": f"/api/{version}/{resource}/{i}", "method": "GET"},
+                            {"path": f"/api/{version}/{resource}/{i}", "method": "PUT"},
+                            {
+                                "path": f"/api/{version}/{resource}/{i}",
+                                "method": "DELETE",
+                            },
+                        ]
+                    )
 
         # WebSocket endpoints
         websocket_endpoints = [
@@ -165,17 +171,24 @@ class PerformanceOptimizer:
         """Initialize advanced caching system"""
         await initialize_cache_system()
         self.cache_monitor = CachePerformanceMonitor(cache_manager)
-        self.logger.info("🚀 Advanced caching system initialized for performance optimization")
+        self.logger.info(
+            "🚀 Advanced caching system initialized for performance optimization"
+        )
 
     @cached(namespace="endpoint_metrics", ttl_seconds=300)
-    async def get_cached_endpoint_metrics(self, endpoint_path: str, method: str) -> Optional[EndpointMetrics]:
+    async def get_cached_endpoint_metrics(
+        self, endpoint_path: str, method: str
+    ) -> Optional[EndpointMetrics]:
         """Get cached endpoint metrics if available"""
         return await APIResponseCache.get_api_response(f"{method}:{endpoint_path}", {})
 
-    async def benchmark_endpoint_with_cache(self, endpoint: Dict[str, str],
-                                          concurrent_requests: int = 100,
-                                          total_requests: int = 1000,
-                                          test_caching: bool = True) -> EndpointMetrics:
+    async def benchmark_endpoint_with_cache(
+        self,
+        endpoint: Dict[str, str],
+        concurrent_requests: int = 100,
+        total_requests: int = 1000,
+        test_caching: bool = True,
+    ) -> EndpointMetrics:
         """Enhanced benchmark that tests both cached and uncached performance"""
 
         if test_caching and self.caching_enabled:
@@ -186,65 +199,94 @@ class PerformanceOptimizer:
             return cache_metrics
         else:
             # Standard benchmark
-            return await self.benchmark_endpoint(endpoint, concurrent_requests, total_requests)
+            return await self.benchmark_endpoint(
+                endpoint, concurrent_requests, total_requests
+            )
 
-    async def _benchmark_with_cache_analysis(self, endpoint: Dict[str, str],
-                                           concurrent_requests: int,
-                                           total_requests: int) -> EndpointMetrics:
+    async def _benchmark_with_cache_analysis(
+        self, endpoint: Dict[str, str], concurrent_requests: int, total_requests: int
+    ) -> EndpointMetrics:
         """Benchmark endpoint with cache hit/miss analysis"""
 
         # Run initial benchmark to populate cache
-        initial_metrics = await self.benchmark_endpoint(endpoint, concurrent_requests // 2, total_requests // 2)
+        initial_metrics = await self.benchmark_endpoint(
+            endpoint, concurrent_requests // 2, total_requests // 2
+        )
 
         # Cache the response pattern for this endpoint
         cache_key = f"{endpoint['method']}:{endpoint['path']}"
         await APIResponseCache.cache_api_response(
-            cache_key, {},
+            cache_key,
+            {},
             {"status": "cached", "response_time": initial_metrics.avg_response_time},
-            ttl_seconds=300
+            ttl_seconds=300,
         )
 
         # Run second benchmark (should benefit from caching)
-        cached_metrics = await self.benchmark_endpoint(endpoint, concurrent_requests // 2, total_requests // 2)
+        cached_metrics = await self.benchmark_endpoint(
+            endpoint, concurrent_requests // 2, total_requests // 2
+        )
 
         # Calculate cache improvement
         cache_improvement = (
-            (initial_metrics.avg_response_time - cached_metrics.avg_response_time) /
-            initial_metrics.avg_response_time * 100
-        ) if initial_metrics.avg_response_time > 0 else 0
+            (
+                (initial_metrics.avg_response_time - cached_metrics.avg_response_time)
+                / initial_metrics.avg_response_time
+                * 100
+            )
+            if initial_metrics.avg_response_time > 0
+            else 0
+        )
 
-        self.cache_hit_improvements[endpoint['path']] = cache_improvement
+        self.cache_hit_improvements[endpoint["path"]] = cache_improvement
 
         # Return combined metrics with cache analysis
         combined_metrics = EndpointMetrics(
-            endpoint=endpoint['path'],
-            method=endpoint['method'],
-            avg_response_time=(initial_metrics.avg_response_time + cached_metrics.avg_response_time) / 2,
-            min_response_time=min(initial_metrics.min_response_time, cached_metrics.min_response_time),
-            max_response_time=max(initial_metrics.max_response_time, cached_metrics.max_response_time),
-            requests_per_second=initial_metrics.requests_per_second + cached_metrics.requests_per_second,
-            success_rate=(initial_metrics.success_rate + cached_metrics.success_rate) / 2,
+            endpoint=endpoint["path"],
+            method=endpoint["method"],
+            avg_response_time=(
+                initial_metrics.avg_response_time + cached_metrics.avg_response_time
+            )
+            / 2,
+            min_response_time=min(
+                initial_metrics.min_response_time, cached_metrics.min_response_time
+            ),
+            max_response_time=max(
+                initial_metrics.max_response_time, cached_metrics.max_response_time
+            ),
+            requests_per_second=initial_metrics.requests_per_second
+            + cached_metrics.requests_per_second,
+            success_rate=(initial_metrics.success_rate + cached_metrics.success_rate)
+            / 2,
             error_count=initial_metrics.error_count + cached_metrics.error_count,
-            total_requests=initial_metrics.total_requests + cached_metrics.total_requests,
-            percentile_95=(initial_metrics.percentile_95 + cached_metrics.percentile_95) / 2,
-            percentile_99=(initial_metrics.percentile_99 + cached_metrics.percentile_99) / 2
+            total_requests=initial_metrics.total_requests
+            + cached_metrics.total_requests,
+            percentile_95=(initial_metrics.percentile_95 + cached_metrics.percentile_95)
+            / 2,
+            percentile_99=(initial_metrics.percentile_99 + cached_metrics.percentile_99)
+            / 2,
         )
 
-        self.logger.info(f"Cache improvement for {endpoint['path']}: {cache_improvement:.1f}%")
+        self.logger.info(
+            f"Cache improvement for {endpoint['path']}: {cache_improvement:.1f}%"
+        )
         return combined_metrics
 
-    async def benchmark_endpoint(self, endpoint: Dict[str, str],
-                                concurrent_requests: int = 100,
-                                total_requests: int = 1000) -> EndpointMetrics:
+    async def benchmark_endpoint(
+        self,
+        endpoint: Dict[str, str],
+        concurrent_requests: int = 100,
+        total_requests: int = 1000,
+    ) -> EndpointMetrics:
         """Benchmark a single endpoint"""
 
         url = f"{self.base_url}{endpoint['path']}"
-        method = endpoint['method']
+        method = endpoint["method"]
 
         if method == "WS":
             # Skip WebSocket endpoints for HTTP benchmarking
             return EndpointMetrics(
-                endpoint=endpoint['path'],
+                endpoint=endpoint["path"],
                 method=method,
                 avg_response_time=0,
                 min_response_time=0,
@@ -254,7 +296,7 @@ class PerformanceOptimizer:
                 error_count=0,
                 total_requests=0,
                 percentile_95=0,
-                percentile_99=0
+                percentile_99=0,
             )
 
         response_times = []
@@ -267,14 +309,26 @@ class PerformanceOptimizer:
                 async with semaphore:
                     start_time = time.time()
                     try:
-                        async with session.request(method, url, timeout=aiohttp.ClientTimeout(total=5)) as response:
+                        async with session.request(
+                            method, url, timeout=aiohttp.ClientTimeout(total=5)
+                        ) as response:
                             await response.text()  # Read response body
                             end_time = time.time()
-                            response_time = (end_time - start_time) * 1000  # Convert to ms
-                            return {"success": True, "response_time": response_time, "status": response.status}
+                            response_time = (
+                                end_time - start_time
+                            ) * 1000  # Convert to ms
+                            return {
+                                "success": True,
+                                "response_time": response_time,
+                                "status": response.status,
+                            }
                     except Exception as e:
                         end_time = time.time()
-                        return {"success": False, "error": str(e), "response_time": (end_time - start_time) * 1000}
+                        return {
+                            "success": False,
+                            "error": str(e),
+                            "response_time": (end_time - start_time) * 1000,
+                        }
 
             # Execute all requests concurrently
             start_benchmark = time.time()
@@ -291,17 +345,25 @@ class PerformanceOptimizer:
                 avg_response_time = statistics.mean(response_times)
                 min_response_time = min(response_times)
                 max_response_time = max(response_times)
-                percentile_95 = statistics.quantiles(response_times, n=20)[18]  # 95th percentile
-                percentile_99 = statistics.quantiles(response_times, n=100)[98] if len(response_times) > 100 else max_response_time
+                percentile_95 = statistics.quantiles(response_times, n=20)[
+                    18
+                ]  # 95th percentile
+                percentile_99 = (
+                    statistics.quantiles(response_times, n=100)[98]
+                    if len(response_times) > 100
+                    else max_response_time
+                )
             else:
-                avg_response_time = min_response_time = max_response_time = percentile_95 = percentile_99 = 0
+                avg_response_time = (
+                    min_response_time
+                ) = max_response_time = percentile_95 = percentile_99 = 0
 
             total_time = end_benchmark - start_benchmark
             requests_per_second = total_requests / total_time if total_time > 0 else 0
             success_rate = len(successful_results) / total_requests * 100
 
             return EndpointMetrics(
-                endpoint=endpoint['path'],
+                endpoint=endpoint["path"],
                 method=method,
                 avg_response_time=avg_response_time,
                 min_response_time=min_response_time,
@@ -311,7 +373,7 @@ class PerformanceOptimizer:
                 error_count=len(errors),
                 total_requests=total_requests,
                 percentile_95=percentile_95,
-                percentile_99=percentile_99
+                percentile_99=percentile_99,
             )
 
     def get_system_metrics(self) -> SystemMetrics:
@@ -332,14 +394,14 @@ class PerformanceOptimizer:
 
             # Open file descriptors
             process = psutil.Process()
-            open_fds = process.num_fds() if hasattr(process, 'num_fds') else 0
+            open_fds = process.num_fds() if hasattr(process, "num_fds") else 0
 
             return SystemMetrics(
                 cpu_usage=cpu_usage,
                 memory_usage=memory_usage,
                 network_io=network_io,
                 disk_io=disk_io,
-                open_file_descriptors=open_fds
+                open_file_descriptors=open_fds,
             )
         except Exception as e:
             self.logger.error(f"Error getting system metrics: {e}")
@@ -348,7 +410,7 @@ class PerformanceOptimizer:
                 memory_usage=0,
                 network_io={},
                 disk_io={},
-                open_file_descriptors=0
+                open_file_descriptors=0,
             )
 
     async def run_massive_scale_test(self) -> Dict[str, Any]:
@@ -363,13 +425,15 @@ class PerformanceOptimizer:
             {"concurrent": 500, "total": 5000, "name": "Medium Load"},
             {"concurrent": 1000, "total": 10000, "name": "High Load"},
             {"concurrent": 2000, "total": 20000, "name": "Extreme Load"},
-            {"concurrent": 5000, "total": 50000, "name": "MAXIMUM SCALE"}
+            {"concurrent": 5000, "total": 50000, "name": "MAXIMUM SCALE"},
         ]
 
         results = {}
 
         for config in test_configurations:
-            self.logger.info(f"🔥 Running {config['name']}: {config['total']} requests, {config['concurrent']} concurrent")
+            self.logger.info(
+                f"🔥 Running {config['name']}: {config['total']} requests, {config['concurrent']} concurrent"
+            )
 
             # System metrics before test
             system_before = self.get_system_metrics()
@@ -382,8 +446,8 @@ class PerformanceOptimizer:
             try:
                 metrics = await self.benchmark_endpoint(
                     test_endpoint,
-                    concurrent_requests=config['concurrent'],
-                    total_requests=config['total']
+                    concurrent_requests=config["concurrent"],
+                    total_requests=config["total"],
                 )
 
                 end_time = time.time()
@@ -392,23 +456,25 @@ class PerformanceOptimizer:
                 # System metrics after test
                 system_after = self.get_system_metrics()
 
-                results[config['name']] = {
+                results[config["name"]] = {
                     "configuration": config,
                     "metrics": asdict(metrics),
                     "test_time": total_test_time,
                     "system_before": asdict(system_before),
                     "system_after": asdict(system_after),
-                    "achieved_rps": metrics.requests_per_second
+                    "achieved_rps": metrics.requests_per_second,
                 }
 
-                self.logger.info(f"✅ {config['name']} completed: {metrics.requests_per_second:.0f} RPS")
+                self.logger.info(
+                    f"✅ {config['name']} completed: {metrics.requests_per_second:.0f} RPS"
+                )
 
                 # Short break between tests
                 await asyncio.sleep(2)
 
             except Exception as e:
                 self.logger.error(f"❌ {config['name']} failed: {e}")
-                results[config['name']] = {"error": str(e)}
+                results[config["name"]] = {"error": str(e)}
 
         return results
 
@@ -425,36 +491,50 @@ class PerformanceOptimizer:
         optimization_results = []
 
         for endpoint in sample_endpoints:
-            self.logger.info(f"🔍 Testing endpoint: {endpoint['method']} {endpoint['path']}")
+            self.logger.info(
+                f"🔍 Testing endpoint: {endpoint['method']} {endpoint['path']}"
+            )
 
             try:
-                metrics = await self.benchmark_endpoint(endpoint, concurrent_requests=50, total_requests=500)
+                metrics = await self.benchmark_endpoint(
+                    endpoint, concurrent_requests=50, total_requests=500
+                )
                 optimization_results.append(asdict(metrics))
 
                 # Identify optimization opportunities
                 if metrics.avg_response_time > 1000:  # > 1 second
-                    self.logger.warning(f"⚠️ Slow endpoint detected: {endpoint['path']} ({metrics.avg_response_time:.0f}ms)")
+                    self.logger.warning(
+                        f"⚠️ Slow endpoint detected: {endpoint['path']} ({metrics.avg_response_time:.0f}ms)"
+                    )
 
                 if metrics.success_rate < 95:
-                    self.logger.warning(f"⚠️ Low success rate: {endpoint['path']} ({metrics.success_rate:.1f}%)")
+                    self.logger.warning(
+                        f"⚠️ Low success rate: {endpoint['path']} ({metrics.success_rate:.1f}%)"
+                    )
 
             except Exception as e:
                 self.logger.error(f"❌ Failed to test {endpoint['path']}: {e}")
 
         # Calculate overall statistics
-        successful_metrics = [m for m in optimization_results if m['success_rate'] > 0]
+        successful_metrics = [m for m in optimization_results if m["success_rate"] > 0]
 
         if successful_metrics:
-            avg_response_times = [m['avg_response_time'] for m in successful_metrics]
-            total_rps = sum(m['requests_per_second'] for m in successful_metrics)
+            avg_response_times = [m["avg_response_time"] for m in successful_metrics]
+            total_rps = sum(m["requests_per_second"] for m in successful_metrics)
 
             summary = {
                 "total_endpoints_tested": len(successful_metrics),
                 "avg_response_time": statistics.mean(avg_response_times),
                 "total_rps": total_rps,
-                "fastest_endpoint": min(successful_metrics, key=lambda x: x['avg_response_time']),
-                "slowest_endpoint": max(successful_metrics, key=lambda x: x['avg_response_time']),
-                "optimization_recommendations": self._generate_optimization_recommendations(successful_metrics)
+                "fastest_endpoint": min(
+                    successful_metrics, key=lambda x: x["avg_response_time"]
+                ),
+                "slowest_endpoint": max(
+                    successful_metrics, key=lambda x: x["avg_response_time"]
+                ),
+                "optimization_recommendations": self._generate_optimization_recommendations(
+                    successful_metrics
+                ),
             }
         else:
             summary = {"error": "No successful endpoint tests"}
@@ -462,34 +542,46 @@ class PerformanceOptimizer:
         return {
             "summary": summary,
             "detailed_results": optimization_results,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     def _generate_optimization_recommendations(self, metrics: List[Dict]) -> List[str]:
         """Generate optimization recommendations based on test results"""
         recommendations = []
 
-        slow_endpoints = [m for m in metrics if m['avg_response_time'] > 500]
+        slow_endpoints = [m for m in metrics if m["avg_response_time"] > 500]
         if slow_endpoints:
-            recommendations.append(f"⚡ Optimize {len(slow_endpoints)} slow endpoints (>500ms response time)")
+            recommendations.append(
+                f"⚡ Optimize {len(slow_endpoints)} slow endpoints (>500ms response time)"
+            )
 
-        low_success_endpoints = [m for m in metrics if m['success_rate'] < 98]
+        low_success_endpoints = [m for m in metrics if m["success_rate"] < 98]
         if low_success_endpoints:
-            recommendations.append(f"🛠️ Fix {len(low_success_endpoints)} endpoints with low success rates")
+            recommendations.append(
+                f"🛠️ Fix {len(low_success_endpoints)} endpoints with low success rates"
+            )
 
-        high_variability = [m for m in metrics if (m['max_response_time'] - m['min_response_time']) > 1000]
+        high_variability = [
+            m
+            for m in metrics
+            if (m["max_response_time"] - m["min_response_time"]) > 1000
+        ]
         if high_variability:
-            recommendations.append(f"📊 Reduce response time variability for {len(high_variability)} endpoints")
+            recommendations.append(
+                f"📊 Reduce response time variability for {len(high_variability)} endpoints"
+            )
 
         if not recommendations:
             recommendations.append("🎉 All tested endpoints are performing well!")
 
-        recommendations.extend([
-            "🚀 Implement response caching for frequently accessed endpoints",
-            "📦 Use connection pooling for database operations",
-            "⚡ Add async processing for heavy operations",
-            "🔄 Implement load balancing for high-traffic endpoints"
-        ])
+        recommendations.extend(
+            [
+                "🚀 Implement response caching for frequently accessed endpoints",
+                "📦 Use connection pooling for database operations",
+                "⚡ Add async processing for heavy operations",
+                "🔄 Implement load balancing for high-traffic endpoints",
+            ]
+        )
 
         return recommendations
 
@@ -507,36 +599,50 @@ class PerformanceOptimizer:
             "cache_performance": {},
             "endpoint_improvements": {},
             "cache_statistics": {},
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Test a sample of endpoints with caching
         sample_endpoints = self.endpoints[:10]  # Test first 10 endpoints
 
         for endpoint in sample_endpoints:
-            self.logger.info(f"🔍 Cache testing endpoint: {endpoint['method']} {endpoint['path']}")
+            self.logger.info(
+                f"🔍 Cache testing endpoint: {endpoint['method']} {endpoint['path']}"
+            )
 
             try:
                 # Test without cache
                 no_cache_metrics = await self.benchmark_endpoint(endpoint, 50, 500)
 
                 # Test with cache
-                cache_metrics = await self.benchmark_endpoint_with_cache(endpoint, 50, 500)
+                cache_metrics = await self.benchmark_endpoint_with_cache(
+                    endpoint, 50, 500
+                )
 
                 # Calculate improvement
                 improvement = (
-                    (no_cache_metrics.avg_response_time - cache_metrics.avg_response_time) /
-                    no_cache_metrics.avg_response_time * 100
-                ) if no_cache_metrics.avg_response_time > 0 else 0
+                    (
+                        (
+                            no_cache_metrics.avg_response_time
+                            - cache_metrics.avg_response_time
+                        )
+                        / no_cache_metrics.avg_response_time
+                        * 100
+                    )
+                    if no_cache_metrics.avg_response_time > 0
+                    else 0
+                )
 
-                optimization_results["endpoint_improvements"][endpoint['path']] = {
+                optimization_results["endpoint_improvements"][endpoint["path"]] = {
                     "no_cache_response_time": no_cache_metrics.avg_response_time,
                     "cache_response_time": cache_metrics.avg_response_time,
                     "improvement_percentage": improvement,
-                    "cache_hit_rate": cache_metrics.success_rate
+                    "cache_hit_rate": cache_metrics.success_rate,
                 }
 
-                self.logger.info(f"✅ Cache improvement for {endpoint['path']}: {improvement:.1f}%")
+                self.logger.info(
+                    f"✅ Cache improvement for {endpoint['path']}: {improvement:.1f}%"
+                )
 
             except Exception as e:
                 self.logger.error(f"❌ Cache test failed for {endpoint['path']}: {e}")
@@ -547,7 +653,9 @@ class PerformanceOptimizer:
             optimization_results["cache_statistics"] = cache_stats
 
         # Generate cache optimization recommendations
-        optimization_results["recommendations"] = await self._generate_cache_recommendations(
+        optimization_results[
+            "recommendations"
+        ] = await self._generate_cache_recommendations(
             optimization_results["endpoint_improvements"]
         )
 
@@ -566,27 +674,34 @@ class PerformanceOptimizer:
             optimization_results["overall_cache_improvement"] = 0
             optimization_results["endpoints_benefiting_from_cache"] = 0
 
-        self.logger.info(f"🎉 Cache optimization completed. Average improvement: {optimization_results.get('overall_cache_improvement', 0):.1f}%")
+        self.logger.info(
+            f"🎉 Cache optimization completed. Average improvement: {optimization_results.get('overall_cache_improvement', 0):.1f}%"
+        )
 
         return optimization_results
 
-    async def _generate_cache_recommendations(self, improvement_data: Dict[str, Any]) -> List[str]:
+    async def _generate_cache_recommendations(
+        self, improvement_data: Dict[str, Any]
+    ) -> List[str]:
         """Generate intelligent cache optimization recommendations"""
         recommendations = []
 
         # Analyze improvement patterns
         high_improvement_endpoints = [
-            endpoint for endpoint, data in improvement_data.items()
+            endpoint
+            for endpoint, data in improvement_data.items()
             if data["improvement_percentage"] > 30
         ]
 
         medium_improvement_endpoints = [
-            endpoint for endpoint, data in improvement_data.items()
+            endpoint
+            for endpoint, data in improvement_data.items()
             if 10 <= data["improvement_percentage"] <= 30
         ]
 
         low_improvement_endpoints = [
-            endpoint for endpoint, data in improvement_data.items()
+            endpoint
+            for endpoint, data in improvement_data.items()
             if 0 < data["improvement_percentage"] < 10
         ]
 
@@ -606,16 +721,18 @@ class PerformanceOptimizer:
             )
 
         # Cache-specific recommendations
-        recommendations.extend([
-            "📦 Implement Redis cluster for distributed caching",
-            "🔄 Add cache warming for frequently accessed endpoints",
-            "📊 Implement cache analytics and monitoring",
-            "⚡ Use cache tags for intelligent invalidation",
-            "🎯 Implement cache compression for large responses",
-            "🔍 Add cache hit/miss ratio monitoring",
-            "⏰ Implement adaptive TTL based on access patterns",
-            "🌐 Consider CDN integration for static content caching"
-        ])
+        recommendations.extend(
+            [
+                "📦 Implement Redis cluster for distributed caching",
+                "🔄 Add cache warming for frequently accessed endpoints",
+                "📊 Implement cache analytics and monitoring",
+                "⚡ Use cache tags for intelligent invalidation",
+                "🎯 Implement cache compression for large responses",
+                "🔍 Add cache hit/miss ratio monitoring",
+                "⏰ Implement adaptive TTL based on access patterns",
+                "🌐 Consider CDN integration for static content caching",
+            ]
+        )
 
         return recommendations
 
@@ -632,7 +749,7 @@ class PerformanceOptimizer:
             {"users": 100, "requests": 1000, "name": "Light Load"},
             {"users": 500, "requests": 5000, "name": "Medium Load"},
             {"users": 1000, "requests": 10000, "name": "Heavy Load"},
-            {"users": 2000, "requests": 20000, "name": "Extreme Load"}
+            {"users": 2000, "requests": 20000, "name": "Extreme Load"},
         ]
 
         for config in test_configurations:
@@ -646,44 +763,53 @@ class PerformanceOptimizer:
                 start_time = time.time()
                 cache_metrics = await self.benchmark_endpoint_with_cache(
                     test_endpoint,
-                    concurrent_requests=config['users'],
-                    total_requests=config['requests']
+                    concurrent_requests=config["users"],
+                    total_requests=config["requests"],
                 )
                 cache_test_time = time.time() - start_time
 
                 # Get cache statistics
                 cache_stats = await cache_manager.get_stats()
 
-                scalability_results[config['name']] = {
+                scalability_results[config["name"]] = {
                     "configuration": config,
                     "cache_metrics": asdict(cache_metrics),
                     "test_duration": cache_test_time,
                     "cache_hit_rate": cache_stats.get("overall_hit_rate", 0),
-                    "cache_response_time": cache_stats.get("avg_response_time_ms", 0)
+                    "cache_response_time": cache_stats.get("avg_response_time_ms", 0),
                 }
 
-                self.logger.info(f"✅ {config['name']} completed - Cache hit rate: {cache_stats.get('overall_hit_rate', 0):.2%}")
+                self.logger.info(
+                    f"✅ {config['name']} completed - Cache hit rate: {cache_stats.get('overall_hit_rate', 0):.2%}"
+                )
 
             except Exception as e:
-                self.logger.error(f"❌ Cache scalability test failed for {config['name']}: {e}")
-                scalability_results[config['name']] = {"error": str(e)}
+                self.logger.error(
+                    f"❌ Cache scalability test failed for {config['name']}: {e}"
+                )
+                scalability_results[config["name"]] = {"error": str(e)}
 
         return scalability_results
 
+
 # Global performance optimizer instance
 performance_optimizer = PerformanceOptimizer()
+
 
 async def run_performance_tests():
     """Run comprehensive performance tests"""
     return await performance_optimizer.run_massive_scale_test()
 
+
 async def optimize_endpoints():
     """Optimize all API endpoints"""
     return await performance_optimizer.optimize_all_endpoints()
 
+
 async def run_cache_optimization():
     """Run comprehensive cache optimization"""
     return await performance_optimizer.run_comprehensive_cache_optimization()
+
 
 async def benchmark_cache_performance():
     """Benchmark cache scalability"""

@@ -3,12 +3,11 @@ Distributed Tracing and Observability System for API Orchestrator
 OpenTelemetry-based tracing with Jaeger, Zipkin, and custom observability
 """
 
-from typing import Optional, Dict, Any, List, Set, Callable, Union
-from datetime import datetime, timedelta
+from typing import Optional, Dict, Any, List, Set, Callable
+from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
 import asyncio
-import json
 import uuid
 import time
 import logging
@@ -19,7 +18,7 @@ import threading
 
 # Optional imports with graceful fallbacks
 try:
-    from opentelemetry import trace, metrics, baggage
+    from opentelemetry import trace, metrics
     from opentelemetry.trace import Status, StatusCode
     from opentelemetry.exporter.jaeger.thrift import JaegerExporter
     from opentelemetry.exporter.zipkin.json import ZipkinExporter
@@ -31,18 +30,19 @@ try:
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
     from opentelemetry.instrumentation.requests import RequestsInstrumentor
     from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+
     HAS_OTEL = True
 except ImportError:
     HAS_OTEL = False
 
 try:
     import structlog
+
     HAS_STRUCTLOG = True
 except ImportError:
     structlog = None
     HAS_STRUCTLOG = False
 
-from src.config import settings
 
 class TraceLevel(str, Enum):
     DEBUG = "debug"
@@ -50,6 +50,7 @@ class TraceLevel(str, Enum):
     WARN = "warn"
     ERROR = "error"
     CRITICAL = "critical"
+
 
 class SpanType(str, Enum):
     HTTP_REQUEST = "http.request"
@@ -61,9 +62,11 @@ class SpanType(str, Enum):
     MESSAGE_QUEUE = "message.queue"
     AI_OPERATION = "ai.operation"
 
+
 @dataclass
 class TraceContext:
     """Trace context information"""
+
     trace_id: str
     span_id: str
     parent_span_id: Optional[str] = None
@@ -73,9 +76,11 @@ class TraceContext:
     start_time: datetime = field(default_factory=datetime.utcnow)
     tags: Dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass
 class Span:
     """Custom span implementation for when OpenTelemetry is not available"""
+
     trace_id: str
     span_id: str
     parent_span_id: Optional[str]
@@ -89,9 +94,11 @@ class Span:
     status: str = "ok"
     error: Optional[str] = None
 
+
 @dataclass
 class ServiceMetrics:
     """Service-level metrics for observability"""
+
     service_name: str
     request_count: int = 0
     error_count: int = 0
@@ -103,14 +110,17 @@ class ServiceMetrics:
     throughput_rps: float = 0.0
     last_updated: datetime = field(default_factory=datetime.utcnow)
 
+
 @dataclass
 class DependencyMap:
     """Service dependency mapping"""
+
     service_name: str
     dependencies: Set[str] = field(default_factory=set)
     dependents: Set[str] = field(default_factory=set)
     call_count: Dict[str, int] = field(default_factory=dict)
     error_count: Dict[str, int] = field(default_factory=dict)
+
 
 class DistributedTracer:
     """Distributed tracing implementation with OpenTelemetry integration"""
@@ -128,8 +138,9 @@ class DistributedTracer:
         self.span_lock = threading.Lock()
 
         # Context variables for async trace propagation
-        self.current_trace_context: contextvars.ContextVar[Optional[TraceContext]] = \
-            contextvars.ContextVar('current_trace_context', default=None)
+        self.current_trace_context: contextvars.ContextVar[
+            Optional[TraceContext]
+        ] = contextvars.ContextVar("current_trace_context", default=None)
 
         # Metrics collection
         self.service_metrics: Dict[str, ServiceMetrics] = {}
@@ -137,10 +148,12 @@ class DistributedTracer:
 
         self.initialized = False
 
-    async def initialize(self,
-                        jaeger_endpoint: Optional[str] = None,
-                        zipkin_endpoint: Optional[str] = None,
-                        enable_console_export: bool = True):
+    async def initialize(
+        self,
+        jaeger_endpoint: Optional[str] = None,
+        zipkin_endpoint: Optional[str] = None,
+        enable_console_export: bool = True,
+    ):
         """Initialize distributed tracing with various backends"""
 
         if HAS_OTEL:
@@ -151,12 +164,16 @@ class DistributedTracer:
             logging.warning("OpenTelemetry not available, using fallback tracing")
 
         self.initialized = True
-        logging.info(f"🔍 Distributed tracing initialized for service: {self.service_name}")
+        logging.info(
+            f"🔍 Distributed tracing initialized for service: {self.service_name}"
+        )
 
-    async def _initialize_opentelemetry(self,
-                                      jaeger_endpoint: Optional[str],
-                                      zipkin_endpoint: Optional[str],
-                                      enable_console_export: bool):
+    async def _initialize_opentelemetry(
+        self,
+        jaeger_endpoint: Optional[str],
+        zipkin_endpoint: Optional[str],
+        enable_console_export: bool,
+    ):
         """Initialize OpenTelemetry with multiple exporters"""
 
         # Set up trace provider
@@ -166,25 +183,22 @@ class DistributedTracer:
         # Add exporters
         if jaeger_endpoint:
             jaeger_exporter = JaegerExporter(
-                agent_host_name=jaeger_endpoint.split(':')[0],
-                agent_port=int(jaeger_endpoint.split(':')[1]) if ':' in jaeger_endpoint else 14268,
+                agent_host_name=jaeger_endpoint.split(":")[0],
+                agent_port=int(jaeger_endpoint.split(":")[1])
+                if ":" in jaeger_endpoint
+                else 14268,
             )
-            self.trace_provider.add_span_processor(
-                BatchSpanProcessor(jaeger_exporter)
-            )
+            self.trace_provider.add_span_processor(BatchSpanProcessor(jaeger_exporter))
 
         if zipkin_endpoint:
             zipkin_exporter = ZipkinExporter(endpoint=zipkin_endpoint)
-            self.trace_provider.add_span_processor(
-                BatchSpanProcessor(zipkin_exporter)
-            )
+            self.trace_provider.add_span_processor(BatchSpanProcessor(zipkin_exporter))
 
         if enable_console_export:
             from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+
             console_exporter = ConsoleSpanExporter()
-            self.trace_provider.add_span_processor(
-                BatchSpanProcessor(console_exporter)
-            )
+            self.trace_provider.add_span_processor(BatchSpanProcessor(console_exporter))
 
         # Set up propagation
         set_global_textmap(B3MultiFormat())
@@ -203,11 +217,13 @@ class DistributedTracer:
         self.meter = metrics.get_meter(__name__)
 
     @asynccontextmanager
-    async def trace_span(self,
-                        operation_name: str,
-                        span_type: SpanType = SpanType.BUSINESS_LOGIC,
-                        tags: Optional[Dict[str, Any]] = None,
-                        parent_context: Optional[TraceContext] = None):
+    async def trace_span(
+        self,
+        operation_name: str,
+        span_type: SpanType = SpanType.BUSINESS_LOGIC,
+        tags: Optional[Dict[str, Any]] = None,
+        parent_context: Optional[TraceContext] = None,
+    ):
         """Create a traced span with automatic timing and error handling"""
 
         # Generate trace context
@@ -252,10 +268,12 @@ class DistributedTracer:
             finally:
                 self.current_trace_context.reset(token)
 
-    async def _create_trace_context(self,
-                                  operation_name: str,
-                                  parent_context: Optional[TraceContext],
-                                  tags: Optional[Dict[str, Any]]) -> TraceContext:
+    async def _create_trace_context(
+        self,
+        operation_name: str,
+        parent_context: Optional[TraceContext],
+        tags: Optional[Dict[str, Any]],
+    ) -> TraceContext:
         """Create trace context for a new span"""
 
         # Get current context or create new one
@@ -277,10 +295,12 @@ class DistributedTracer:
             parent_span_id=parent_span_id,
             service_name=self.service_name,
             operation_name=operation_name,
-            tags=tags or {}
+            tags=tags or {},
         )
 
-    async def _create_fallback_span(self, trace_context: TraceContext, span_type: SpanType) -> Span:
+    async def _create_fallback_span(
+        self, trace_context: TraceContext, span_type: SpanType
+    ) -> Span:
         """Create fallback span when OpenTelemetry is not available"""
 
         span = Span(
@@ -290,7 +310,7 @@ class DistributedTracer:
             operation_name=trace_context.operation_name,
             service_name=trace_context.service_name,
             start_time=trace_context.start_time,
-            tags=trace_context.tags.copy()
+            tags=trace_context.tags.copy(),
         )
 
         span.tags["span.type"] = span_type.value
@@ -300,7 +320,9 @@ class DistributedTracer:
 
         return span
 
-    async def _complete_fallback_span(self, span: Span, status: str, error: Optional[str] = None):
+    async def _complete_fallback_span(
+        self, span: Span, status: str, error: Optional[str] = None
+    ):
         """Complete a fallback span"""
 
         span.end_time = datetime.utcnow()
@@ -322,7 +344,9 @@ class DistributedTracer:
         service_name = span.service_name
 
         if service_name not in self.service_metrics:
-            self.service_metrics[service_name] = ServiceMetrics(service_name=service_name)
+            self.service_metrics[service_name] = ServiceMetrics(
+                service_name=service_name
+            )
 
         metrics = self.service_metrics[service_name]
         metrics.request_count += 1
@@ -356,7 +380,7 @@ class DistributedTracer:
                     "timestamp": datetime.utcnow().isoformat(),
                     "level": level.value,
                     "message": message,
-                    **kwargs
+                    **kwargs,
                 }
                 self.active_spans[span_id].logs.append(log_entry)
 
@@ -381,7 +405,9 @@ class DistributedTracer:
 
         return headers
 
-    async def extract_trace_headers(self, headers: Dict[str, str]) -> Optional[TraceContext]:
+    async def extract_trace_headers(
+        self, headers: Dict[str, str]
+    ) -> Optional[TraceContext]:
         """Extract trace context from HTTP headers"""
         trace_id = headers.get("X-Trace-Id")
         span_id = headers.get("X-Span-Id")
@@ -392,7 +418,7 @@ class DistributedTracer:
                 trace_id=trace_id,
                 span_id=span_id,
                 parent_span_id=parent_span_id,
-                service_name=self.service_name
+                service_name=self.service_name,
             )
 
         return None
@@ -423,11 +449,12 @@ class DistributedTracer:
                     "duration_ms": span.duration_ms,
                     "status": span.status,
                     "start_time": span.start_time.isoformat(),
-                    "tags": span.tags
+                    "tags": span.tags,
                 }
                 for span in spans
-            ]
+            ],
         }
+
 
 class ObservabilityManager:
     """Comprehensive observability management"""
@@ -451,7 +478,7 @@ class ObservabilityManager:
                     structlog.processors.TimeStamper(fmt="iso"),
                     structlog.processors.StackInfoRenderer(),
                     structlog.processors.format_exc_info,
-                    structlog.processors.JSONRenderer()
+                    structlog.processors.JSONRenderer(),
                 ],
                 context_class=dict,
                 logger_factory=structlog.stdlib.LoggerFactory(),
@@ -465,21 +492,27 @@ class ObservabilityManager:
         logging.info("🔭 Observability system initialized")
 
     @asynccontextmanager
-    async def trace_operation(self,
-                            operation_name: str,
-                            span_type: SpanType = SpanType.BUSINESS_LOGIC,
-                            **kwargs):
+    async def trace_operation(
+        self,
+        operation_name: str,
+        span_type: SpanType = SpanType.BUSINESS_LOGIC,
+        **kwargs,
+    ):
         """Trace an operation with observability features"""
-        async with self.tracer.trace_span(operation_name, span_type, **kwargs) as context:
+        async with self.tracer.trace_span(
+            operation_name, span_type, **kwargs
+        ) as context:
             yield context
 
-    def record_metric(self, metric_name: str, value: float, tags: Optional[Dict[str, str]] = None):
+    def record_metric(
+        self, metric_name: str, value: float, tags: Optional[Dict[str, str]] = None
+    ):
         """Record a custom metric"""
         metric_entry = {
             "name": metric_name,
             "value": value,
             "timestamp": datetime.utcnow(),
-            "tags": tags or {}
+            "tags": tags or {},
         }
         self.metrics_store[metric_name].append(metric_entry)
 
@@ -498,29 +531,35 @@ class ObservabilityManager:
         for name, check_func in self.health_checks.items():
             try:
                 start_time = time.time()
-                result = await check_func() if asyncio.iscoroutinefunction(check_func) else check_func()
+                result = (
+                    await check_func()
+                    if asyncio.iscoroutinefunction(check_func)
+                    else check_func()
+                )
                 duration = (time.time() - start_time) * 1000
 
                 results[name] = {
                     "status": "healthy" if result else "unhealthy",
                     "response_time_ms": duration,
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.utcnow().isoformat(),
                 }
             except Exception as e:
                 results[name] = {
                     "status": "error",
                     "error": str(e),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.utcnow().isoformat(),
                 }
 
-        overall_status = "healthy" if all(
-            r["status"] == "healthy" for r in results.values()
-        ) else "unhealthy"
+        overall_status = (
+            "healthy"
+            if all(r["status"] == "healthy" for r in results.values())
+            else "unhealthy"
+        )
 
         return {
             "overall_status": overall_status,
             "checks": results,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     def calculate_sli_metrics(self) -> Dict[str, float]:
@@ -554,7 +593,7 @@ class ObservabilityManager:
             "tracing": {
                 "active_spans": len(self.tracer.active_spans),
                 "completed_spans": len(self.tracer.completed_spans),
-                "current_trace_id": self.tracer.get_current_trace_id()
+                "current_trace_id": self.tracer.get_current_trace_id(),
             },
             "metrics": {
                 "service_metrics": {
@@ -562,24 +601,29 @@ class ObservabilityManager:
                         "request_count": m.request_count,
                         "error_rate": m.error_rate,
                         "throughput_rps": m.throughput_rps,
-                        "p95_latency": m.p95_latency
+                        "p95_latency": m.p95_latency,
                     }
                     for name, m in self.tracer.service_metrics.items()
                 },
-                "custom_metrics_count": len(self.metrics_store)
+                "custom_metrics_count": len(self.metrics_store),
             },
             "sli_metrics": self.calculate_sli_metrics(),
-            "error_budget_remaining": max(0, self.error_budget - sum(
-                m.error_rate for m in self.tracer.service_metrics.values()
-            ))
+            "error_budget_remaining": max(
+                0,
+                self.error_budget
+                - sum(m.error_rate for m in self.tracer.service_metrics.values()),
+            ),
         }
+
 
 # Global observability instance
 observability = ObservabilityManager()
 
+
 # Decorators for easy integration
 def trace(operation_name: str, span_type: SpanType = SpanType.BUSINESS_LOGIC):
     """Decorator to trace function calls"""
+
     def decorator(func: Callable):
         async def async_wrapper(*args, **kwargs):
             async with observability.trace_operation(operation_name, span_type):
@@ -587,7 +631,7 @@ def trace(operation_name: str, span_type: SpanType = SpanType.BUSINESS_LOGIC):
 
         def sync_wrapper(*args, **kwargs):
             # For sync functions, create a simple span
-            span_id = str(uuid.uuid4())
+            str(uuid.uuid4())
             start_time = time.time()
 
             try:
@@ -595,29 +639,35 @@ def trace(operation_name: str, span_type: SpanType = SpanType.BUSINESS_LOGIC):
                 duration = (time.time() - start_time) * 1000
                 observability.record_metric(f"{operation_name}_duration_ms", duration)
                 return result
-            except Exception as e:
+            except Exception:
                 observability.record_metric(f"{operation_name}_errors", 1)
                 raise
 
         return async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
+
     return decorator
+
 
 # Utility functions
 async def initialize_observability(**config):
     """Initialize the observability system"""
     await observability.initialize(**config)
 
+
 def get_trace_id() -> Optional[str]:
     """Get current trace ID"""
     return observability.tracer.get_current_trace_id()
+
 
 def add_trace_tag(key: str, value: Any):
     """Add tag to current trace"""
     observability.tracer.add_span_tag(key, value)
 
+
 def record_metric(name: str, value: float, **tags):
     """Record a metric value"""
     observability.record_metric(name, value, tags)
+
 
 # FastAPI middleware for automatic tracing
 class TracingMiddleware:
@@ -637,9 +687,9 @@ class TracingMiddleware:
 
         # Extract trace context from headers
         headers = dict(scope.get("headers", []))
-        trace_context = await observability.tracer.extract_trace_headers({
-            k.decode(): v.decode() for k, v in headers.items()
-        })
+        trace_context = await observability.tracer.extract_trace_headers(
+            {k.decode(): v.decode() for k, v in headers.items()}
+        )
 
         async with observability.trace_operation(
             operation_name,
@@ -647,8 +697,8 @@ class TracingMiddleware:
             tags={
                 "http.method": request_method,
                 "http.path": request_path,
-                "http.scheme": scope.get("scheme", "http")
+                "http.scheme": scope.get("scheme", "http"),
             },
-            parent_context=trace_context
+            parent_context=trace_context,
         ):
             await self.app(scope, receive, send)

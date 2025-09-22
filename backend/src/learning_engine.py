@@ -11,9 +11,11 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, asdict
 
+
 @dataclass
 class SecurityContext:
     """Context information for security scans"""
+
     project_type: str
     language: str
     framework: str
@@ -21,9 +23,11 @@ class SecurityContext:
     compliance_requirements: List[str]
     endpoint_patterns: List[str]
 
+
 @dataclass
 class LearningRecord:
     """Record of a security scan and its outcomes"""
+
     scan_id: str
     timestamp: datetime
     context: SecurityContext
@@ -31,6 +35,7 @@ class LearningRecord:
     fixes_applied: List[Dict[str, Any]]
     user_feedback: Optional[Dict[str, Any]]
     effectiveness_score: float
+
 
 class LearningEngine:
     """AI learning engine for continuous improvement"""
@@ -59,19 +64,25 @@ class LearningEngine:
             records_data = []
             for record in self.learning_records:
                 record_dict = asdict(record)
-                record_dict['timestamp'] = record.timestamp.isoformat()
-                record_dict['context'] = asdict(record.context)
+                record_dict["timestamp"] = record.timestamp.isoformat()
+                record_dict["context"] = asdict(record.context)
                 records_data.append(record_dict)
 
-            with open(os.path.join(self.storage_path, 'learning_records.json'), 'w') as f:
+            with open(
+                os.path.join(self.storage_path, "learning_records.json"), "w"
+            ) as f:
                 json.dump(records_data, f, indent=2)
 
             # Save learned patterns
-            with open(os.path.join(self.storage_path, 'learned_patterns.json'), 'w') as f:
+            with open(
+                os.path.join(self.storage_path, "learned_patterns.json"), "w"
+            ) as f:
                 json.dump(self.patterns_learned, f, indent=2)
 
             # Save context weights
-            with open(os.path.join(self.storage_path, 'context_weights.json'), 'w') as f:
+            with open(
+                os.path.join(self.storage_path, "context_weights.json"), "w"
+            ) as f:
                 json.dump(self.context_weights, f, indent=2)
 
         except Exception as e:
@@ -81,41 +92,46 @@ class LearningEngine:
         """Load learning data from storage"""
         try:
             # Load learning records
-            records_file = os.path.join(self.storage_path, 'learning_records.json')
+            records_file = os.path.join(self.storage_path, "learning_records.json")
             if os.path.exists(records_file):
-                with open(records_file, 'r') as f:
+                with open(records_file, "r") as f:
                     records_data = json.load(f)
 
                 for record_dict in records_data:
-                    context = SecurityContext(**record_dict['context'])
+                    context = SecurityContext(**record_dict["context"])
                     record = LearningRecord(
-                        scan_id=record_dict['scan_id'],
-                        timestamp=datetime.fromisoformat(record_dict['timestamp']),
+                        scan_id=record_dict["scan_id"],
+                        timestamp=datetime.fromisoformat(record_dict["timestamp"]),
                         context=context,
-                        vulnerabilities_found=record_dict['vulnerabilities_found'],
-                        fixes_applied=record_dict['fixes_applied'],
-                        user_feedback=record_dict.get('user_feedback'),
-                        effectiveness_score=record_dict['effectiveness_score']
+                        vulnerabilities_found=record_dict["vulnerabilities_found"],
+                        fixes_applied=record_dict["fixes_applied"],
+                        user_feedback=record_dict.get("user_feedback"),
+                        effectiveness_score=record_dict["effectiveness_score"],
                     )
                     self.learning_records.append(record)
 
             # Load learned patterns
-            patterns_file = os.path.join(self.storage_path, 'learned_patterns.json')
+            patterns_file = os.path.join(self.storage_path, "learned_patterns.json")
             if os.path.exists(patterns_file):
-                with open(patterns_file, 'r') as f:
+                with open(patterns_file, "r") as f:
                     self.patterns_learned = json.load(f)
 
             # Load context weights
-            weights_file = os.path.join(self.storage_path, 'context_weights.json')
+            weights_file = os.path.join(self.storage_path, "context_weights.json")
             if os.path.exists(weights_file):
-                with open(weights_file, 'r') as f:
+                with open(weights_file, "r") as f:
                     self.context_weights = json.load(f)
 
         except Exception as e:
             print(f"Warning: Could not load learning data: {e}")
 
-    def record_scan_outcome(self, context: SecurityContext, vulnerabilities: List[Dict[str, Any]],
-                           fixes: List[Dict[str, Any]], effectiveness: float) -> str:
+    def record_scan_outcome(
+        self,
+        context: SecurityContext,
+        vulnerabilities: List[Dict[str, Any]],
+        fixes: List[Dict[str, Any]],
+        effectiveness: float,
+    ) -> str:
         """Record the outcome of a security scan"""
 
         scan_id = self._generate_scan_id(context)
@@ -127,7 +143,7 @@ class LearningEngine:
             vulnerabilities_found=vulnerabilities,
             fixes_applied=fixes,
             user_feedback=None,
-            effectiveness_score=effectiveness
+            effectiveness_score=effectiveness,
         )
 
         self.learning_records.append(record)
@@ -140,8 +156,13 @@ class LearningEngine:
 
         return scan_id
 
-    def _update_learned_patterns(self, context: SecurityContext, vulnerabilities: List[Dict[str, Any]],
-                                fixes: List[Dict[str, Any]], effectiveness: float):
+    def _update_learned_patterns(
+        self,
+        context: SecurityContext,
+        vulnerabilities: List[Dict[str, Any]],
+        fixes: List[Dict[str, Any]],
+        effectiveness: float,
+    ):
         """Update learned patterns based on scan outcomes"""
 
         # Learn vulnerability patterns by project type
@@ -152,7 +173,7 @@ class LearningEngine:
                 "common_vulnerabilities": {},
                 "effective_fixes": {},
                 "scan_count": 0,
-                "avg_effectiveness": 0.0
+                "avg_effectiveness": 0.0,
             }
 
         pattern = self.patterns_learned[project_key]
@@ -160,25 +181,27 @@ class LearningEngine:
 
         # Update vulnerability frequency
         for vuln in vulnerabilities:
-            vuln_type = vuln.get('type', 'unknown')
+            vuln_type = vuln.get("type", "unknown")
             if vuln_type not in pattern["common_vulnerabilities"]:
                 pattern["common_vulnerabilities"][vuln_type] = 0
             pattern["common_vulnerabilities"][vuln_type] += 1
 
         # Update fix effectiveness
         for fix in fixes:
-            fix_type = fix.get('type', 'unknown')
+            fix_type = fix.get("type", "unknown")
             if fix_type not in pattern["effective_fixes"]:
-                pattern["effective_fixes"][fix_type] = {"count": 0, "total_effectiveness": 0.0}
+                pattern["effective_fixes"][fix_type] = {
+                    "count": 0,
+                    "total_effectiveness": 0.0,
+                }
 
             pattern["effective_fixes"][fix_type]["count"] += 1
             pattern["effective_fixes"][fix_type]["total_effectiveness"] += effectiveness
 
         # Update average effectiveness
         pattern["avg_effectiveness"] = (
-            (pattern["avg_effectiveness"] * (pattern["scan_count"] - 1) + effectiveness) /
-            pattern["scan_count"]
-        )
+            pattern["avg_effectiveness"] * (pattern["scan_count"] - 1) + effectiveness
+        ) / pattern["scan_count"]
 
         # Update context weights
         context_key = f"{context.business_domain}_{context.framework}"
@@ -187,9 +210,13 @@ class LearningEngine:
 
         # Increase weight for contexts with higher effectiveness
         if effectiveness > 0.8:
-            self.context_weights[context_key] = min(2.0, self.context_weights[context_key] + 0.1)
+            self.context_weights[context_key] = min(
+                2.0, self.context_weights[context_key] + 0.1
+            )
         elif effectiveness < 0.5:
-            self.context_weights[context_key] = max(0.5, self.context_weights[context_key] - 0.1)
+            self.context_weights[context_key] = max(
+                0.5, self.context_weights[context_key] - 0.1
+            )
 
     def get_recommendations(self, context: SecurityContext) -> Dict[str, Any]:
         """Get AI-powered recommendations based on learned patterns"""
@@ -202,7 +229,7 @@ class LearningEngine:
             "likely_vulnerabilities": [],
             "recommended_fixes": [],
             "confidence_score": 0.0,
-            "learning_insights": {}
+            "learning_insights": {},
         }
 
         # Get patterns for similar projects
@@ -224,13 +251,17 @@ class LearningEngine:
                 effective_fixes = []
                 for fix_type, fix_data in fixes.items():
                     if fix_data["count"] > 0:
-                        avg_effectiveness = fix_data["total_effectiveness"] / fix_data["count"]
+                        avg_effectiveness = (
+                            fix_data["total_effectiveness"] / fix_data["count"]
+                        )
                         if avg_effectiveness > 0.6:
-                            effective_fixes.append({
-                                "type": fix_type,
-                                "effectiveness": avg_effectiveness,
-                                "usage_count": fix_data["count"]
-                            })
+                            effective_fixes.append(
+                                {
+                                    "type": fix_type,
+                                    "effectiveness": avg_effectiveness,
+                                    "usage_count": fix_data["count"],
+                                }
+                            )
 
                 recommendations["recommended_fixes"] = sorted(
                     effective_fixes, key=lambda x: x["effectiveness"], reverse=True
@@ -243,18 +274,28 @@ class LearningEngine:
 
         recommendations["learning_insights"] = {
             "total_scans_recorded": len(self.learning_records),
-            "similar_project_scans": self.patterns_learned.get(project_key, {}).get("scan_count", 0),
+            "similar_project_scans": self.patterns_learned.get(project_key, {}).get(
+                "scan_count", 0
+            ),
             "context_weight": context_weight,
-            "avg_effectiveness": self.patterns_learned.get(project_key, {}).get("avg_effectiveness", 0.0)
+            "avg_effectiveness": self.patterns_learned.get(project_key, {}).get(
+                "avg_effectiveness", 0.0
+            ),
         }
 
         # Prioritize scan types based on learned patterns
         if recommendations["likely_vulnerabilities"]:
-            high_prob_vulns = [v for v in recommendations["likely_vulnerabilities"] if v["probability"] > 0.3]
+            high_prob_vulns = [
+                v
+                for v in recommendations["likely_vulnerabilities"]
+                if v["probability"] > 0.3
+            ]
             if high_prob_vulns:
                 recommendations["priority_scan_types"] = [
                     "security_vulnerability_scan",
-                    "database_security_audit" if any("sql" in v["type"].lower() for v in high_prob_vulns) else "devops_security_scan"
+                    "database_security_audit"
+                    if any("sql" in v["type"].lower() for v in high_prob_vulns)
+                    else "devops_security_scan",
                 ]
 
         return recommendations
@@ -268,14 +309,20 @@ class LearningEngine:
 
                 # Adjust effectiveness based on feedback
                 if feedback.get("helpful", False):
-                    record.effectiveness_score = min(1.0, record.effectiveness_score + 0.1)
+                    record.effectiveness_score = min(
+                        1.0, record.effectiveness_score + 0.1
+                    )
                 elif feedback.get("not_helpful", False):
-                    record.effectiveness_score = max(0.0, record.effectiveness_score - 0.2)
+                    record.effectiveness_score = max(
+                        0.0, record.effectiveness_score - 0.2
+                    )
 
                 # Update learned patterns with feedback
                 self._update_learned_patterns(
-                    record.context, record.vulnerabilities_found,
-                    record.fixes_applied, record.effectiveness_score
+                    record.context,
+                    record.vulnerabilities_found,
+                    record.fixes_applied,
+                    record.effectiveness_score,
                 )
 
                 self._save_learning_data()
@@ -289,21 +336,25 @@ class LearningEngine:
                 "total_scans": 0,
                 "avg_effectiveness": 0.0,
                 "learning_coverage": {},
-                "improvement_trend": "No data"
+                "improvement_trend": "No data",
             }
 
         recent_records = [
-            r for r in self.learning_records
+            r
+            for r in self.learning_records
             if r.timestamp > datetime.now() - timedelta(days=30)
         ]
 
         stats = {
             "total_scans": len(self.learning_records),
             "recent_scans": len(recent_records),
-            "avg_effectiveness": sum(r.effectiveness_score for r in self.learning_records) / len(self.learning_records),
+            "avg_effectiveness": sum(
+                r.effectiveness_score for r in self.learning_records
+            )
+            / len(self.learning_records),
             "learning_coverage": {},
             "patterns_learned": len(self.patterns_learned),
-            "context_variations": len(self.context_weights)
+            "context_variations": len(self.context_weights),
         }
 
         # Calculate learning coverage by language/framework
@@ -318,8 +369,12 @@ class LearningEngine:
 
         # Calculate improvement trend
         if len(self.learning_records) >= 5:
-            recent_avg = sum(r.effectiveness_score for r in self.learning_records[-5:]) / 5
-            older_avg = sum(r.effectiveness_score for r in self.learning_records[:5]) / 5
+            recent_avg = (
+                sum(r.effectiveness_score for r in self.learning_records[-5:]) / 5
+            )
+            older_avg = (
+                sum(r.effectiveness_score for r in self.learning_records[:5]) / 5
+            )
 
             if recent_avg > older_avg + 0.1:
                 stats["improvement_trend"] = "Improving"
@@ -336,8 +391,7 @@ class LearningEngine:
 
         original_count = len(self.learning_records)
         self.learning_records = [
-            record for record in self.learning_records
-            if record.timestamp > cutoff_date
+            record for record in self.learning_records if record.timestamp > cutoff_date
         ]
 
         removed_count = original_count - len(self.learning_records)
@@ -348,10 +402,15 @@ class LearningEngine:
 
         for record in self.learning_records:
             self._update_learned_patterns(
-                record.context, record.vulnerabilities_found,
-                record.fixes_applied, record.effectiveness_score
+                record.context,
+                record.vulnerabilities_found,
+                record.fixes_applied,
+                record.effectiveness_score,
             )
 
         self._save_learning_data()
 
-        return {"removed_records": removed_count, "remaining_records": len(self.learning_records)}
+        return {
+            "removed_records": removed_count,
+            "remaining_records": len(self.learning_records),
+        }

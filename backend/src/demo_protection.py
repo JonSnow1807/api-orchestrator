@@ -12,8 +12,9 @@ DEMO_ACCOUNTS = [
     "test@streamapi.dev",
     "demo@example.com",
     "test@example.com",
-    "demo@api-orchestrator.com"
+    "demo@api-orchestrator.com",
 ]
+
 
 def is_demo_account(email: str) -> bool:
     """Check if an email belongs to a demo account"""
@@ -34,6 +35,7 @@ def is_demo_account(email: str) -> bool:
 
     return False
 
+
 def protect_demo_account(email: str, operation: str = "payment") -> None:
     """
     Raise an exception if a demo account tries to perform a protected operation
@@ -49,9 +51,10 @@ def protect_demo_account(email: str, operation: str = "payment") -> None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Demo accounts cannot perform {operation} operations. "
-                   f"This is a demo account for testing purposes only. "
-                   f"To upgrade, please create a real account."
+            f"This is a demo account for testing purposes only. "
+            f"To upgrade, please create a real account.",
         )
+
 
 def get_demo_tier_limit(email: str) -> Optional[str]:
     """
@@ -68,7 +71,10 @@ def get_demo_tier_limit(email: str) -> Optional[str]:
         return "professional"
     return None
 
-def validate_demo_subscription(email: str, tier: str, payment_required: bool = False) -> dict:
+
+def validate_demo_subscription(
+    email: str, tier: str, payment_required: bool = False
+) -> dict:
     """
     Validate if a demo account can use the requested subscription tier
 
@@ -84,7 +90,7 @@ def validate_demo_subscription(email: str, tier: str, payment_required: bool = F
         return {
             "is_demo": False,
             "allowed": True,
-            "message": "Regular account - all operations allowed"
+            "message": "Regular account - all operations allowed",
         }
 
     # Demo account detected
@@ -93,7 +99,7 @@ def validate_demo_subscription(email: str, tier: str, payment_required: bool = F
             "is_demo": True,
             "allowed": False,
             "message": "Demo accounts cannot make payments. All features are already unlocked for testing.",
-            "suggestion": "Use the demo account to test all features without payment."
+            "suggestion": "Use the demo account to test all features without payment.",
         }
 
     # Check tier limits for demo accounts
@@ -103,7 +109,7 @@ def validate_demo_subscription(email: str, tier: str, payment_required: bool = F
             "is_demo": True,
             "allowed": True,
             "message": f"Demo account granted {tier} tier features for testing",
-            "note": "No payment required for demo accounts"
+            "note": "No payment required for demo accounts",
         }
 
     # Enterprise tier not allowed for demo
@@ -112,11 +118,11 @@ def validate_demo_subscription(email: str, tier: str, payment_required: bool = F
             "is_demo": True,
             "allowed": False,
             "message": "Demo accounts cannot access enterprise tier",
-            "suggestion": "Create a real account and contact sales for enterprise access"
+            "suggestion": "Create a real account and contact sales for enterprise access",
         }
 
     return {
         "is_demo": True,
         "allowed": False,
-        "message": f"Invalid tier '{tier}' for demo account"
+        "message": f"Invalid tier '{tier}' for demo account",
     }

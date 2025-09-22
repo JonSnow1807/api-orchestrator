@@ -1,20 +1,20 @@
+import logging
+
 """
 Multi-Language SDK Code Generator
 Generates client SDKs in Python, JavaScript, TypeScript, Java, Go, C#, PHP, Ruby, and more
 """
 
-from typing import Optional, Dict, Any, List, Set, Union
+from typing import Optional, Dict, Any, List
 from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
-import json
 import re
 import os
-from pathlib import Path
 import zipfile
 import tempfile
-import uuid
-from jinja2 import Environment, BaseLoader, Template
+from jinja2 import Environment, BaseLoader
+
 
 class ProgrammingLanguage(str, Enum):
     PYTHON = "python"
@@ -30,6 +30,7 @@ class ProgrammingLanguage(str, Enum):
     RUST = "rust"
     DART = "dart"
 
+
 class AuthType(str, Enum):
     API_KEY = "api_key"
     BEARER_TOKEN = "bearer_token"
@@ -38,9 +39,11 @@ class AuthType(str, Enum):
     JWT = "jwt"
     CUSTOM = "custom"
 
+
 @dataclass
 class EndpointSpec:
     """Specification for an API endpoint"""
+
     path: str
     method: str
     operation_id: str
@@ -53,9 +56,11 @@ class EndpointSpec:
     rate_limit: Optional[Dict[str, Any]] = None
     tags: List[str] = field(default_factory=list)
 
+
 @dataclass
 class SDKConfig:
     """Configuration for SDK generation"""
+
     package_name: str
     version: str = "1.0.0"
     description: str = ""
@@ -76,15 +81,18 @@ class SDKConfig:
     include_examples: bool = True
     include_tests: bool = True
 
+
 @dataclass
 class GeneratedSDK:
     """Generated SDK package"""
+
     language: ProgrammingLanguage
     package_name: str
     version: str
     files: Dict[str, str]  # filename -> content
     metadata: Dict[str, Any]
     zip_path: Optional[str] = None
+
 
 class TemplateEngine:
     """Template engine for code generation"""
@@ -105,7 +113,7 @@ class TemplateEngine:
                 "setup": self._get_python_setup_template(),
                 "readme": self._get_python_readme_template(),
                 "example": self._get_python_example_template(),
-                "test": self._get_python_test_template()
+                "test": self._get_python_test_template(),
             },
             ProgrammingLanguage.JAVASCRIPT: {
                 "client": self._get_js_client_template(),
@@ -114,7 +122,7 @@ class TemplateEngine:
                 "package": self._get_js_package_template(),
                 "readme": self._get_js_readme_template(),
                 "example": self._get_js_example_template(),
-                "test": self._get_js_test_template()
+                "test": self._get_js_test_template(),
             },
             ProgrammingLanguage.TYPESCRIPT: {
                 "client": self._get_ts_client_template(),
@@ -123,7 +131,7 @@ class TemplateEngine:
                 "package": self._get_ts_package_template(),
                 "readme": self._get_ts_readme_template(),
                 "example": self._get_ts_example_template(),
-                "test": self._get_ts_test_template()
+                "test": self._get_ts_test_template(),
             },
             ProgrammingLanguage.JAVA: {
                 "client": self._get_java_client_template(),
@@ -132,7 +140,7 @@ class TemplateEngine:
                 "pom": self._get_java_pom_template(),
                 "readme": self._get_java_readme_template(),
                 "example": self._get_java_example_template(),
-                "test": self._get_java_test_template()
+                "test": self._get_java_test_template(),
             },
             ProgrammingLanguage.GO: {
                 "client": self._get_go_client_template(),
@@ -141,76 +149,176 @@ class TemplateEngine:
                 "mod": self._get_go_mod_template(),
                 "readme": self._get_go_readme_template(),
                 "example": self._get_go_example_template(),
-                "test": self._get_go_test_template()
+                "test": self._get_go_test_template(),
             },
             ProgrammingLanguage.RUST: {
-                "client": enhanced_templates.get('rust', {}).get('client', "// Rust client template..."),
-                "model": enhanced_templates.get('rust', {}).get('model', "// Rust model template..."),
-                "auth": enhanced_templates.get('rust', {}).get('auth', "// Rust auth template..."),
-                "cargo": enhanced_templates.get('rust', {}).get('cargo', "# Rust Cargo.toml template..."),
-                "readme": enhanced_templates.get('rust', {}).get('readme', "# Rust README template..."),
-                "example": enhanced_templates.get('rust', {}).get('example', "// Rust example template..."),
-                "test": enhanced_templates.get('rust', {}).get('test', "// Rust test template...")
+                "client": enhanced_templates.get("rust", {}).get(
+                    "client", "// Rust client template..."
+                ),
+                "model": enhanced_templates.get("rust", {}).get(
+                    "model", "// Rust model template..."
+                ),
+                "auth": enhanced_templates.get("rust", {}).get(
+                    "auth", "// Rust auth template..."
+                ),
+                "cargo": enhanced_templates.get("rust", {}).get(
+                    "cargo", "# Rust Cargo.toml template..."
+                ),
+                "readme": enhanced_templates.get("rust", {}).get(
+                    "readme", "# Rust README template..."
+                ),
+                "example": enhanced_templates.get("rust", {}).get(
+                    "example", "// Rust example template..."
+                ),
+                "test": enhanced_templates.get("rust", {}).get(
+                    "test", "// Rust test template..."
+                ),
             },
             ProgrammingLanguage.SWIFT: {
-                "client": enhanced_templates.get('swift', {}).get('client', "// Swift client template..."),
-                "model": enhanced_templates.get('swift', {}).get('model', "// Swift model template..."),
-                "auth": enhanced_templates.get('swift', {}).get('auth', "// Swift auth template..."),
-                "package": enhanced_templates.get('swift', {}).get('package', "// Swift Package.swift template..."),
-                "readme": enhanced_templates.get('swift', {}).get('readme', "# Swift README template..."),
-                "example": enhanced_templates.get('swift', {}).get('example', "// Swift example template..."),
-                "test": enhanced_templates.get('swift', {}).get('test', "// Swift test template...")
+                "client": enhanced_templates.get("swift", {}).get(
+                    "client", "// Swift client template..."
+                ),
+                "model": enhanced_templates.get("swift", {}).get(
+                    "model", "// Swift model template..."
+                ),
+                "auth": enhanced_templates.get("swift", {}).get(
+                    "auth", "// Swift auth template..."
+                ),
+                "package": enhanced_templates.get("swift", {}).get(
+                    "package", "// Swift Package.swift template..."
+                ),
+                "readme": enhanced_templates.get("swift", {}).get(
+                    "readme", "# Swift README template..."
+                ),
+                "example": enhanced_templates.get("swift", {}).get(
+                    "example", "// Swift example template..."
+                ),
+                "test": enhanced_templates.get("swift", {}).get(
+                    "test", "// Swift test template..."
+                ),
             },
             ProgrammingLanguage.KOTLIN: {
-                "client": modern_templates.get('kotlin', {}).get('client', "// Kotlin client template..."),
-                "model": modern_templates.get('kotlin', {}).get('model', "// Kotlin model template..."),
-                "auth": modern_templates.get('kotlin', {}).get('auth', "// Kotlin auth template..."),
-                "gradle": modern_templates.get('kotlin', {}).get('gradle', "// Kotlin build.gradle template..."),
-                "readme": modern_templates.get('kotlin', {}).get('readme', "# Kotlin README template..."),
-                "example": modern_templates.get('kotlin', {}).get('example', "// Kotlin example template..."),
-                "test": modern_templates.get('kotlin', {}).get('test', "// Kotlin test template...")
+                "client": modern_templates.get("kotlin", {}).get(
+                    "client", "// Kotlin client template..."
+                ),
+                "model": modern_templates.get("kotlin", {}).get(
+                    "model", "// Kotlin model template..."
+                ),
+                "auth": modern_templates.get("kotlin", {}).get(
+                    "auth", "// Kotlin auth template..."
+                ),
+                "gradle": modern_templates.get("kotlin", {}).get(
+                    "gradle", "// Kotlin build.gradle template..."
+                ),
+                "readme": modern_templates.get("kotlin", {}).get(
+                    "readme", "# Kotlin README template..."
+                ),
+                "example": modern_templates.get("kotlin", {}).get(
+                    "example", "// Kotlin example template..."
+                ),
+                "test": modern_templates.get("kotlin", {}).get(
+                    "test", "// Kotlin test template..."
+                ),
             },
             ProgrammingLanguage.DART: {
-                "client": modern_templates.get('dart', {}).get('client', "// Dart client template..."),
-                "model": modern_templates.get('dart', {}).get('model', "// Dart model template..."),
-                "auth": modern_templates.get('dart', {}).get('auth', "// Dart auth template..."),
-                "pubspec": modern_templates.get('dart', {}).get('pubspec', "# Dart pubspec.yaml template..."),
-                "readme": modern_templates.get('dart', {}).get('readme', "# Dart README template..."),
-                "example": modern_templates.get('dart', {}).get('example', "// Dart example template..."),
-                "test": modern_templates.get('dart', {}).get('test', "// Dart test template...")
+                "client": modern_templates.get("dart", {}).get(
+                    "client", "// Dart client template..."
+                ),
+                "model": modern_templates.get("dart", {}).get(
+                    "model", "// Dart model template..."
+                ),
+                "auth": modern_templates.get("dart", {}).get(
+                    "auth", "// Dart auth template..."
+                ),
+                "pubspec": modern_templates.get("dart", {}).get(
+                    "pubspec", "# Dart pubspec.yaml template..."
+                ),
+                "readme": modern_templates.get("dart", {}).get(
+                    "readme", "# Dart README template..."
+                ),
+                "example": modern_templates.get("dart", {}).get(
+                    "example", "// Dart example template..."
+                ),
+                "test": modern_templates.get("dart", {}).get(
+                    "test", "// Dart test template..."
+                ),
             },
             ProgrammingLanguage.CSHARP: {
-                "client": modern_templates.get('csharp', {}).get('client', "// C# client template..."),
-                "model": modern_templates.get('csharp', {}).get('model', "// C# model template..."),
-                "auth": modern_templates.get('csharp', {}).get('auth', "// C# auth template..."),
-                "csproj": modern_templates.get('csharp', {}).get('csproj', "<!-- C# .csproj template... -->"),
-                "readme": modern_templates.get('csharp', {}).get('readme', "# C# README template..."),
-                "example": modern_templates.get('csharp', {}).get('example', "// C# example template..."),
-                "test": modern_templates.get('csharp', {}).get('test', "// C# test template...")
+                "client": modern_templates.get("csharp", {}).get(
+                    "client", "// C# client template..."
+                ),
+                "model": modern_templates.get("csharp", {}).get(
+                    "model", "// C# model template..."
+                ),
+                "auth": modern_templates.get("csharp", {}).get(
+                    "auth", "// C# auth template..."
+                ),
+                "csproj": modern_templates.get("csharp", {}).get(
+                    "csproj", "<!-- C# .csproj template... -->"
+                ),
+                "readme": modern_templates.get("csharp", {}).get(
+                    "readme", "# C# README template..."
+                ),
+                "example": modern_templates.get("csharp", {}).get(
+                    "example", "// C# example template..."
+                ),
+                "test": modern_templates.get("csharp", {}).get(
+                    "test", "// C# test template..."
+                ),
             },
             ProgrammingLanguage.PHP: {
-                "client": modern_templates.get('php', {}).get('client', "<?php // PHP client template..."),
-                "model": modern_templates.get('php', {}).get('model', "<?php // PHP model template..."),
-                "auth": modern_templates.get('php', {}).get('auth', "<?php // PHP auth template..."),
-                "composer": modern_templates.get('php', {}).get('composer', "// PHP composer.json template..."),
-                "readme": modern_templates.get('php', {}).get('readme', "# PHP README template..."),
-                "example": modern_templates.get('php', {}).get('example', "<?php // PHP example template..."),
-                "test": modern_templates.get('php', {}).get('test', "<?php // PHP test template...")
+                "client": modern_templates.get("php", {}).get(
+                    "client", "<?php // PHP client template..."
+                ),
+                "model": modern_templates.get("php", {}).get(
+                    "model", "<?php // PHP model template..."
+                ),
+                "auth": modern_templates.get("php", {}).get(
+                    "auth", "<?php // PHP auth template..."
+                ),
+                "composer": modern_templates.get("php", {}).get(
+                    "composer", "// PHP composer.json template..."
+                ),
+                "readme": modern_templates.get("php", {}).get(
+                    "readme", "# PHP README template..."
+                ),
+                "example": modern_templates.get("php", {}).get(
+                    "example", "<?php // PHP example template..."
+                ),
+                "test": modern_templates.get("php", {}).get(
+                    "test", "<?php // PHP test template..."
+                ),
             },
             ProgrammingLanguage.RUBY: {
-                "client": modern_templates.get('ruby', {}).get('client', "# Ruby client template..."),
-                "model": modern_templates.get('ruby', {}).get('model', "# Ruby model template..."),
-                "auth": modern_templates.get('ruby', {}).get('auth', "# Ruby auth template..."),
-                "gemspec": modern_templates.get('ruby', {}).get('gemspec', "# Ruby gemspec template..."),
-                "readme": modern_templates.get('ruby', {}).get('readme', "# Ruby README template..."),
-                "example": modern_templates.get('ruby', {}).get('example', "# Ruby example template..."),
-                "test": modern_templates.get('ruby', {}).get('test', "# Ruby test template...")
-            }
+                "client": modern_templates.get("ruby", {}).get(
+                    "client", "# Ruby client template..."
+                ),
+                "model": modern_templates.get("ruby", {}).get(
+                    "model", "# Ruby model template..."
+                ),
+                "auth": modern_templates.get("ruby", {}).get(
+                    "auth", "# Ruby auth template..."
+                ),
+                "gemspec": modern_templates.get("ruby", {}).get(
+                    "gemspec", "# Ruby gemspec template..."
+                ),
+                "readme": modern_templates.get("ruby", {}).get(
+                    "readme", "# Ruby README template..."
+                ),
+                "example": modern_templates.get("ruby", {}).get(
+                    "example", "# Ruby example template..."
+                ),
+                "test": modern_templates.get("ruby", {}).get(
+                    "test", "# Ruby test template..."
+                ),
+            },
         }
 
         return base_templates
 
-    def render_template(self, language: ProgrammingLanguage, template_type: str, **kwargs) -> str:
+    def render_template(
+        self, language: ProgrammingLanguage, template_type: str, **kwargs
+    ) -> str:
         """Render a template with given context"""
         template_str = self.templates.get(language, {}).get(template_type, "")
         if not template_str:
@@ -418,7 +526,7 @@ class Async{{ class_name }}:
 
             try:
                 return await response.json()
-            except:
+            except Exception:
                 text = await response.text()
                 return {"data": text}
 
@@ -526,7 +634,7 @@ setup(
 '''
 
     def _get_python_readme_template(self) -> str:
-        return '''# {{ package_name }}
+        return """# {{ package_name }}
 
 {{ description }}
 
@@ -612,7 +720,7 @@ except {{ class_name }}Error as e:
 ## License
 
 This project is licensed under the {{ license }} License.
-'''
+"""
 
     def _get_python_example_template(self) -> str:
         return '''"""
@@ -861,7 +969,7 @@ class BasicAuth:
 '''
 
     def _get_js_client_template(self) -> str:
-        return '''/**
+        return """/**
  * {{ package_name }} - {{ description }}
  * Generated API client for {{ base_url }}
  */
@@ -1085,10 +1193,10 @@ if (typeof module !== 'undefined' && module.exports) {
     window.{{ class_name }}Error = {{ class_name }}Error;
     window.createClient = createClient;
 }
-'''
+"""
 
     def _get_js_package_template(self) -> str:
-        return '''{
+        return """{
   "name": "{{ package_name }}",
   "version": "{{ version }}",
   "description": "{{ description }}",
@@ -1124,7 +1232,7 @@ if (typeof module !== 'undefined' && module.exports) {
   },
   "homepage": "https://github.com/example/{{ package_name }}#readme"
 }
-'''
+"""
 
     # Additional template methods would be implemented here for other languages...
     # For brevity, I'm showing the structure for Python and JavaScript
@@ -1150,6 +1258,7 @@ if (typeof module !== 'undefined' && module.exports) {
         try:
             from .sdk_templates.enhanced_templates import ENHANCED_TEMPLATES
             from .sdk_templates.modern_languages import MODERN_LANGUAGE_TEMPLATES
+
             return ENHANCED_TEMPLATES, MODERN_LANGUAGE_TEMPLATES
         except ImportError:
             return {}, {}
@@ -1157,89 +1266,122 @@ if (typeof module !== 'undefined' && module.exports) {
     # TypeScript templates
     def _get_ts_client_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('typescript', {}).get('client', "// TypeScript client template...")
+        return enhanced_templates.get("typescript", {}).get(
+            "client", "// TypeScript client template..."
+        )
 
     def _get_ts_types_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('typescript', {}).get('types', "// TypeScript types template...")
+        return enhanced_templates.get("typescript", {}).get(
+            "types", "// TypeScript types template..."
+        )
 
     def _get_ts_auth_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('typescript', {}).get('auth', "// TypeScript auth template...")
+        return enhanced_templates.get("typescript", {}).get(
+            "auth", "// TypeScript auth template..."
+        )
 
     def _get_ts_package_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('typescript', {}).get('package', "// TypeScript package.json template...")
+        return enhanced_templates.get("typescript", {}).get(
+            "package", "// TypeScript package.json template..."
+        )
 
     def _get_ts_readme_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('typescript', {}).get('readme', "# TypeScript README template...")
+        return enhanced_templates.get("typescript", {}).get(
+            "readme", "# TypeScript README template..."
+        )
 
     def _get_ts_example_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('typescript', {}).get('example', "// TypeScript example template...")
+        return enhanced_templates.get("typescript", {}).get(
+            "example", "// TypeScript example template..."
+        )
 
     def _get_ts_test_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('typescript', {}).get('test', "// TypeScript test template...")
+        return enhanced_templates.get("typescript", {}).get(
+            "test", "// TypeScript test template..."
+        )
 
     # Java templates
     def _get_java_client_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('java', {}).get('client', "// Java client template...")
+        return enhanced_templates.get("java", {}).get(
+            "client", "// Java client template..."
+        )
 
     def _get_java_model_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('java', {}).get('model', "// Java model template...")
+        return enhanced_templates.get("java", {}).get(
+            "model", "// Java model template..."
+        )
 
     def _get_java_auth_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('java', {}).get('auth', "// Java auth template...")
+        return enhanced_templates.get("java", {}).get(
+            "auth", "// Java auth template..."
+        )
 
     def _get_java_pom_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('java', {}).get('pom', "<!-- Java pom.xml template... -->")
+        return enhanced_templates.get("java", {}).get(
+            "pom", "<!-- Java pom.xml template... -->"
+        )
 
     def _get_java_readme_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('java', {}).get('readme', "# Java README template...")
+        return enhanced_templates.get("java", {}).get(
+            "readme", "# Java README template..."
+        )
 
     def _get_java_example_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('java', {}).get('example', "// Java example template...")
+        return enhanced_templates.get("java", {}).get(
+            "example", "// Java example template..."
+        )
 
     def _get_java_test_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('java', {}).get('test', "// Java test template...")
+        return enhanced_templates.get("java", {}).get(
+            "test", "// Java test template..."
+        )
 
     # Go templates
     def _get_go_client_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('go', {}).get('client', "// Go client template...")
+        return enhanced_templates.get("go", {}).get(
+            "client", "// Go client template..."
+        )
 
     def _get_go_model_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('go', {}).get('model', "// Go model template...")
+        return enhanced_templates.get("go", {}).get("model", "// Go model template...")
 
     def _get_go_auth_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('go', {}).get('auth', "// Go auth template...")
+        return enhanced_templates.get("go", {}).get("auth", "// Go auth template...")
 
     def _get_go_mod_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('go', {}).get('mod', "// Go go.mod template...")
+        return enhanced_templates.get("go", {}).get("mod", "// Go go.mod template...")
 
     def _get_go_readme_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('go', {}).get('readme', "# Go README template...")
+        return enhanced_templates.get("go", {}).get("readme", "# Go README template...")
 
     def _get_go_example_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('go', {}).get('example', "// Go example template...")
+        return enhanced_templates.get("go", {}).get(
+            "example", "// Go example template..."
+        )
 
     def _get_go_test_template(self) -> str:
         enhanced_templates, _ = self._get_enhanced_templates()
-        return enhanced_templates.get('go', {}).get('test', "// Go test template...")
+        return enhanced_templates.get("go", {}).get("test", "// Go test template...")
+
 
 class MultiLanguageSDKGenerator:
     """Main SDK generator for multiple programming languages"""
@@ -1248,10 +1390,12 @@ class MultiLanguageSDKGenerator:
         self.template_engine = TemplateEngine()
         self.generated_sdks: Dict[str, GeneratedSDK] = {}
 
-    async def generate_sdk(self,
-                          language: ProgrammingLanguage,
-                          endpoints: List[EndpointSpec],
-                          config: SDKConfig) -> GeneratedSDK:
+    async def generate_sdk(
+        self,
+        language: ProgrammingLanguage,
+        endpoints: List[EndpointSpec],
+        config: SDKConfig,
+    ) -> GeneratedSDK:
         """Generate SDK for specified language"""
 
         # Prepare context for templates
@@ -1297,8 +1441,8 @@ class MultiLanguageSDKGenerator:
                 "generated_at": datetime.utcnow().isoformat(),
                 "endpoints_count": len(endpoints),
                 "language": language.value,
-                "config": config.__dict__
-            }
+                "config": config.__dict__,
+            },
         )
 
         # Create zip package
@@ -1309,10 +1453,12 @@ class MultiLanguageSDKGenerator:
 
         return sdk
 
-    def _prepare_template_context(self,
-                                endpoints: List[EndpointSpec],
-                                config: SDKConfig,
-                                language: ProgrammingLanguage) -> Dict[str, Any]:
+    def _prepare_template_context(
+        self,
+        endpoints: List[EndpointSpec],
+        config: SDKConfig,
+        language: ProgrammingLanguage,
+    ) -> Dict[str, Any]:
         """Prepare context for template rendering"""
 
         # Process endpoints for template usage
@@ -1341,16 +1487,18 @@ class MultiLanguageSDKGenerator:
             "include_type_hints": config.include_type_hints,
             "include_examples": config.include_examples,
             "include_tests": config.include_tests,
-            "language_settings": config.language_settings.get(language.value, {})
+            "language_settings": config.language_settings.get(language.value, {}),
         }
 
-    def _process_endpoint_for_language(self,
-                                     endpoint: EndpointSpec,
-                                     language: ProgrammingLanguage) -> Dict[str, Any]:
+    def _process_endpoint_for_language(
+        self, endpoint: EndpointSpec, language: ProgrammingLanguage
+    ) -> Dict[str, Any]:
         """Process endpoint specification for specific language"""
 
         # Generate method name
-        method_name = self._generate_method_name(endpoint.operation_id or endpoint.path, language)
+        method_name = self._generate_method_name(
+            endpoint.operation_id or endpoint.path, language
+        )
 
         # Process parameters
         processed_params = []
@@ -1364,7 +1512,7 @@ class MultiLanguageSDKGenerator:
                 "type": self._convert_type(param.get("type", "string"), language),
                 "required": param.get("required", False),
                 "description": param.get("description", ""),
-                "example": param.get("example", "")
+                "example": param.get("example", ""),
             }
 
             processed_params.append(processed_param)
@@ -1391,37 +1539,53 @@ class MultiLanguageSDKGenerator:
             "body_params": body_params,
             "has_body": len(body_params) > 0 or endpoint.request_body is not None,
             "required_params": [p for p in processed_params if p["required"]],
-            "auth_required": endpoint.auth_required
+            "auth_required": endpoint.auth_required,
         }
 
-    def _generate_class_name(self, package_name: str, language: ProgrammingLanguage) -> str:
+    def _generate_class_name(
+        self, package_name: str, language: ProgrammingLanguage
+    ) -> str:
         """Generate appropriate class name for language"""
 
         # Convert package name to class name
-        words = re.findall(r'[A-Za-z0-9]+', package_name)
+        words = re.findall(r"[A-Za-z0-9]+", package_name)
 
         if language in [ProgrammingLanguage.PYTHON, ProgrammingLanguage.RUBY]:
             # PascalCase for Python/Ruby classes
-            return ''.join(word.capitalize() for word in words) + "Client"
-        elif language in [ProgrammingLanguage.JAVA, ProgrammingLanguage.CSHARP, ProgrammingLanguage.KOTLIN]:
+            return "".join(word.capitalize() for word in words) + "Client"
+        elif language in [
+            ProgrammingLanguage.JAVA,
+            ProgrammingLanguage.CSHARP,
+            ProgrammingLanguage.KOTLIN,
+        ]:
             # PascalCase for Java/C#/Kotlin
-            return ''.join(word.capitalize() for word in words) + "Client"
+            return "".join(word.capitalize() for word in words) + "Client"
         elif language == ProgrammingLanguage.GO:
             # PascalCase for Go
-            return ''.join(word.capitalize() for word in words) + "Client"
+            return "".join(word.capitalize() for word in words) + "Client"
         else:
             # camelCase for JavaScript/TypeScript
             if not words:
                 return "APIClient"
-            return words[0].lower() + ''.join(word.capitalize() for word in words[1:]) + "Client"
+            return (
+                words[0].lower()
+                + "".join(word.capitalize() for word in words[1:])
+                + "Client"
+            )
 
-    def _generate_method_name(self, operation_id: str, language: ProgrammingLanguage) -> str:
+    def _generate_method_name(
+        self, operation_id: str, language: ProgrammingLanguage
+    ) -> str:
         """Generate appropriate method name for language"""
 
         # Clean operation ID
-        if operation_id.startswith('/'):
+        if operation_id.startswith("/"):
             # Extract from path
-            parts = [part for part in operation_id.split('/') if part and not part.startswith('{')]
+            parts = [
+                part
+                for part in operation_id.split("/")
+                if part and not part.startswith("{")
+            ]
             if len(parts) >= 2:
                 operation_id = f"{parts[-2]}_{parts[-1]}"
             elif parts:
@@ -1430,30 +1594,32 @@ class MultiLanguageSDKGenerator:
                 operation_id = "api_call"
 
         # Convert to appropriate case
-        words = re.findall(r'[A-Za-z0-9]+', operation_id)
+        words = re.findall(r"[A-Za-z0-9]+", operation_id)
 
         if language in [ProgrammingLanguage.PYTHON, ProgrammingLanguage.RUBY]:
             # snake_case
-            return '_'.join(word.lower() for word in words)
+            return "_".join(word.lower() for word in words)
         else:
             # camelCase
             if not words:
                 return "apiCall"
-            return words[0].lower() + ''.join(word.capitalize() for word in words[1:])
+            return words[0].lower() + "".join(word.capitalize() for word in words[1:])
 
-    def _convert_parameter_name(self, param_name: str, language: ProgrammingLanguage) -> str:
+    def _convert_parameter_name(
+        self, param_name: str, language: ProgrammingLanguage
+    ) -> str:
         """Convert parameter name to appropriate case for language"""
 
-        words = re.findall(r'[A-Za-z0-9]+', param_name)
+        words = re.findall(r"[A-Za-z0-9]+", param_name)
 
         if language in [ProgrammingLanguage.PYTHON, ProgrammingLanguage.RUBY]:
             # snake_case
-            return '_'.join(word.lower() for word in words)
+            return "_".join(word.lower() for word in words)
         else:
             # camelCase
             if not words:
                 return "param"
-            return words[0].lower() + ''.join(word.capitalize() for word in words[1:])
+            return words[0].lower() + "".join(word.capitalize() for word in words[1:])
 
     def _convert_type(self, api_type: str, language: ProgrammingLanguage) -> str:
         """Convert API type to language-specific type"""
@@ -1465,7 +1631,7 @@ class MultiLanguageSDKGenerator:
                 "number": "float",
                 "boolean": "bool",
                 "array": "List",
-                "object": "Dict[str, Any]"
+                "object": "Dict[str, Any]",
             },
             ProgrammingLanguage.JAVASCRIPT: {
                 "string": "string",
@@ -1473,7 +1639,7 @@ class MultiLanguageSDKGenerator:
                 "number": "number",
                 "boolean": "boolean",
                 "array": "Array",
-                "object": "Object"
+                "object": "Object",
             },
             ProgrammingLanguage.TYPESCRIPT: {
                 "string": "string",
@@ -1481,7 +1647,7 @@ class MultiLanguageSDKGenerator:
                 "number": "number",
                 "boolean": "boolean",
                 "array": "Array<any>",
-                "object": "Record<string, any>"
+                "object": "Record<string, any>",
             },
             ProgrammingLanguage.JAVA: {
                 "string": "String",
@@ -1489,7 +1655,7 @@ class MultiLanguageSDKGenerator:
                 "number": "Double",
                 "boolean": "Boolean",
                 "array": "List<Object>",
-                "object": "Map<String, Object>"
+                "object": "Map<String, Object>",
             },
             ProgrammingLanguage.GO: {
                 "string": "string",
@@ -1497,7 +1663,7 @@ class MultiLanguageSDKGenerator:
                 "number": "float64",
                 "boolean": "bool",
                 "array": "[]interface{}",
-                "object": "map[string]interface{}"
+                "object": "map[string]interface{}",
             },
             ProgrammingLanguage.RUST: {
                 "string": "String",
@@ -1505,7 +1671,7 @@ class MultiLanguageSDKGenerator:
                 "number": "f64",
                 "boolean": "bool",
                 "array": "Vec<serde_json::Value>",
-                "object": "serde_json::Map<String, serde_json::Value>"
+                "object": "serde_json::Map<String, serde_json::Value>",
             },
             ProgrammingLanguage.SWIFT: {
                 "string": "String",
@@ -1513,7 +1679,7 @@ class MultiLanguageSDKGenerator:
                 "number": "Double",
                 "boolean": "Bool",
                 "array": "[Any]",
-                "object": "[String: Any]"
+                "object": "[String: Any]",
             },
             ProgrammingLanguage.KOTLIN: {
                 "string": "String",
@@ -1521,7 +1687,7 @@ class MultiLanguageSDKGenerator:
                 "number": "Double",
                 "boolean": "Boolean",
                 "array": "List<Any>",
-                "object": "Map<String, Any>"
+                "object": "Map<String, Any>",
             },
             ProgrammingLanguage.DART: {
                 "string": "String",
@@ -1529,7 +1695,7 @@ class MultiLanguageSDKGenerator:
                 "number": "double",
                 "boolean": "bool",
                 "array": "List<dynamic>",
-                "object": "Map<String, dynamic>"
+                "object": "Map<String, dynamic>",
             },
             ProgrammingLanguage.CSHARP: {
                 "string": "string",
@@ -1537,7 +1703,7 @@ class MultiLanguageSDKGenerator:
                 "number": "double",
                 "boolean": "bool",
                 "array": "List<object>",
-                "object": "Dictionary<string, object>"
+                "object": "Dictionary<string, object>",
             },
             ProgrammingLanguage.PHP: {
                 "string": "string",
@@ -1545,7 +1711,7 @@ class MultiLanguageSDKGenerator:
                 "number": "float",
                 "boolean": "bool",
                 "array": "array",
-                "object": "array"
+                "object": "array",
             },
             ProgrammingLanguage.RUBY: {
                 "string": "String",
@@ -1553,8 +1719,8 @@ class MultiLanguageSDKGenerator:
                 "number": "Float",
                 "boolean": "Boolean",
                 "array": "Array",
-                "object": "Hash"
-            }
+                "object": "Hash",
+            },
         }
 
         mapping = type_mappings.get(language, {})
@@ -1687,17 +1853,23 @@ class MultiLanguageSDKGenerator:
         package_path = context["package_name"].replace("-", "").replace("_", "")
 
         # Main client file
-        files[f"src/main/java/com/{package_path}/Client.java"] = self.template_engine.render_template(
+        files[
+            f"src/main/java/com/{package_path}/Client.java"
+        ] = self.template_engine.render_template(
             ProgrammingLanguage.JAVA, "client", **context
         )
 
         # Model classes
-        files[f"src/main/java/com/{package_path}/models/BaseModel.java"] = self.template_engine.render_template(
+        files[
+            f"src/main/java/com/{package_path}/models/BaseModel.java"
+        ] = self.template_engine.render_template(
             ProgrammingLanguage.JAVA, "model", **context
         )
 
         # Auth helpers
-        files[f"src/main/java/com/{package_path}/auth/Authentication.java"] = self.template_engine.render_template(
+        files[
+            f"src/main/java/com/{package_path}/auth/Authentication.java"
+        ] = self.template_engine.render_template(
             ProgrammingLanguage.JAVA, "auth", **context
         )
 
@@ -1713,13 +1885,17 @@ class MultiLanguageSDKGenerator:
 
         # Example
         if context["include_examples"]:
-            files[f"src/main/java/com/{package_path}/examples/Example.java"] = self.template_engine.render_template(
+            files[
+                f"src/main/java/com/{package_path}/examples/Example.java"
+            ] = self.template_engine.render_template(
                 ProgrammingLanguage.JAVA, "example", **context
             )
 
         # Tests
         if context["include_tests"]:
-            files[f"src/test/java/com/{package_path}/ClientTest.java"] = self.template_engine.render_template(
+            files[
+                f"src/test/java/com/{package_path}/ClientTest.java"
+            ] = self.template_engine.render_template(
                 ProgrammingLanguage.JAVA, "test", **context
             )
 
@@ -1848,7 +2024,9 @@ class MultiLanguageSDKGenerator:
 
         # Tests
         if context["include_tests"]:
-            files["Tests/APIClientTests/ClientTests.swift"] = self.template_engine.render_template(
+            files[
+                "Tests/APIClientTests/ClientTests.swift"
+            ] = self.template_engine.render_template(
                 ProgrammingLanguage.SWIFT, "test", **context
             )
 
@@ -1860,17 +2038,23 @@ class MultiLanguageSDKGenerator:
         package_path = context["package_name"].replace("-", "").replace("_", "")
 
         # Main client file
-        files[f"src/main/kotlin/com/{package_path}/Client.kt"] = self.template_engine.render_template(
+        files[
+            f"src/main/kotlin/com/{package_path}/Client.kt"
+        ] = self.template_engine.render_template(
             ProgrammingLanguage.KOTLIN, "client", **context
         )
 
         # Model classes
-        files[f"src/main/kotlin/com/{package_path}/models/Models.kt"] = self.template_engine.render_template(
+        files[
+            f"src/main/kotlin/com/{package_path}/models/Models.kt"
+        ] = self.template_engine.render_template(
             ProgrammingLanguage.KOTLIN, "model", **context
         )
 
         # Auth helpers
-        files[f"src/main/kotlin/com/{package_path}/auth/Auth.kt"] = self.template_engine.render_template(
+        files[
+            f"src/main/kotlin/com/{package_path}/auth/Auth.kt"
+        ] = self.template_engine.render_template(
             ProgrammingLanguage.KOTLIN, "auth", **context
         )
 
@@ -1886,13 +2070,17 @@ class MultiLanguageSDKGenerator:
 
         # Example
         if context["include_examples"]:
-            files[f"src/main/kotlin/com/{package_path}/examples/Example.kt"] = self.template_engine.render_template(
+            files[
+                f"src/main/kotlin/com/{package_path}/examples/Example.kt"
+            ] = self.template_engine.render_template(
                 ProgrammingLanguage.KOTLIN, "example", **context
             )
 
         # Tests
         if context["include_tests"]:
-            files[f"src/test/kotlin/com/{package_path}/ClientTest.kt"] = self.template_engine.render_template(
+            files[
+                f"src/test/kotlin/com/{package_path}/ClientTest.kt"
+            ] = self.template_engine.render_template(
                 ProgrammingLanguage.KOTLIN, "test", **context
             )
 
@@ -1952,17 +2140,23 @@ class MultiLanguageSDKGenerator:
         )
 
         # Model classes
-        files[f"{namespace}Client/Models/Models.cs"] = self.template_engine.render_template(
+        files[
+            f"{namespace}Client/Models/Models.cs"
+        ] = self.template_engine.render_template(
             ProgrammingLanguage.CSHARP, "model", **context
         )
 
         # Auth helpers
-        files[f"{namespace}Client/Auth/Authentication.cs"] = self.template_engine.render_template(
+        files[
+            f"{namespace}Client/Auth/Authentication.cs"
+        ] = self.template_engine.render_template(
             ProgrammingLanguage.CSHARP, "auth", **context
         )
 
         # .csproj
-        files[f"{namespace}Client/{namespace}Client.csproj"] = self.template_engine.render_template(
+        files[
+            f"{namespace}Client/{namespace}Client.csproj"
+        ] = self.template_engine.render_template(
             ProgrammingLanguage.CSHARP, "csproj", **context
         )
 
@@ -1979,7 +2173,9 @@ class MultiLanguageSDKGenerator:
 
         # Tests
         if context["include_tests"]:
-            files[f"{namespace}Client.Tests/ClientTests.cs"] = self.template_engine.render_template(
+            files[
+                f"{namespace}Client.Tests/ClientTests.cs"
+            ] = self.template_engine.render_template(
                 ProgrammingLanguage.CSHARP, "test", **context
             )
 
@@ -1988,7 +2184,7 @@ class MultiLanguageSDKGenerator:
     async def _generate_php_sdk(self, context: Dict[str, Any]) -> Dict[str, str]:
         """Generate PHP SDK files"""
         files = {}
-        namespace = context["package_name"].replace("-", "").title()
+        context["package_name"].replace("-", "").title()
 
         # Main client file
         files["src/Client.php"] = self.template_engine.render_template(
@@ -2050,7 +2246,9 @@ class MultiLanguageSDKGenerator:
         )
 
         # Main gem file
-        files[f"lib/{gem_name}.rb"] = f'require "{gem_name}/client"\nrequire "{gem_name}/models"\nrequire "{gem_name}/auth"'
+        files[
+            f"lib/{gem_name}.rb"
+        ] = f'require "{gem_name}/client"\nrequire "{gem_name}/models"\nrequire "{gem_name}/auth"'
 
         # Gemspec
         files[f"{gem_name}.gemspec"] = self.template_engine.render_template(
@@ -2081,16 +2279,20 @@ class MultiLanguageSDKGenerator:
 
         # Create temporary directory
         temp_dir = tempfile.mkdtemp()
-        zip_path = os.path.join(temp_dir, f"{sdk.package_name}_{sdk.language.value}_v{sdk.version}.zip")
+        zip_path = os.path.join(
+            temp_dir, f"{sdk.package_name}_{sdk.language.value}_v{sdk.version}.zip"
+        )
 
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
             for filename, content in sdk.files.items():
                 # Create directory structure in zip
                 zipf.writestr(filename, content)
 
         return zip_path
 
-    def get_generated_sdk(self, language: ProgrammingLanguage, package_name: str) -> Optional[GeneratedSDK]:
+    def get_generated_sdk(
+        self, language: ProgrammingLanguage, package_name: str
+    ) -> Optional[GeneratedSDK]:
         """Get previously generated SDK"""
         key = f"{language.value}_{package_name}"
         return self.generated_sdks.get(key)
@@ -2099,10 +2301,12 @@ class MultiLanguageSDKGenerator:
         """List all generated SDKs"""
         return list(self.generated_sdks.values())
 
-    async def generate_multiple_sdks(self,
-                                   languages: List[ProgrammingLanguage],
-                                   endpoints: List[EndpointSpec],
-                                   config: SDKConfig) -> Dict[ProgrammingLanguage, GeneratedSDK]:
+    async def generate_multiple_sdks(
+        self,
+        languages: List[ProgrammingLanguage],
+        endpoints: List[EndpointSpec],
+        config: SDKConfig,
+    ) -> Dict[ProgrammingLanguage, GeneratedSDK]:
         """Generate SDKs for multiple languages simultaneously"""
 
         results = {}
@@ -2123,14 +2327,15 @@ class MultiLanguageSDKGenerator:
 
         return results
 
+
 # Global SDK generator instance
 sdk_generator = MultiLanguageSDKGenerator()
 
+
 # Utility functions
-async def generate_sdk_for_language(language: str,
-                                  endpoints: List[Dict[str, Any]],
-                                  package_name: str,
-                                  **config_kwargs) -> GeneratedSDK:
+async def generate_sdk_for_language(
+    language: str, endpoints: List[Dict[str, Any]], package_name: str, **config_kwargs
+) -> GeneratedSDK:
     """Convenient function to generate SDK for a specific language"""
 
     # Convert string to enum
@@ -2151,14 +2356,11 @@ async def generate_sdk_for_language(language: str,
             parameters=ep.get("parameters", []),
             request_body=ep.get("request_body"),
             responses=ep.get("responses", {}),
-            auth_required=ep.get("auth_required", True)
+            auth_required=ep.get("auth_required", True),
         )
         endpoint_specs.append(endpoint_spec)
 
     # Create SDK config
-    config = SDKConfig(
-        package_name=package_name,
-        **config_kwargs
-    )
+    config = SDKConfig(package_name=package_name, **config_kwargs)
 
     return await sdk_generator.generate_sdk(lang_enum, endpoint_specs, config)

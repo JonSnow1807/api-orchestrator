@@ -6,13 +6,14 @@ Implements intelligent caching for API responses, AI analysis, and database quer
 # Optional Redis import - graceful fallback to memory cache
 try:
     import redis
+
     HAS_REDIS = True
 except ImportError:
     HAS_REDIS = False
     redis = None
 import json
 import hashlib
-from typing import Optional, Any, Dict, List
+from typing import Optional, Any, Dict
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
@@ -20,6 +21,7 @@ import os
 import pickle
 
 logger = logging.getLogger(__name__)
+
 
 class CacheManager:
     """Redis-based cache manager with intelligent TTL and compression"""
@@ -38,7 +40,7 @@ class CacheManager:
                     socket_connect_timeout=5,
                     socket_timeout=5,
                     retry_on_timeout=True,
-                    health_check_interval=30
+                    health_check_interval=30,
                 )
                 # Test connection
                 self.redis_client.ping()
@@ -61,7 +63,7 @@ class CacheManager:
         try:
             # Use pickle for complex objects, JSON for simple ones
             if isinstance(data, (dict, list, str, int, float, bool, type(None))):
-                return json.dumps(data).encode('utf-8')
+                return json.dumps(data).encode("utf-8")
             else:
                 return pickle.dumps(data)
         except Exception:
@@ -71,7 +73,7 @@ class CacheManager:
         """Deserialize data from storage"""
         try:
             # Try JSON first (faster)
-            return json.loads(data.decode('utf-8'))
+            return json.loads(data.decode("utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError):
             # Fall back to pickle
             return pickle.loads(data)
@@ -90,8 +92,8 @@ class CacheManager:
                 # Memory cache fallback
                 if key in self._memory_cache:
                     item = self._memory_cache[key]
-                    if item['expires'] > datetime.now():
-                        return item['data']
+                    if item["expires"] > datetime.now():
+                        return item["data"]
                     else:
                         del self._memory_cache[key]
         except Exception as e:
@@ -112,8 +114,8 @@ class CacheManager:
             else:
                 # Memory cache fallback with TTL
                 self._memory_cache[key] = {
-                    'data': value,
-                    'expires': datetime.now() + timedelta(seconds=ttl)
+                    "data": value,
+                    "expires": datetime.now() + timedelta(seconds=ttl),
                 }
                 return True
         except Exception as e:
@@ -140,8 +142,11 @@ class CacheManager:
                     return self.redis_client.delete(*keys)
             else:
                 # Clear memory cache matching pattern
-                to_delete = [k for k in self._memory_cache.keys()
-                           if k.startswith(f"api_orch:{pattern}")]
+                to_delete = [
+                    k
+                    for k in self._memory_cache.keys()
+                    if k.startswith(f"api_orch:{pattern}")
+                ]
                 for key in to_delete:
                     del self._memory_cache[key]
                 return len(to_delete)
@@ -155,37 +160,51 @@ class CacheManager:
             if self.use_redis:
                 info = self.redis_client.info()
                 return {
-                    'type': 'redis',
-                    'connected_clients': info.get('connected_clients', 0),
-                    'used_memory_human': info.get('used_memory_human', '0B'),
-                    'keyspace_hits': info.get('keyspace_hits', 0),
-                    'keyspace_misses': info.get('keyspace_misses', 0),
-                    'hit_rate': round((info.get('keyspace_hits', 0) /
-                                    max(1, info.get('keyspace_hits', 0) +
-                                        info.get('keyspace_misses', 0))) * 100, 2)
+                    "type": "redis",
+                    "connected_clients": info.get("connected_clients", 0),
+                    "used_memory_human": info.get("used_memory_human", "0B"),
+                    "keyspace_hits": info.get("keyspace_hits", 0),
+                    "keyspace_misses": info.get("keyspace_misses", 0),
+                    "hit_rate": round(
+                        (
+                            info.get("keyspace_hits", 0)
+                            / max(
+                                1,
+                                info.get("keyspace_hits", 0)
+                                + info.get("keyspace_misses", 0),
+                            )
+                        )
+                        * 100,
+                        2,
+                    ),
                 }
             else:
                 return {
-                    'type': 'memory',
-                    'keys': len(self._memory_cache),
-                    'status': 'active'
+                    "type": "memory",
+                    "keys": len(self._memory_cache),
+                    "status": "active",
                 }
         except Exception as e:
             logger.error(f"Cache stats error: {e}")
-            return {'type': 'error', 'message': str(e)}
+            return {"type": "error", "message": str(e)}
+
 
 # Global cache instance
 cache = CacheManager()
 
 # Decorators for easy caching
 
+
 def cached(ttl: int = 3600, key_prefix: str = "func"):
     """Decorator to cache function results"""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             # Generate cache key
-            cache_key = cache._generate_key(f"{key_prefix}:{func.__name__}", *args, **kwargs)
+            cache_key = cache._generate_key(
+                f"{key_prefix}:{func.__name__}", *args, **kwargs
+            )
 
             # Try to get from cache first
             result = cache.get(cache_key)
@@ -198,16 +217,22 @@ def cached(ttl: int = 3600, key_prefix: str = "func"):
             result = func(*args, **kwargs)
             cache.set(cache_key, result, ttl)
             return result
+
         return wrapper
+
     return decorator
+
 
 def cached_async(ttl: int = 3600, key_prefix: str = "async_func"):
     """Async decorator to cache function results"""
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             # Generate cache key
-            cache_key = cache._generate_key(f"{key_prefix}:{func.__name__}", *args, **kwargs)
+            cache_key = cache._generate_key(
+                f"{key_prefix}:{func.__name__}", *args, **kwargs
+            )
 
             # Try to get from cache first
             result = cache.get(cache_key)
@@ -220,10 +245,14 @@ def cached_async(ttl: int = 3600, key_prefix: str = "async_func"):
             result = await func(*args, **kwargs)
             cache.set(cache_key, result, ttl)
             return result
+
         return wrapper
+
     return decorator
 
+
 # Specialized cache keys for different data types
+
 
 class CacheKeys:
     """Predefined cache key patterns for consistency"""
@@ -257,7 +286,9 @@ class CacheKeys:
         """Generate project-specific cache key"""
         return f"project:{project_id}:{key_type}"
 
+
 # Cache warming functions
+
 
 def warm_user_cache(user_id: int, db_session):
     """Pre-warm cache with user's commonly accessed data"""
@@ -269,7 +300,7 @@ def warm_user_cache(user_id: int, db_session):
         cache.set(
             cache._generate_key(CacheKeys.USER_PROJECTS, user_id),
             [p.to_dict() for p in projects],
-            ttl=1800  # 30 minutes
+            ttl=1800,  # 30 minutes
         )
 
         # Cache user profile
@@ -278,19 +309,17 @@ def warm_user_cache(user_id: int, db_session):
             cache.set(
                 cache._generate_key(CacheKeys.USER_PROFILE, user_id),
                 user.to_dict(),
-                ttl=3600  # 1 hour
+                ttl=3600,  # 1 hour
             )
 
         logger.info(f"✅ Warmed cache for user {user_id}")
     except Exception as e:
         logger.error(f"Failed to warm cache for user {user_id}: {e}")
 
+
 def invalidate_user_cache(user_id: int):
     """Invalidate all cache entries for a user"""
-    patterns = [
-        f"user:{user_id}",
-        f"*user_id*{user_id}*"
-    ]
+    patterns = [f"user:{user_id}", f"*user_id*{user_id}*"]
 
     total_deleted = 0
     for pattern in patterns:
@@ -298,10 +327,13 @@ def invalidate_user_cache(user_id: int):
 
     logger.info(f"Invalidated {total_deleted} cache entries for user {user_id}")
 
+
 # Performance monitoring cache decorator
+
 
 def performance_cached(ttl: int = 3600):
     """Cache with performance monitoring"""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -324,8 +356,11 @@ def performance_cached(ttl: int = 3600):
             logger.info(f"🔄 Executed {func.__name__} in {execution_time:.3f}s")
 
             return result
+
         return wrapper
+
     return decorator
+
 
 if __name__ == "__main__":
     # Test cache functionality
@@ -340,6 +375,7 @@ if __name__ == "__main__":
     @cached(ttl=30, key_prefix="test")
     def expensive_function(x, y):
         import time
+
         time.sleep(0.1)  # Simulate expensive operation
         return x * y + 42
 
