@@ -5,7 +5,7 @@ Generates production-ready SDKs in 30+ languages
 
 import json
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any
 from datetime import datetime
 import re
 
@@ -14,150 +14,180 @@ logger = logging.getLogger(__name__)
 
 class CodeGeneratorAgent:
     """Enterprise-grade code generation with AI enhancement"""
-    
+
     SUPPORTED_LANGUAGES = {
-        'javascript', 'typescript', 'python', 'java', 'csharp', 'go',
-        'ruby', 'php', 'swift', 'kotlin', 'rust', 'cpp', 'dart',
-        'scala', 'elixir', 'perl', 'r', 'matlab', 'shell', 'powershell',
-        'objectivec', 'lua', 'haskell', 'clojure', 'fsharp', 'julia',
-        'groovy', 'crystal', 'nim', 'ocaml'
+        "javascript",
+        "typescript",
+        "python",
+        "java",
+        "csharp",
+        "go",
+        "ruby",
+        "php",
+        "swift",
+        "kotlin",
+        "rust",
+        "cpp",
+        "dart",
+        "scala",
+        "elixir",
+        "perl",
+        "r",
+        "matlab",
+        "shell",
+        "powershell",
+        "objectivec",
+        "lua",
+        "haskell",
+        "clojure",
+        "fsharp",
+        "julia",
+        "groovy",
+        "crystal",
+        "nim",
+        "ocaml",
     }
-    
+
     def __init__(self, ai_service=None):
         """Initialize code generator with optional AI service"""
         self.ai_service = ai_service
         self.templates = self._load_templates()
-        
+
     def generate_sdk(
         self,
         api_spec: Dict[str, Any],
         language: str,
         library: str,
-        options: Dict[str, Any]
+        options: Dict[str, Any],
     ) -> Dict[str, Any]:
         """
         Generate complete SDK package with AI enhancement
-        
+
         Args:
             api_spec: OpenAPI specification or request data
             language: Target programming language
             library: HTTP library to use
             options: Generation options (async, error handling, etc.)
-            
+
         Returns:
             Dictionary containing generated code, tests, docs, and package files
         """
         try:
             if language not in self.SUPPORTED_LANGUAGES:
                 raise ValueError(f"Unsupported language: {language}")
-            
+
             # Extract API information
             api_info = self._extract_api_info(api_spec)
-            
+
             # Generate base code
             code = self._generate_code(api_info, language, library, options)
-            
+
             # Generate package files
             package_files = self._generate_package_files(language, library, options)
-            
+
             # Generate tests
             tests = self._generate_tests(api_info, language, library, options)
-            
+
             # Generate documentation
-            documentation = self._generate_documentation(api_info, language, library, options)
-            
+            documentation = self._generate_documentation(
+                api_info, language, library, options
+            )
+
             # Calculate metrics
             complexity = self._calculate_complexity(code)
             estimated_time = self._estimate_implementation_time(code, complexity)
-            
+
             # AI Enhancement (if available)
-            if self.ai_service and options.get('ai_enhancement', True):
+            if self.ai_service and options.get("ai_enhancement", True):
                 code = self._enhance_with_ai(code, language, options)
-            
+
             return {
-                'code': code,
-                'packageFiles': package_files,
-                'tests': tests,
-                'documentation': documentation,
-                'complexity': complexity,
-                'estimatedTime': estimated_time,
-                'aiGenerated': bool(self.ai_service),
-                'timestamp': datetime.utcnow().isoformat(),
-                'metadata': {
-                    'language': language,
-                    'library': library,
-                    'linesOfCode': len(code.split('\n')),
-                    'filesGenerated': len(package_files) + 3,  # +3 for code, tests, docs
-                }
+                "code": code,
+                "packageFiles": package_files,
+                "tests": tests,
+                "documentation": documentation,
+                "complexity": complexity,
+                "estimatedTime": estimated_time,
+                "aiGenerated": bool(self.ai_service),
+                "timestamp": datetime.utcnow().isoformat(),
+                "metadata": {
+                    "language": language,
+                    "library": library,
+                    "linesOfCode": len(code.split("\n")),
+                    "filesGenerated": len(package_files)
+                    + 3,  # +3 for code, tests, docs
+                },
             }
-            
+
         except Exception as e:
             logger.error(f"Code generation failed: {str(e)}")
             raise
-    
+
     def _extract_api_info(self, api_spec: Dict[str, Any]) -> Dict[str, Any]:
         """Extract relevant API information from specification"""
         if isinstance(api_spec, dict):
             # OpenAPI spec
-            if 'openapi' in api_spec or 'swagger' in api_spec:
+            if "openapi" in api_spec or "swagger" in api_spec:
                 return {
-                    'baseUrl': api_spec.get('servers', [{}])[0].get('url', 'https://api.example.com'),
-                    'paths': api_spec.get('paths', {}),
-                    'schemas': api_spec.get('components', {}).get('schemas', {}),
-                    'security': api_spec.get('security', []),
-                    'info': api_spec.get('info', {})
+                    "baseUrl": api_spec.get("servers", [{}])[0].get(
+                        "url", "https://api.example.com"
+                    ),
+                    "paths": api_spec.get("paths", {}),
+                    "schemas": api_spec.get("components", {}).get("schemas", {}),
+                    "security": api_spec.get("security", []),
+                    "info": api_spec.get("info", {}),
                 }
             # Simple request data
             else:
                 return {
-                    'baseUrl': api_spec.get('url', 'https://api.example.com'),
-                    'method': api_spec.get('method', 'GET'),
-                    'path': api_spec.get('path', '/endpoint'),
-                    'headers': api_spec.get('headers', {}),
-                    'body': api_spec.get('body', {})
+                    "baseUrl": api_spec.get("url", "https://api.example.com"),
+                    "method": api_spec.get("method", "GET"),
+                    "path": api_spec.get("path", "/endpoint"),
+                    "headers": api_spec.get("headers", {}),
+                    "body": api_spec.get("body", {}),
                 }
         return {
-            'baseUrl': 'https://api.example.com',
-            'method': 'GET',
-            'path': '/endpoint'
+            "baseUrl": "https://api.example.com",
+            "method": "GET",
+            "path": "/endpoint",
         }
-    
+
     def _generate_code(
         self,
         api_info: Dict[str, Any],
         language: str,
         library: str,
-        options: Dict[str, Any]
+        options: Dict[str, Any],
     ) -> str:
         """Generate language-specific code"""
-        
+
         generators = {
-            'javascript': self._generate_javascript,
-            'typescript': self._generate_typescript,
-            'python': self._generate_python,
-            'java': self._generate_java,
-            'csharp': self._generate_csharp,
-            'go': self._generate_go,
-            'ruby': self._generate_ruby,
-            'php': self._generate_php,
-            'rust': self._generate_rust,
-            'kotlin': self._generate_kotlin,
+            "javascript": self._generate_javascript,
+            "typescript": self._generate_typescript,
+            "python": self._generate_python,
+            "java": self._generate_java,
+            "csharp": self._generate_csharp,
+            "go": self._generate_go,
+            "ruby": self._generate_ruby,
+            "php": self._generate_php,
+            "rust": self._generate_rust,
+            "kotlin": self._generate_kotlin,
         }
-        
+
         generator = generators.get(language, self._generate_generic)
         return generator(api_info, library, options)
-    
+
     def _generate_javascript(self, api_info: Dict, library: str, options: Dict) -> str:
         """Generate JavaScript SDK code"""
-        base_url = api_info.get('baseUrl', 'https://api.example.com')
-        
-        if library == 'axios':
+        base_url = api_info.get("baseUrl", "https://api.example.com")
+
+        if library == "axios":
             return self._generate_axios_code(base_url, options)
-        elif library == 'fetch':
+        elif library == "fetch":
             return self._generate_fetch_code(base_url, options)
         else:
             return self._generate_axios_code(base_url, options)
-    
+
     def _generate_axios_code(self, base_url: str, options: Dict) -> str:
         """Generate Axios-based JavaScript code"""
         code = f"""import axios from 'axios';
@@ -214,7 +244,7 @@ class APIClient {{
 
 export default APIClient;"""
         return code
-    
+
     def _generate_fetch_code(self, base_url: str, options: Dict) -> str:
         """Generate Fetch API-based JavaScript code"""
         return f"""class APIClient {{
@@ -258,18 +288,18 @@ export default APIClient;"""
 }}
 
 export default APIClient;"""
-    
+
     def _generate_python(self, api_info: Dict, library: str, options: Dict) -> str:
         """Generate Python SDK code"""
-        base_url = api_info.get('baseUrl', 'https://api.example.com')
-        
-        if library == 'requests':
+        base_url = api_info.get("baseUrl", "https://api.example.com")
+
+        if library == "requests":
             return self._generate_requests_code(base_url, options)
-        elif library == 'aiohttp':
+        elif library == "aiohttp":
             return self._generate_aiohttp_code(base_url, options)
         else:
             return self._generate_requests_code(base_url, options)
-    
+
     def _generate_requests_code(self, base_url: str, options: Dict) -> str:
         """Generate requests-based Python code"""
         return f"""import os
@@ -328,7 +358,7 @@ if __name__ == '__main__':
     # Example usage
     response = client.get('/endpoint')
     print(response)"""
-    
+
     def _generate_aiohttp_code(self, base_url: str, options: Dict) -> str:
         """Generate aiohttp-based Python code"""
         return f"""import asyncio
@@ -377,7 +407,7 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())"""
-    
+
     def _generate_java(self, api_info: Dict, library: str, options: Dict) -> str:
         """Generate Java SDK code"""
         return f"""import okhttp3.*;
@@ -431,10 +461,10 @@ public class APIClient {{
         }}
     }}
 }}"""
-    
+
     def _generate_typescript(self, api_info: Dict, library: str, options: Dict) -> str:
         """Generate TypeScript SDK code"""
-        base_url = api_info.get('baseUrl', 'https://api.example.com')
+        base_url = api_info.get("baseUrl", "https://api.example.com")
         return f"""import axios, {{ AxiosInstance }} from 'axios';
 
 interface APIClientConfig {{
@@ -469,7 +499,7 @@ class APIClient {{
 }}
 
 export default APIClient;"""
-    
+
     def _generate_csharp(self, api_info: Dict, library: str, options: Dict) -> str:
         """Generate C# SDK code"""
         return f"""using System;
@@ -521,7 +551,7 @@ namespace APIClient
         }}
     }}
 }}"""
-    
+
     def _generate_go(self, api_info: Dict, library: str, options: Dict) -> str:
         """Generate Go SDK code"""
         return f"""package apiclient
@@ -599,7 +629,7 @@ func (c *Client) Post(endpoint string, data interface{{}}) ([]byte, error) {{
     
     return io.ReadAll(resp.Body)
 }}"""
-    
+
     def _generate_ruby(self, api_info: Dict, library: str, options: Dict) -> str:
         """Generate Ruby SDK code"""
         return f"""require 'net/http'
@@ -639,7 +669,7 @@ class APIClient
     JSON.parse(response.body)
   end
 end"""
-    
+
     def _generate_php(self, api_info: Dict, library: str, options: Dict) -> str:
         """Generate PHP SDK code"""
         return f"""<?php
@@ -695,7 +725,7 @@ class APIClient {{
         return json_decode($response, true);
     }}
 }}"""
-    
+
     def _generate_rust(self, api_info: Dict, library: str, options: Dict) -> str:
         """Generate Rust SDK code"""
         return f"""use reqwest;
@@ -755,7 +785,7 @@ impl ApiClient {{
         Ok(response)
     }}
 }}"""
-    
+
     def _generate_kotlin(self, api_info: Dict, library: str, options: Dict) -> str:
         """Generate Kotlin SDK code"""
         return f"""import okhttp3.*
@@ -807,7 +837,7 @@ class APIClient(
         }}
     }}
 }}"""
-    
+
     def _generate_generic(self, api_info: Dict, library: str, options: Dict) -> str:
         """Generate generic SDK template"""
         return f"""// Generic SDK Template
@@ -822,49 +852,49 @@ class APIClient(
 // - Auth Type: {options.get('authType', 'bearer')}
 // - Retry Policy: {options.get('retryPolicy', 'none')}
 """
-    
+
     def _get_auth_header(self, auth_type: str) -> str:
         """Get authentication header for JavaScript"""
-        if auth_type == 'bearer':
+        if auth_type == "bearer":
             return "'Authorization': `Bearer ${this.apiKey}`"
-        elif auth_type == 'apikey':
+        elif auth_type == "apikey":
             return "'X-API-Key': this.apiKey"
-        elif auth_type == 'basic':
+        elif auth_type == "basic":
             return "'Authorization': `Basic ${Buffer.from(`${this.username}:${this.password}`).toString('base64')}`"
         return ""
-    
+
     def _get_auth_header_python(self, auth_type: str) -> str:
         """Get authentication header for Python"""
-        if auth_type == 'bearer':
+        if auth_type == "bearer":
             return "'Authorization': f'Bearer {self.api_key}'"
-        elif auth_type == 'apikey':
+        elif auth_type == "apikey":
             return "'X-API-Key': self.api_key"
-        elif auth_type == 'basic':
+        elif auth_type == "basic":
             return "'Authorization': f'Basic {base64.b64encode(f\"{self.username}:{self.password}\".encode()).decode()}'"
         return ""
-    
+
     def _get_retry_logic(self, options: Dict) -> str:
         """Get retry logic code"""
-        if options.get('retryPolicy') == 'exponential':
+        if options.get("retryPolicy") == "exponential":
             return """if (error.response?.status === 429 || error.response?.status >= 500) {
                     const retryAfter = error.response.headers['retry-after'] || 1;
                     await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
                     return this.client.request(error.config);
                 }
                 return Promise.reject(error);"""
-        elif options.get('retryPolicy') == 'linear':
+        elif options.get("retryPolicy") == "linear":
             return """if (error.response?.status === 429 || error.response?.status >= 500) {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     return this.client.request(error.config);
                 }
                 return Promise.reject(error);"""
         return "return Promise.reject(error);"
-    
+
     def _get_http_methods(self, options: Dict) -> str:
         """Get HTTP method implementations"""
-        async_prefix = "async " if options.get('async', True) else ""
-        await_keyword = "await " if options.get('async', True) else ""
-        
+        async_prefix = "async " if options.get("async", True) else ""
+        await_keyword = "await " if options.get("async", True) else ""
+
         return f"""{async_prefix}get(endpoint, params = {{}}) {{
         try {{
             const response = {await_keyword}this.client.get(endpoint, {{ params }});
@@ -900,10 +930,10 @@ class APIClient(
             this.handleError(error);
         }}
     }}"""
-    
+
     def _get_error_handling(self, options: Dict) -> str:
         """Get error handling code"""
-        if options.get('errorHandling') == 'advanced':
+        if options.get("errorHandling") == "advanced":
             return """handleError(error) {
         if (error.response) {
             const status = error.response.status;
@@ -931,7 +961,7 @@ class APIClient(
             throw new Error(`Request failed: ${error.message}`);
         }
     }"""
-        elif options.get('errorHandling') == 'standard':
+        elif options.get("errorHandling") == "standard":
             return """handleError(error) {
         if (error.response) {
             console.error('API Error:', error.response.status, error.response.data);
@@ -944,23 +974,26 @@ class APIClient(
             return """handleError(error) {
         throw error;
     }"""
-    
+
     def _get_special_features(self, options: Dict) -> str:
         """Get special feature implementations"""
         features = []
-        
-        if options.get('streaming'):
-            features.append("""async stream(endpoint, onData) {
+
+        if options.get("streaming"):
+            features.append(
+                """async stream(endpoint, onData) {
         const response = await this.client.get(endpoint, {
             responseType: 'stream'
         });
         
         response.data.on('data', chunk => onData(chunk));
         response.data.on('end', () => console.log('Stream ended'));
-    }""")
-        
-        if options.get('fileHandling'):
-            features.append("""async uploadFile(endpoint, file) {
+    }"""
+            )
+
+        if options.get("fileHandling"):
+            features.append(
+                """async uploadFile(endpoint, file) {
         const formData = new FormData();
         formData.append('file', file);
         
@@ -969,10 +1002,12 @@ class APIClient(
         });
         
         return response.data;
-    }""")
-        
-        if options.get('websocket'):
-            features.append("""connectWebSocket(endpoint) {
+    }"""
+            )
+
+        if options.get("websocket"):
+            features.append(
+                """connectWebSocket(endpoint) {
         const ws = new WebSocket(`ws://${this.baseURL.replace('http://', '')}${endpoint}`);
         
         ws.on('open', () => console.log('WebSocket connected'));
@@ -980,49 +1015,61 @@ class APIClient(
         ws.on('close', () => console.log('WebSocket disconnected'));
         
         return ws;
-    }""")
-        
-        return '\n\n    '.join(features)
-    
-    def _generate_package_files(self, language: str, library: str, options: Dict) -> Dict[str, str]:
+    }"""
+            )
+
+        return "\n\n    ".join(features)
+
+    def _generate_package_files(
+        self, language: str, library: str, options: Dict
+    ) -> Dict[str, str]:
         """Generate package management files"""
         files = {}
-        
-        if language in ['javascript', 'typescript']:
-            files['package.json'] = json.dumps({
-                'name': 'api-client-sdk',
-                'version': '1.0.0',
-                'main': 'index.js' if language == 'javascript' else 'dist/index.js',
-                'scripts': {
-                    'start': 'node index.js',
-                    'test': 'jest',
-                    'build': 'tsc' if language == 'typescript' else 'webpack',
+
+        if language in ["javascript", "typescript"]:
+            files["package.json"] = json.dumps(
+                {
+                    "name": "api-client-sdk",
+                    "version": "1.0.0",
+                    "main": "index.js" if language == "javascript" else "dist/index.js",
+                    "scripts": {
+                        "start": "node index.js",
+                        "test": "jest",
+                        "build": "tsc" if language == "typescript" else "webpack",
+                    },
+                    "dependencies": {
+                        library: self._get_library_version(library),
+                        "dotenv": "^16.3.1",
+                    },
+                    "devDependencies": {
+                        "jest": "^29.7.0",
+                        "typescript": "^5.3.0" if language == "typescript" else None,
+                    },
                 },
-                'dependencies': {
-                    library: self._get_library_version(library),
-                    'dotenv': '^16.3.1',
-                },
-                'devDependencies': {
-                    'jest': '^29.7.0',
-                    'typescript': '^5.3.0' if language == 'typescript' else None,
-                }
-            }, indent=2)
-            
-        elif language == 'python':
-            files['requirements.txt'] = f"""{library}>=2.31.0
+                indent=2,
+            )
+
+        elif language == "python":
+            files[
+                "requirements.txt"
+            ] = f"""{library}>=2.31.0
 python-dotenv>=1.0.0
 pytest>=7.4.0
 """
-            files['setup.py'] = """from setuptools import setup, find_packages
+            files[
+                "setup.py"
+            ] = """from setuptools import setup, find_packages
 
 setup(
     name='api-client-sdk',
     version='1.0.0',
     packages=find_packages(),
 )"""
-            
-        elif language == 'java':
-            files['pom.xml'] = """<?xml version="1.0" encoding="UTF-8"?>
+
+        elif language == "java":
+            files[
+                "pom.xml"
+            ] = """<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.example</groupId>
@@ -1036,18 +1083,22 @@ setup(
         </dependency>
     </dependencies>
 </project>"""
-            
-        elif language == 'go':
-            files['go.mod'] = """module github.com/example/api-client-sdk
+
+        elif language == "go":
+            files[
+                "go.mod"
+            ] = """module github.com/example/api-client-sdk
 
 go 1.21
 
 require (
     github.com/joho/godotenv v1.5.1
 )"""
-            
-        elif language == 'rust':
-            files['Cargo.toml'] = """[package]
+
+        elif language == "rust":
+            files[
+                "Cargo.toml"
+            ] = """[package]
 name = "api-client-sdk"
 version = "1.0.0"
 edition = "2021"
@@ -1056,49 +1107,49 @@ edition = "2021"
 reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }"""
-        
+
         # Add common files
-        if options.get('includeDocker'):
-            files['Dockerfile'] = self._generate_dockerfile(language)
-        
-        if options.get('includeCI'):
-            files['.github/workflows/ci.yml'] = self._generate_ci_config(language)
-        
-        files['.env.example'] = """API_BASE_URL=https://api.example.com
+        if options.get("includeDocker"):
+            files["Dockerfile"] = self._generate_dockerfile(language)
+
+        if options.get("includeCI"):
+            files[".github/workflows/ci.yml"] = self._generate_ci_config(language)
+
+        files[
+            ".env.example"
+        ] = """API_BASE_URL=https://api.example.com
 API_KEY=your_api_key_here
 LOG_LEVEL=info"""
-        
+
         return files
-    
+
     def _get_library_version(self, library: str) -> str:
         """Get library version for package.json"""
         versions = {
-            'axios': '^1.6.0',
-            'node-fetch': '^3.3.0',
-            'got': '^13.0.0',
-            'superagent': '^8.1.0',
-            'request': '^2.88.2',
+            "axios": "^1.6.0",
+            "node-fetch": "^3.3.0",
+            "got": "^13.0.0",
+            "superagent": "^8.1.0",
+            "request": "^2.88.2",
         }
-        return versions.get(library, '^1.0.0')
-    
+        return versions.get(library, "^1.0.0")
+
     def _generate_dockerfile(self, language: str) -> str:
         """Generate Dockerfile for the SDK"""
         dockerfiles = {
-            'javascript': """FROM node:18-alpine
+            "javascript": """FROM node:18-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
 CMD ["node", "index.js"]""",
-            
-            'python': """FROM python:3.11-slim
+            "python": """FROM python:3.11-slim
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
 CMD ["python", "main.py"]""",
-            
-            'go': """FROM golang:1.21-alpine AS builder
+            "go": """FROM golang:1.21-alpine AS builder
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
@@ -1109,8 +1160,8 @@ FROM alpine:latest
 COPY --from=builder /app/main .
 CMD ["./main"]""",
         }
-        return dockerfiles.get(language, "FROM alpine:latest\nCMD [\"./app\"]")
-    
+        return dockerfiles.get(language, 'FROM alpine:latest\nCMD ["./app"]')
+
     def _generate_ci_config(self, language: str) -> str:
         """Generate CI/CD configuration"""
         return f"""name: CI/CD Pipeline
@@ -1134,34 +1185,36 @@ jobs:
     - name: Run tests
       run: |
         {self._get_test_command(language)}"""
-    
+
     def _get_install_command(self, language: str) -> str:
         """Get install command for CI"""
         commands = {
-            'javascript': 'npm ci',
-            'typescript': 'npm ci',
-            'python': 'pip install -r requirements.txt',
-            'java': 'mvn install',
-            'go': 'go mod download',
-            'rust': 'cargo build',
+            "javascript": "npm ci",
+            "typescript": "npm ci",
+            "python": "pip install -r requirements.txt",
+            "java": "mvn install",
+            "go": "go mod download",
+            "rust": "cargo build",
         }
         return commands.get(language, 'echo "Install dependencies"')
-    
+
     def _get_test_command(self, language: str) -> str:
         """Get test command for CI"""
         commands = {
-            'javascript': 'npm test',
-            'typescript': 'npm test',
-            'python': 'pytest',
-            'java': 'mvn test',
-            'go': 'go test ./...',
-            'rust': 'cargo test',
+            "javascript": "npm test",
+            "typescript": "npm test",
+            "python": "pytest",
+            "java": "mvn test",
+            "go": "go test ./...",
+            "rust": "cargo test",
         }
         return commands.get(language, 'echo "Run tests"')
-    
-    def _generate_tests(self, api_info: Dict, language: str, library: str, options: Dict) -> str:
+
+    def _generate_tests(
+        self, api_info: Dict, language: str, library: str, options: Dict
+    ) -> str:
         """Generate test code"""
-        if language in ['javascript', 'typescript']:
+        if language in ["javascript", "typescript"]:
             return """import APIClient from './index';
 
 describe('APIClient', () => {
@@ -1184,8 +1237,8 @@ describe('APIClient', () => {
         expect(data).toBeDefined();
     });
 });"""
-        
-        elif language == 'python':
+
+        elif language == "python":
             return """import pytest
 from api_client import APIClient
 
@@ -1200,10 +1253,12 @@ def test_get_request(client):
 def test_post_request(client):
     response = client.post('/users', {'name': 'Test'})
     assert response is not None"""
-        
+
         return f"// Tests for {language} SDK"
-    
-    def _generate_documentation(self, api_info: Dict, language: str, library: str, options: Dict) -> str:
+
+    def _generate_documentation(
+        self, api_info: Dict, language: str, library: str, options: Dict
+    ) -> str:
         """Generate README documentation"""
         return f"""# API Client SDK for {language.title()}
 
@@ -1248,10 +1303,10 @@ MIT
 
 Generated with StreamAPI - Enterprise API Platform
 """
-    
+
     def _get_usage_example(self, language: str, library: str) -> str:
         """Get usage example for documentation"""
-        if language == 'javascript':
+        if language == "javascript":
             return """const APIClient = require('./api-client');
 
 const client = new APIClient({
@@ -1269,8 +1324,8 @@ const newUser = await client.post('/users', {
     email: 'john@example.com'
 });
 console.log(newUser);"""
-        
-        elif language == 'python':
+
+        elif language == "python":
             return """from api_client import APIClient
 
 client = APIClient(
@@ -1288,56 +1343,53 @@ new_user = client.post('/users', {
     'email': 'john@example.com'
 })
 print(new_user)"""
-        
+
         return f"// Example for {language}"
-    
+
     def _calculate_complexity(self, code: str) -> str:
         """Calculate code complexity"""
-        lines = len(code.split('\n'))
-        
+        lines = len(code.split("\n"))
+
         # Count control structures
-        control_structures = len(re.findall(r'\b(if|else|for|while|switch|try|catch)\b', code))
-        functions = len(re.findall(r'\b(function|def|func|method|class)\b', code))
-        
+        control_structures = len(
+            re.findall(r"\b(if|else|for|while|switch|try|catch)\b", code)
+        )
+        functions = len(re.findall(r"\b(function|def|func|method|class)\b", code))
+
         score = control_structures + functions * 2
-        
+
         if score < 10:
-            return 'Low'
+            return "Low"
         elif score < 30:
-            return 'Medium'
+            return "Medium"
         elif score < 60:
-            return 'High'
+            return "High"
         else:
-            return 'Very High'
-    
+            return "Very High"
+
     def _estimate_implementation_time(self, code: str, complexity: str) -> str:
         """Estimate implementation time"""
-        lines = len(code.split('\n'))
-        
-        multipliers = {
-            'Low': 0.5,
-            'Medium': 1,
-            'High': 2,
-            'Very High': 3
-        }
-        
+        lines = len(code.split("\n"))
+
+        multipliers = {"Low": 0.5, "Medium": 1, "High": 2, "Very High": 3}
+
         minutes = lines * 0.1 * multipliers.get(complexity, 1)
-        
+
         if minutes < 1:
-            return '< 1 min'
+            return "< 1 min"
         elif minutes < 60:
-            return f'~{int(minutes)} min'
+            return f"~{int(minutes)} min"
         else:
             hours = minutes / 60
-            return f'~{hours:.1f} hours'
-    
+            return f"~{hours:.1f} hours"
+
     def _enhance_with_ai(self, code: str, language: str, options: Dict) -> str:
         """Enhance code with AI suggestions (placeholder for AI integration)"""
         # This would integrate with an AI service like Claude or GPT-4
         # For now, return the original code
         logger.info(f"AI enhancement requested for {language} code")
         return code
-    
+
     def _load_templates(self) -> Dict[str, str]:
         """Load code templates"""
         # This would load templates from files or database

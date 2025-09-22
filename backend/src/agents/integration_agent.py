@@ -7,14 +7,13 @@ import asyncio
 import json
 import requests
 import time
-from typing import Dict, List, Any, Optional, Callable
+from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 from enum import Enum
-import base64
 import hmac
 import hashlib
-from urllib.parse import urlencode, urlparse
+
 
 class IntegrationType(Enum):
     CI_CD = "ci_cd"
@@ -25,15 +24,18 @@ class IntegrationType(Enum):
     COMMUNICATION = "communication"
     PROJECT_MANAGEMENT = "project_management"
 
+
 class IntegrationStatus(Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"
     ERROR = "error"
     PENDING = "pending"
 
+
 @dataclass
 class Integration:
     """Represents a tool integration configuration"""
+
     integration_id: str
     name: str
     type: IntegrationType
@@ -43,9 +45,11 @@ class Integration:
     api_key: Optional[str] = None
     last_sync: Optional[datetime] = None
 
+
 @dataclass
 class IntegrationEvent:
     """Represents an event from an integrated tool"""
+
     event_id: str
     integration_id: str
     event_type: str
@@ -53,14 +57,17 @@ class IntegrationEvent:
     timestamp: datetime
     processed: bool = False
 
+
 @dataclass
 class SyncResult:
     """Result of a synchronization operation"""
+
     integration_id: str
     success: bool
     items_synced: int
     errors: List[str]
     duration: float
+
 
 class IntegrationAgent:
     """
@@ -76,7 +83,9 @@ class IntegrationAgent:
         self.sync_history = []
         self.webhook_handlers = {}
 
-    async def add_integration(self, integration_config: Dict[str, Any]) -> Dict[str, Any]:
+    async def add_integration(
+        self, integration_config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Add a new tool integration"""
         try:
             integration_id = integration_config.get("id") or f"int_{int(time.time())}"
@@ -88,7 +97,7 @@ class IntegrationAgent:
                 status=IntegrationStatus.PENDING,
                 config=integration_config.get("config", {}),
                 webhook_url=integration_config.get("webhook_url"),
-                api_key=integration_config.get("api_key")
+                api_key=integration_config.get("api_key"),
             )
 
             # Validate integration
@@ -110,41 +119,48 @@ class IntegrationAgent:
                         "id": integration.integration_id,
                         "name": integration.name,
                         "type": integration.type.value,
-                        "status": integration.status.value
-                    }
+                        "status": integration.status.value,
+                    },
                 }
             else:
                 return {
                     "integration_id": integration_id,
                     "status": "error",
                     "message": f"Integration validation failed: {validation_result['error']}",
-                    "errors": validation_result.get("errors", [])
+                    "errors": validation_result.get("errors", []),
                 }
 
         except Exception as e:
             return {
                 "status": "error",
                 "message": f"Failed to add integration: {str(e)}",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
-    async def sync_integration(self, integration_id: str, force: bool = False) -> Dict[str, Any]:
+    async def sync_integration(
+        self, integration_id: str, force: bool = False
+    ) -> Dict[str, Any]:
         """Synchronize data with an integrated tool"""
         try:
             integration = self.integrations.get(integration_id)
             if not integration:
-                return {"error": "Integration not found", "integration_id": integration_id}
+                return {
+                    "error": "Integration not found",
+                    "integration_id": integration_id,
+                }
 
             sync_start = time.time()
 
             # Check if sync is needed
             if not force and integration.last_sync:
-                time_since_sync = (datetime.now() - integration.last_sync).total_seconds()
+                time_since_sync = (
+                    datetime.now() - integration.last_sync
+                ).total_seconds()
                 if time_since_sync < 300:  # 5 minutes minimum between syncs
                     return {
                         "integration_id": integration_id,
                         "status": "skipped",
-                        "message": "Recent sync found, use force=True to override"
+                        "message": "Recent sync found, use force=True to override",
                     }
 
             # Perform sync based on integration type
@@ -160,7 +176,7 @@ class IntegrationAgent:
                 success=sync_result["success"],
                 items_synced=sync_result.get("items_synced", 0),
                 errors=sync_result.get("errors", []),
-                duration=sync_duration
+                duration=sync_duration,
             )
             self.sync_history.append(sync_record)
 
@@ -171,19 +187,21 @@ class IntegrationAgent:
                     "items_synced": sync_result.get("items_synced", 0),
                     "duration": round(sync_duration, 2),
                     "errors": sync_result.get("errors", []),
-                    "last_sync": integration.last_sync.isoformat()
+                    "last_sync": integration.last_sync.isoformat(),
                 },
-                "data": sync_result.get("data", {})
+                "data": sync_result.get("data", {}),
             }
 
         except Exception as e:
             return {
                 "integration_id": integration_id,
                 "error": f"Sync failed: {str(e)}",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
-    async def handle_webhook(self, integration_id: str, payload: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
+    async def handle_webhook(
+        self, integration_id: str, payload: Dict[str, Any], headers: Dict[str, str]
+    ) -> Dict[str, Any]:
         """Handle incoming webhook from integrated tool"""
         try:
             integration = self.integrations.get(integration_id)
@@ -192,7 +210,9 @@ class IntegrationAgent:
 
             # Verify webhook signature if configured
             if integration.config.get("webhook_secret"):
-                if not self._verify_webhook_signature(payload, headers, integration.config["webhook_secret"]):
+                if not self._verify_webhook_signature(
+                    payload, headers, integration.config["webhook_secret"]
+                ):
                     return {"error": "Invalid webhook signature", "status": 401}
 
             # Create event
@@ -201,7 +221,7 @@ class IntegrationAgent:
                 integration_id=integration_id,
                 event_type=payload.get("event_type", "unknown"),
                 payload=payload,
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
             self.event_queue.append(event)
@@ -216,17 +236,19 @@ class IntegrationAgent:
                 "event_id": event.event_id,
                 "status": "success",
                 "message": "Webhook processed successfully",
-                "processing_result": processing_result
+                "processing_result": processing_result,
             }
 
         except Exception as e:
             return {
                 "error": f"Webhook processing failed: {str(e)}",
                 "status": 500,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
-    async def get_integration_status(self, integration_id: Optional[str] = None) -> Dict[str, Any]:
+    async def get_integration_status(
+        self, integration_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Get status of integrations"""
         try:
             if integration_id:
@@ -234,8 +256,12 @@ class IntegrationAgent:
                 if not integration:
                     return {"error": "Integration not found"}
 
-                recent_syncs = [s for s in self.sync_history if s.integration_id == integration_id][-5:]
-                recent_events = [e for e in self.event_queue if e.integration_id == integration_id][-10:]
+                recent_syncs = [
+                    s for s in self.sync_history if s.integration_id == integration_id
+                ][-5:]
+                recent_events = [
+                    e for e in self.event_queue if e.integration_id == integration_id
+                ][-10:]
 
                 return {
                     "integration": {
@@ -243,50 +269,80 @@ class IntegrationAgent:
                         "name": integration.name,
                         "type": integration.type.value,
                         "status": integration.status.value,
-                        "last_sync": integration.last_sync.isoformat() if integration.last_sync else None
+                        "last_sync": integration.last_sync.isoformat()
+                        if integration.last_sync
+                        else None,
                     },
-                    "recent_syncs": [{
-                        "success": s.success,
-                        "items_synced": s.items_synced,
-                        "duration": s.duration,
-                        "errors": s.errors
-                    } for s in recent_syncs],
-                    "recent_events": [{
-                        "event_id": e.event_id,
-                        "event_type": e.event_type,
-                        "timestamp": e.timestamp.isoformat(),
-                        "processed": e.processed
-                    } for e in recent_events]
+                    "recent_syncs": [
+                        {
+                            "success": s.success,
+                            "items_synced": s.items_synced,
+                            "duration": s.duration,
+                            "errors": s.errors,
+                        }
+                        for s in recent_syncs
+                    ],
+                    "recent_events": [
+                        {
+                            "event_id": e.event_id,
+                            "event_type": e.event_type,
+                            "timestamp": e.timestamp.isoformat(),
+                            "processed": e.processed,
+                        }
+                        for e in recent_events
+                    ],
                 }
             else:
                 # Return all integrations status
                 integrations_status = []
                 for integration in self.integrations.values():
-                    sync_count = len([s for s in self.sync_history if s.integration_id == integration.integration_id])
-                    event_count = len([e for e in self.event_queue if e.integration_id == integration.integration_id])
+                    sync_count = len(
+                        [
+                            s
+                            for s in self.sync_history
+                            if s.integration_id == integration.integration_id
+                        ]
+                    )
+                    event_count = len(
+                        [
+                            e
+                            for e in self.event_queue
+                            if e.integration_id == integration.integration_id
+                        ]
+                    )
 
-                    integrations_status.append({
-                        "id": integration.integration_id,
-                        "name": integration.name,
-                        "type": integration.type.value,
-                        "status": integration.status.value,
-                        "last_sync": integration.last_sync.isoformat() if integration.last_sync else None,
-                        "sync_count": sync_count,
-                        "event_count": event_count
-                    })
+                    integrations_status.append(
+                        {
+                            "id": integration.integration_id,
+                            "name": integration.name,
+                            "type": integration.type.value,
+                            "status": integration.status.value,
+                            "last_sync": integration.last_sync.isoformat()
+                            if integration.last_sync
+                            else None,
+                            "sync_count": sync_count,
+                            "event_count": event_count,
+                        }
+                    )
 
                 return {
                     "total_integrations": len(self.integrations),
-                    "active_integrations": len([i for i in self.integrations.values() if i.status == IntegrationStatus.ACTIVE]),
+                    "active_integrations": len(
+                        [
+                            i
+                            for i in self.integrations.values()
+                            if i.status == IntegrationStatus.ACTIVE
+                        ]
+                    ),
                     "total_syncs": len(self.sync_history),
                     "total_events": len(self.event_queue),
-                    "integrations": integrations_status
+                    "integrations": integrations_status,
                 }
 
         except Exception as e:
             return {
                 "error": f"Failed to get integration status: {str(e)}",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
     async def _validate_integration(self, integration: Integration) -> Dict[str, Any]:
@@ -305,7 +361,9 @@ class IntegrationAgent:
         except Exception as e:
             return {"valid": False, "error": str(e)}
 
-    async def _validate_cicd_integration(self, integration: Integration) -> Dict[str, Any]:
+    async def _validate_cicd_integration(
+        self, integration: Integration
+    ) -> Dict[str, Any]:
         """Validate CI/CD integration (GitHub, GitLab, Jenkins, etc.)"""
         config = integration.config
 
@@ -316,79 +374,123 @@ class IntegrationAgent:
             # Test GitHub API connection
             try:
                 headers = {"Authorization": f"token {config['token']}"}
-                response = requests.get("https://api.github.com/user", headers=headers, timeout=10)
+                response = requests.get(
+                    "https://api.github.com/user", headers=headers, timeout=10
+                )
                 if response.status_code == 200:
                     return {"valid": True, "message": "GitHub integration validated"}
                 else:
-                    return {"valid": False, "error": f"GitHub API error: {response.status_code}"}
+                    return {
+                        "valid": False,
+                        "error": f"GitHub API error: {response.status_code}",
+                    }
             except Exception as e:
                 return {"valid": False, "error": f"GitHub connection failed: {str(e)}"}
 
         elif integration.name.lower() == "jenkins":
-            if not config.get("url") or not config.get("username") or not config.get("token"):
-                return {"valid": False, "error": "Jenkins URL, username, and token are required"}
+            if (
+                not config.get("url")
+                or not config.get("username")
+                or not config.get("token")
+            ):
+                return {
+                    "valid": False,
+                    "error": "Jenkins URL, username, and token are required",
+                }
 
             # Test Jenkins connection
             try:
                 auth = (config["username"], config["token"])
-                response = requests.get(f"{config['url']}/api/json", auth=auth, timeout=10)
+                response = requests.get(
+                    f"{config['url']}/api/json", auth=auth, timeout=10
+                )
                 if response.status_code == 200:
                     return {"valid": True, "message": "Jenkins integration validated"}
                 else:
-                    return {"valid": False, "error": f"Jenkins API error: {response.status_code}"}
+                    return {
+                        "valid": False,
+                        "error": f"Jenkins API error: {response.status_code}",
+                    }
             except Exception as e:
                 return {"valid": False, "error": f"Jenkins connection failed: {str(e)}"}
 
         return {"valid": True, "message": "CI/CD integration validated"}
 
-    async def _validate_monitoring_integration(self, integration: Integration) -> Dict[str, Any]:
+    async def _validate_monitoring_integration(
+        self, integration: Integration
+    ) -> Dict[str, Any]:
         """Validate monitoring integration (Datadog, New Relic, etc.)"""
         config = integration.config
 
         if integration.name.lower() == "datadog":
             if not config.get("api_key") or not config.get("app_key"):
-                return {"valid": False, "error": "Datadog API key and App key are required"}
+                return {
+                    "valid": False,
+                    "error": "Datadog API key and App key are required",
+                }
 
             # Test Datadog API
             try:
                 headers = {
                     "DD-API-KEY": config["api_key"],
-                    "DD-APPLICATION-KEY": config["app_key"]
+                    "DD-APPLICATION-KEY": config["app_key"],
                 }
-                response = requests.get("https://api.datadoghq.com/api/v1/validate", headers=headers, timeout=10)
+                response = requests.get(
+                    "https://api.datadoghq.com/api/v1/validate",
+                    headers=headers,
+                    timeout=10,
+                )
                 if response.status_code == 200:
                     return {"valid": True, "message": "Datadog integration validated"}
                 else:
-                    return {"valid": False, "error": f"Datadog API error: {response.status_code}"}
+                    return {
+                        "valid": False,
+                        "error": f"Datadog API error: {response.status_code}",
+                    }
             except Exception as e:
                 return {"valid": False, "error": f"Datadog connection failed: {str(e)}"}
 
         return {"valid": True, "message": "Monitoring integration validated"}
 
-    async def _validate_communication_integration(self, integration: Integration) -> Dict[str, Any]:
+    async def _validate_communication_integration(
+        self, integration: Integration
+    ) -> Dict[str, Any]:
         """Validate communication integration (Slack, Discord, etc.)"""
         config = integration.config
 
         if integration.name.lower() == "slack":
             if not config.get("webhook_url") and not config.get("bot_token"):
-                return {"valid": False, "error": "Slack webhook URL or bot token is required"}
+                return {
+                    "valid": False,
+                    "error": "Slack webhook URL or bot token is required",
+                }
 
             # Test Slack webhook or API
             try:
                 if config.get("webhook_url"):
                     test_payload = {"text": "API Orchestrator integration test"}
-                    response = requests.post(config["webhook_url"], json=test_payload, timeout=10)
+                    response = requests.post(
+                        config["webhook_url"], json=test_payload, timeout=10
+                    )
                     if response.status_code == 200:
                         return {"valid": True, "message": "Slack webhook validated"}
                     else:
-                        return {"valid": False, "error": f"Slack webhook error: {response.status_code}"}
+                        return {
+                            "valid": False,
+                            "error": f"Slack webhook error: {response.status_code}",
+                        }
                 elif config.get("bot_token"):
                     headers = {"Authorization": f"Bearer {config['bot_token']}"}
-                    response = requests.get("https://slack.com/api/auth.test", headers=headers, timeout=10)
+                    response = requests.get(
+                        "https://slack.com/api/auth.test", headers=headers, timeout=10
+                    )
                     if response.status_code == 200:
                         return {"valid": True, "message": "Slack bot token validated"}
                     else:
-                        return {"valid": False, "error": f"Slack API error: {response.status_code}"}
+                        return {
+                            "valid": False,
+                            "error": f"Slack API error: {response.status_code}",
+                        }
             except Exception as e:
                 return {"valid": False, "error": f"Slack connection failed: {str(e)}"}
 
@@ -404,7 +506,11 @@ class IntegrationAgent:
             elif integration.type == IntegrationType.PROJECT_MANAGEMENT:
                 return await self._sync_project_data(integration)
             else:
-                return {"success": True, "items_synced": 0, "message": "No sync required"}
+                return {
+                    "success": True,
+                    "items_synced": 0,
+                    "message": "No sync required",
+                }
 
         except Exception as e:
             return {"success": False, "errors": [str(e)]}
@@ -429,7 +535,12 @@ class IntegrationAgent:
 
                     # Get recent commits
                     commits_url = f"{repo_url}/commits"
-                    commits_response = requests.get(commits_url, headers=headers, params={"per_page": 10}, timeout=10)
+                    commits_response = requests.get(
+                        commits_url,
+                        headers=headers,
+                        params={"per_page": 10},
+                        timeout=10,
+                    )
 
                     if commits_response.status_code == 200:
                         commits = commits_response.json()
@@ -437,10 +548,17 @@ class IntegrationAgent:
 
                     # Get workflow runs
                     workflows_url = f"{repo_url}/actions/runs"
-                    workflows_response = requests.get(workflows_url, headers=headers, params={"per_page": 10}, timeout=10)
+                    workflows_response = requests.get(
+                        workflows_url,
+                        headers=headers,
+                        params={"per_page": 10},
+                        timeout=10,
+                    )
 
                     if workflows_response.status_code == 200:
-                        workflow_runs = workflows_response.json().get("workflow_runs", [])
+                        workflow_runs = workflows_response.json().get(
+                            "workflow_runs", []
+                        )
                         synced_items += len(workflow_runs)
 
                     return {
@@ -449,8 +567,8 @@ class IntegrationAgent:
                         "data": {
                             "repository": repo_data,
                             "recent_commits": commits,
-                            "workflow_runs": workflow_runs
-                        }
+                            "workflow_runs": workflow_runs,
+                        },
                     }
 
             elif integration.name.lower() == "jenkins":
@@ -466,7 +584,7 @@ class IntegrationAgent:
                     return {
                         "success": True,
                         "items_synced": synced_items,
-                        "data": {"jenkins_jobs": jobs_data.get("jobs", [])}
+                        "data": {"jenkins_jobs": jobs_data.get("jobs", [])},
                     }
 
             return {"success": True, "items_synced": 0}
@@ -483,7 +601,7 @@ class IntegrationAgent:
             if integration.name.lower() == "datadog":
                 headers = {
                     "DD-API-KEY": config["api_key"],
-                    "DD-APPLICATION-KEY": config["app_key"]
+                    "DD-APPLICATION-KEY": config["app_key"],
                 }
 
                 # Get metrics
@@ -494,10 +612,12 @@ class IntegrationAgent:
                 metrics_params = {
                     "query": "avg:system.cpu.user{*}",
                     "from": one_hour_ago,
-                    "to": now
+                    "to": now,
                 }
 
-                response = requests.get(metrics_url, headers=headers, params=metrics_params, timeout=10)
+                response = requests.get(
+                    metrics_url, headers=headers, params=metrics_params, timeout=10
+                )
 
                 if response.status_code == 200:
                     metrics_data = response.json()
@@ -506,7 +626,7 @@ class IntegrationAgent:
                     return {
                         "success": True,
                         "items_synced": synced_items,
-                        "data": {"metrics": metrics_data}
+                        "data": {"metrics": metrics_data},
                     }
 
             return {"success": True, "items_synced": 0}
@@ -526,13 +646,15 @@ class IntegrationAgent:
                 base_url = config["base_url"]
 
                 issues_url = f"{base_url}/rest/api/3/search"
-                jql_query = "project = {} ORDER BY updated DESC".format(config.get("project_key", "TEST"))
+                jql_query = "project = {} ORDER BY updated DESC".format(
+                    config.get("project_key", "TEST")
+                )
 
                 response = requests.get(
                     issues_url,
                     auth=auth,
                     params={"jql": jql_query, "maxResults": 50},
-                    timeout=10
+                    timeout=10,
                 )
 
                 if response.status_code == 200:
@@ -542,7 +664,7 @@ class IntegrationAgent:
                     return {
                         "success": True,
                         "items_synced": synced_items,
-                        "data": {"jira_issues": issues_data.get("issues", [])}
+                        "data": {"jira_issues": issues_data.get("issues", [])},
                     }
 
             return {"success": True, "items_synced": 0}
@@ -555,7 +677,7 @@ class IntegrationAgent:
         self.webhook_handlers[integration.integration_id] = {
             "url": integration.webhook_url,
             "secret": integration.config.get("webhook_secret"),
-            "events": integration.config.get("webhook_events", [])
+            "events": integration.config.get("webhook_events", []),
         }
 
     async def _process_webhook_event(self, event: IntegrationEvent) -> Dict[str, Any]:
@@ -565,7 +687,9 @@ class IntegrationAgent:
 
             # GitHub webhook events
             if event.event_type in ["push", "pull_request", "issues"]:
-                processing_result["actions"].append(f"Processed {event.event_type} event")
+                processing_result["actions"].append(
+                    f"Processed {event.event_type} event"
+                )
 
                 # Example: Trigger API tests on push
                 if event.event_type == "push":
@@ -577,7 +701,9 @@ class IntegrationAgent:
 
             # Jenkins webhook events
             elif event.event_type in ["build_started", "build_completed"]:
-                processing_result["actions"].append(f"Processed {event.event_type} event")
+                processing_result["actions"].append(
+                    f"Processed {event.event_type} event"
+                )
 
                 if event.event_type == "build_completed":
                     build_result = event.payload.get("result", "unknown")
@@ -593,18 +719,18 @@ class IntegrationAgent:
         except Exception as e:
             return {"error": f"Event processing failed: {str(e)}"}
 
-    def _verify_webhook_signature(self, payload: Dict[str, Any], headers: Dict[str, str], secret: str) -> bool:
+    def _verify_webhook_signature(
+        self, payload: Dict[str, Any], headers: Dict[str, str], secret: str
+    ) -> bool:
         """Verify webhook signature for security"""
         try:
             signature = headers.get("X-Hub-Signature-256") or headers.get("X-Signature")
             if not signature:
                 return False
 
-            payload_str = json.dumps(payload, separators=(',', ':'))
+            payload_str = json.dumps(payload, separators=(",", ":"))
             expected_signature = hmac.new(
-                secret.encode(),
-                payload_str.encode(),
-                hashlib.sha256
+                secret.encode(), payload_str.encode(), hashlib.sha256
             ).hexdigest()
 
             return hmac.compare_digest(signature, f"sha256={expected_signature}")
@@ -615,49 +741,75 @@ class IntegrationAgent:
     async def get_integration_recommendations(self) -> Dict[str, Any]:
         """Get recommendations for new integrations"""
         try:
-            current_types = set(integration.type for integration in self.integrations.values())
+            current_types = set(
+                integration.type for integration in self.integrations.values()
+            )
 
             recommendations = []
 
             # Recommend missing essential integrations
             if IntegrationType.CI_CD not in current_types:
-                recommendations.append({
-                    "type": "ci_cd",
-                    "title": "Add CI/CD Integration",
-                    "description": "Connect with GitHub, GitLab, or Jenkins for automated testing",
-                    "benefits": ["Automated API testing", "Deployment notifications", "Code quality monitoring"],
-                    "priority": "high"
-                })
+                recommendations.append(
+                    {
+                        "type": "ci_cd",
+                        "title": "Add CI/CD Integration",
+                        "description": "Connect with GitHub, GitLab, or Jenkins for automated testing",
+                        "benefits": [
+                            "Automated API testing",
+                            "Deployment notifications",
+                            "Code quality monitoring",
+                        ],
+                        "priority": "high",
+                    }
+                )
 
             if IntegrationType.MONITORING not in current_types:
-                recommendations.append({
-                    "type": "monitoring",
-                    "title": "Add Monitoring Integration",
-                    "description": "Connect with Datadog, New Relic, or Prometheus for observability",
-                    "benefits": ["Real-time performance monitoring", "Alert management", "SLA tracking"],
-                    "priority": "high"
-                })
+                recommendations.append(
+                    {
+                        "type": "monitoring",
+                        "title": "Add Monitoring Integration",
+                        "description": "Connect with Datadog, New Relic, or Prometheus for observability",
+                        "benefits": [
+                            "Real-time performance monitoring",
+                            "Alert management",
+                            "SLA tracking",
+                        ],
+                        "priority": "high",
+                    }
+                )
 
             if IntegrationType.COMMUNICATION not in current_types:
-                recommendations.append({
-                    "type": "communication",
-                    "title": "Add Team Communication",
-                    "description": "Connect with Slack, Discord, or Microsoft Teams",
-                    "benefits": ["Instant notifications", "Team collaboration", "Alert routing"],
-                    "priority": "medium"
-                })
+                recommendations.append(
+                    {
+                        "type": "communication",
+                        "title": "Add Team Communication",
+                        "description": "Connect with Slack, Discord, or Microsoft Teams",
+                        "benefits": [
+                            "Instant notifications",
+                            "Team collaboration",
+                            "Alert routing",
+                        ],
+                        "priority": "medium",
+                    }
+                )
 
             # Performance-based recommendations
             if len(self.integrations) > 0:
                 sync_failures = [s for s in self.sync_history if not s.success]
                 if len(sync_failures) > 5:
-                    recommendations.append({
-                        "type": "reliability",
-                        "title": "Improve Integration Reliability",
-                        "description": "Several integrations have sync failures",
-                        "benefits": ["Better data consistency", "Reduced manual intervention", "Improved automation"],
-                        "priority": "medium"
-                    })
+                    recommendations.append(
+                        {
+                            "type": "reliability",
+                            "title": "Improve Integration Reliability",
+                            "description": "Several integrations have sync failures",
+                            "benefits": [
+                                "Better data consistency",
+                                "Reduced manual intervention",
+                                "Improved automation",
+                            ],
+                            "priority": "medium",
+                        }
+                    )
 
             return {
                 "recommendations": recommendations,
@@ -667,14 +819,14 @@ class IntegrationAgent:
                     "🔗 Connect essential tools for your workflow",
                     "📊 Set up monitoring and alerting",
                     "🤖 Enable automation for repetitive tasks",
-                    "📢 Configure team notifications"
-                ]
+                    "📢 Configure team notifications",
+                ],
             }
 
         except Exception as e:
             return {
                 "error": f"Failed to generate recommendations: {str(e)}",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
     def _calculate_integration_coverage_score(self) -> int:
@@ -683,11 +835,17 @@ class IntegrationAgent:
             IntegrationType.CI_CD,
             IntegrationType.MONITORING,
             IntegrationType.COMMUNICATION,
-            IntegrationType.TESTING
+            IntegrationType.TESTING,
         ]
 
-        current_types = set(integration.type for integration in self.integrations.values() if integration.status == IntegrationStatus.ACTIVE)
-        coverage = len(current_types.intersection(essential_types)) / len(essential_types)
+        current_types = set(
+            integration.type
+            for integration in self.integrations.values()
+            if integration.status == IntegrationStatus.ACTIVE
+        )
+        coverage = len(current_types.intersection(essential_types)) / len(
+            essential_types
+        )
 
         return int(coverage * 100)
 
@@ -698,11 +856,15 @@ class IntegrationAgent:
 
             # Clean up old events
             old_events = [e for e in self.event_queue if e.timestamp < cutoff_date]
-            self.event_queue = [e for e in self.event_queue if e.timestamp >= cutoff_date]
+            self.event_queue = [
+                e for e in self.event_queue if e.timestamp >= cutoff_date
+            ]
 
             # Clean up old sync history (keep last 100 records per integration)
             for integration_id in self.integrations.keys():
-                integration_syncs = [s for s in self.sync_history if s.integration_id == integration_id]
+                integration_syncs = [
+                    s for s in self.sync_history if s.integration_id == integration_id
+                ]
                 if len(integration_syncs) > 100:
                     # Keep only the latest 100
                     integration_syncs.sort(key=lambda x: x.duration, reverse=True)
@@ -714,17 +876,19 @@ class IntegrationAgent:
                 "events_cleaned": len(old_events),
                 "remaining_events": len(self.event_queue),
                 "remaining_sync_records": len(self.sync_history),
-                "cleanup_date": cutoff_date.isoformat()
+                "cleanup_date": cutoff_date.isoformat(),
             }
 
         except Exception as e:
             return {
                 "error": f"Cleanup failed: {str(e)}",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
+
 
 # Usage example and testing
 if __name__ == "__main__":
+
     async def test_integration_agent():
         agent = IntegrationAgent()
 
@@ -736,9 +900,9 @@ if __name__ == "__main__":
             "config": {
                 "token": "ghp_example_token",
                 "owner": "myorg",
-                "repo": "myrepo"
+                "repo": "myrepo",
             },
-            "webhook_url": "https://api.example.com/webhooks/github"
+            "webhook_url": "https://api.example.com/webhooks/github",
         }
 
         result = await agent.add_integration(github_config)
@@ -751,7 +915,7 @@ if __name__ == "__main__":
             "type": "communication",
             "config": {
                 "webhook_url": "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
-            }
+            },
         }
 
         result = await agent.add_integration(slack_config)

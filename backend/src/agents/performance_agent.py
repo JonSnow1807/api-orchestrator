@@ -7,16 +7,17 @@ import asyncio
 import json
 import time
 import statistics
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
 from collections import defaultdict, deque
 import threading
-import queue
+
 
 @dataclass
 class PerformanceMetric:
     """Represents a performance metric data point"""
+
     timestamp: datetime
     endpoint: str
     method: str
@@ -27,9 +28,11 @@ class PerformanceMetric:
     cpu_usage: float
     error_message: Optional[str] = None
 
+
 @dataclass
 class PerformanceAlert:
     """Represents a performance alert"""
+
     alert_id: str
     severity: str  # critical, warning, info
     title: str
@@ -41,9 +44,11 @@ class PerformanceAlert:
     actual_value: float
     recommendations: List[str]
 
+
 @dataclass
 class PerformanceSummary:
     """Summary of performance metrics"""
+
     avg_response_time: float
     p95_response_time: float
     p99_response_time: float
@@ -51,6 +56,7 @@ class PerformanceSummary:
     throughput: float
     availability: float
     total_requests: int
+
 
 class PerformanceAgent:
     """
@@ -70,14 +76,14 @@ class PerformanceAgent:
         self.thresholds = {
             "critical": {
                 "response_time": 10.0,  # seconds
-                "error_rate": 0.1,      # 10%
-                "availability": 0.95    # 95%
+                "error_rate": 0.1,  # 10%
+                "availability": 0.95,  # 95%
             },
             "warning": {
-                "response_time": 5.0,   # seconds
-                "error_rate": 0.05,     # 5%
-                "availability": 0.98    # 98%
-            }
+                "response_time": 5.0,  # seconds
+                "error_rate": 0.05,  # 5%
+                "availability": 0.98,  # 98%
+            },
         }
 
         # Start background monitoring
@@ -85,6 +91,7 @@ class PerformanceAgent:
 
     def _start_background_monitoring(self):
         """Start background monitoring thread"""
+
         def monitor():
             while self.monitoring_active:
                 try:
@@ -104,12 +111,15 @@ class PerformanceAgent:
         if len(self.metrics_buffer) % 100 == 0:
             await self._update_baselines()
 
-    async def get_real_time_performance(self, endpoint: Optional[str] = None,
-                                      time_window: int = 300) -> Dict[str, Any]:
+    async def get_real_time_performance(
+        self, endpoint: Optional[str] = None, time_window: int = 300
+    ) -> Dict[str, Any]:
         """Get real-time performance metrics for the last N seconds"""
         try:
             cutoff_time = datetime.now() - timedelta(seconds=time_window)
-            recent_metrics = [m for m in self.metrics_buffer if m.timestamp >= cutoff_time]
+            recent_metrics = [
+                m for m in self.metrics_buffer if m.timestamp >= cutoff_time
+            ]
 
             if endpoint:
                 recent_metrics = [m for m in recent_metrics if m.endpoint == endpoint]
@@ -117,7 +127,7 @@ class PerformanceAgent:
             if not recent_metrics:
                 return {
                     "status": "no_data",
-                    "message": f"No performance data available for the last {time_window} seconds"
+                    "message": f"No performance data available for the last {time_window} seconds",
                 }
 
             # Calculate performance summary
@@ -130,7 +140,9 @@ class PerformanceAgent:
             trends = await self._calculate_performance_trends(recent_metrics)
 
             # Optimization recommendations
-            recommendations = await self._generate_performance_recommendations(summary, recent_metrics)
+            recommendations = await self._generate_performance_recommendations(
+                summary, recent_metrics
+            )
 
             return {
                 "timestamp": datetime.now().isoformat(),
@@ -141,16 +153,18 @@ class PerformanceAgent:
                 "trends": trends,
                 "recommendations": recommendations,
                 "health_score": await self._calculate_health_score(summary),
-                "total_requests": len(recent_metrics)
+                "total_requests": len(recent_metrics),
             }
 
         except Exception as e:
             return {
                 "error": f"Failed to get real-time performance data: {str(e)}",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
-    async def _calculate_performance_summary(self, metrics: List[PerformanceMetric]) -> PerformanceSummary:
+    async def _calculate_performance_summary(
+        self, metrics: List[PerformanceMetric]
+    ) -> PerformanceSummary:
         """Calculate performance summary from metrics"""
         if not metrics:
             return PerformanceSummary(0, 0, 0, 0, 0, 0, 0)
@@ -173,12 +187,16 @@ class PerformanceAgent:
 
         return PerformanceSummary(
             avg_response_time=statistics.mean(response_times),
-            p95_response_time=response_times_sorted[p95_index] if response_times_sorted else 0,
-            p99_response_time=response_times_sorted[p99_index] if response_times_sorted else 0,
+            p95_response_time=response_times_sorted[p95_index]
+            if response_times_sorted
+            else 0,
+            p99_response_time=response_times_sorted[p99_index]
+            if response_times_sorted
+            else 0,
             error_rate=error_count / total_requests,
             throughput=throughput,
             availability=1 - (error_count / total_requests),
-            total_requests=total_requests
+            total_requests=total_requests,
         )
 
     def _check_performance_alerts(self):
@@ -186,7 +204,9 @@ class PerformanceAgent:
         try:
             # Get recent metrics (last 5 minutes)
             cutoff_time = datetime.now() - timedelta(minutes=5)
-            recent_metrics = [m for m in self.metrics_buffer if m.timestamp >= cutoff_time]
+            recent_metrics = [
+                m for m in self.metrics_buffer if m.timestamp >= cutoff_time
+            ]
 
             if len(recent_metrics) < 10:  # Need minimum data points
                 return
@@ -228,8 +248,8 @@ class PerformanceAgent:
                     "Check database query performance",
                     "Review endpoint logic for optimization opportunities",
                     "Consider implementing caching",
-                    "Scale infrastructure if needed"
-                ]
+                    "Scale infrastructure if needed",
+                ],
             )
             self.alerts_history.append(alert)
 
@@ -247,8 +267,8 @@ class PerformanceAgent:
                 recommendations=[
                     "Monitor endpoint performance closely",
                     "Consider optimizing database queries",
-                    "Review code for performance bottlenecks"
-                ]
+                    "Review code for performance bottlenecks",
+                ],
             )
             self.alerts_history.append(alert)
 
@@ -268,12 +288,14 @@ class PerformanceAgent:
                     "Investigate error causes immediately",
                     "Check endpoint logic and dependencies",
                     "Review recent deployments",
-                    "Implement circuit breaker pattern"
-                ]
+                    "Implement circuit breaker pattern",
+                ],
             )
             self.alerts_history.append(alert)
 
-    async def _get_active_alerts(self, endpoint: Optional[str] = None) -> List[PerformanceAlert]:
+    async def _get_active_alerts(
+        self, endpoint: Optional[str] = None
+    ) -> List[PerformanceAlert]:
         """Get active alerts (last hour)"""
         cutoff_time = datetime.now() - timedelta(hours=1)
         active_alerts = [a for a in self.alerts_history if a.timestamp >= cutoff_time]
@@ -283,7 +305,9 @@ class PerformanceAgent:
 
         return sorted(active_alerts, key=lambda x: x.timestamp, reverse=True)[:10]
 
-    async def _calculate_performance_trends(self, metrics: List[PerformanceMetric]) -> Dict[str, Any]:
+    async def _calculate_performance_trends(
+        self, metrics: List[PerformanceMetric]
+    ) -> Dict[str, Any]:
         """Calculate performance trends over time"""
         if len(metrics) < 2:
             return {"trend": "insufficient_data"}
@@ -294,7 +318,9 @@ class PerformanceAgent:
 
         start_time = min(m.timestamp for m in metrics)
         for metric in metrics:
-            bucket_key = int((metric.timestamp - start_time).total_seconds() // bucket_size)
+            bucket_key = int(
+                (metric.timestamp - start_time).total_seconds() // bucket_size
+            )
             buckets[bucket_key].append(metric)
 
         # Calculate trend data
@@ -302,19 +328,27 @@ class PerformanceAgent:
         for bucket_key in sorted(buckets.keys()):
             bucket_metrics = buckets[bucket_key]
             avg_response = statistics.mean([m.response_time for m in bucket_metrics])
-            error_rate = sum(1 for m in bucket_metrics if m.status_code >= 400) / len(bucket_metrics)
+            error_rate = sum(1 for m in bucket_metrics if m.status_code >= 400) / len(
+                bucket_metrics
+            )
 
-            trend_data.append({
-                "time_bucket": bucket_key,
-                "avg_response_time": round(avg_response, 3),
-                "error_rate": round(error_rate, 3),
-                "request_count": len(bucket_metrics)
-            })
+            trend_data.append(
+                {
+                    "time_bucket": bucket_key,
+                    "avg_response_time": round(avg_response, 3),
+                    "error_rate": round(error_rate, 3),
+                    "request_count": len(bucket_metrics),
+                }
+            )
 
         # Calculate overall trend direction
         if len(trend_data) >= 2:
-            first_half_avg = statistics.mean([d["avg_response_time"] for d in trend_data[:len(trend_data)//2]])
-            second_half_avg = statistics.mean([d["avg_response_time"] for d in trend_data[len(trend_data)//2:]])
+            first_half_avg = statistics.mean(
+                [d["avg_response_time"] for d in trend_data[: len(trend_data) // 2]]
+            )
+            second_half_avg = statistics.mean(
+                [d["avg_response_time"] for d in trend_data[len(trend_data) // 2 :]]
+            )
 
             if second_half_avg > first_half_avg * 1.1:
                 trend_direction = "degrading"
@@ -328,73 +362,82 @@ class PerformanceAgent:
         return {
             "trend_direction": trend_direction,
             "data_points": trend_data,
-            "bucket_size_seconds": bucket_size
+            "bucket_size_seconds": bucket_size,
         }
 
-    async def _generate_performance_recommendations(self, summary: PerformanceSummary,
-                                                  metrics: List[PerformanceMetric]) -> List[Dict[str, str]]:
+    async def _generate_performance_recommendations(
+        self, summary: PerformanceSummary, metrics: List[PerformanceMetric]
+    ) -> List[Dict[str, str]]:
         """Generate performance optimization recommendations"""
         recommendations = []
 
         # Response time recommendations
         if summary.avg_response_time > 2.0:
-            recommendations.append({
-                "type": "response_time",
-                "priority": "high" if summary.avg_response_time > 5.0 else "medium",
-                "title": "Optimize Response Time",
-                "description": f"Average response time ({summary.avg_response_time:.2f}s) can be improved",
-                "actions": [
-                    "Implement caching for frequently accessed data",
-                    "Optimize database queries",
-                    "Consider asynchronous processing for heavy operations",
-                    "Review code for performance bottlenecks"
-                ]
-            })
+            recommendations.append(
+                {
+                    "type": "response_time",
+                    "priority": "high" if summary.avg_response_time > 5.0 else "medium",
+                    "title": "Optimize Response Time",
+                    "description": f"Average response time ({summary.avg_response_time:.2f}s) can be improved",
+                    "actions": [
+                        "Implement caching for frequently accessed data",
+                        "Optimize database queries",
+                        "Consider asynchronous processing for heavy operations",
+                        "Review code for performance bottlenecks",
+                    ],
+                }
+            )
 
         # Error rate recommendations
         if summary.error_rate > 0.01:  # More than 1% errors
-            recommendations.append({
-                "type": "error_rate",
-                "priority": "high" if summary.error_rate > 0.05 else "medium",
-                "title": "Reduce Error Rate",
-                "description": f"Error rate ({summary.error_rate:.1%}) should be investigated",
-                "actions": [
-                    "Analyze error logs for common failure patterns",
-                    "Implement better input validation",
-                    "Add retry mechanisms for transient failures",
-                    "Improve error handling and recovery"
-                ]
-            })
+            recommendations.append(
+                {
+                    "type": "error_rate",
+                    "priority": "high" if summary.error_rate > 0.05 else "medium",
+                    "title": "Reduce Error Rate",
+                    "description": f"Error rate ({summary.error_rate:.1%}) should be investigated",
+                    "actions": [
+                        "Analyze error logs for common failure patterns",
+                        "Implement better input validation",
+                        "Add retry mechanisms for transient failures",
+                        "Improve error handling and recovery",
+                    ],
+                }
+            )
 
         # Throughput recommendations
         if summary.throughput < 10:  # Low throughput
-            recommendations.append({
-                "type": "throughput",
-                "priority": "medium",
-                "title": "Improve Throughput",
-                "description": f"Current throughput ({summary.throughput:.1f} req/s) could be optimized",
-                "actions": [
-                    "Implement connection pooling",
-                    "Optimize resource utilization",
-                    "Consider horizontal scaling",
-                    "Review concurrent request handling"
-                ]
-            })
+            recommendations.append(
+                {
+                    "type": "throughput",
+                    "priority": "medium",
+                    "title": "Improve Throughput",
+                    "description": f"Current throughput ({summary.throughput:.1f} req/s) could be optimized",
+                    "actions": [
+                        "Implement connection pooling",
+                        "Optimize resource utilization",
+                        "Consider horizontal scaling",
+                        "Review concurrent request handling",
+                    ],
+                }
+            )
 
         # P99 latency recommendations
         if summary.p99_response_time > summary.avg_response_time * 3:
-            recommendations.append({
-                "type": "latency_variance",
-                "priority": "medium",
-                "title": "Reduce Latency Variance",
-                "description": "High P99 latency indicates inconsistent performance",
-                "actions": [
-                    "Investigate outlier requests",
-                    "Implement request timeout policies",
-                    "Optimize resource contention scenarios",
-                    "Consider load balancing improvements"
-                ]
-            })
+            recommendations.append(
+                {
+                    "type": "latency_variance",
+                    "priority": "medium",
+                    "title": "Reduce Latency Variance",
+                    "description": "High P99 latency indicates inconsistent performance",
+                    "actions": [
+                        "Investigate outlier requests",
+                        "Implement request timeout policies",
+                        "Optimize resource contention scenarios",
+                        "Consider load balancing improvements",
+                    ],
+                }
+            )
 
         return recommendations[:5]  # Return top 5 recommendations
 
@@ -439,7 +482,9 @@ class PerformanceAgent:
         try:
             # Get last 24 hours of data for baseline
             cutoff_time = datetime.now() - timedelta(hours=24)
-            baseline_metrics = [m for m in self.metrics_buffer if m.timestamp >= cutoff_time]
+            baseline_metrics = [
+                m for m in self.metrics_buffer if m.timestamp >= cutoff_time
+            ]
 
             if len(baseline_metrics) < 100:  # Need sufficient data
                 return
@@ -454,8 +499,10 @@ class PerformanceAgent:
                 if len(response_times) >= 10:
                     self.performance_baselines[endpoint] = {
                         "avg_response_time": statistics.mean(response_times),
-                        "p95_response_time": statistics.quantiles(response_times, n=20)[18],  # 95th percentile
-                        "baseline_updated": datetime.now().isoformat()
+                        "p95_response_time": statistics.quantiles(response_times, n=20)[
+                            18
+                        ],  # 95th percentile
+                        "baseline_updated": datetime.now().isoformat(),
                     }
 
         except Exception as e:
@@ -465,13 +512,16 @@ class PerformanceAgent:
         """Get comprehensive performance dashboard data"""
         try:
             # Get metrics for last hour
-            recent_metrics = [m for m in self.metrics_buffer
-                            if m.timestamp >= datetime.now() - timedelta(hours=1)]
+            recent_metrics = [
+                m
+                for m in self.metrics_buffer
+                if m.timestamp >= datetime.now() - timedelta(hours=1)
+            ]
 
             if not recent_metrics:
                 return {
                     "status": "no_data",
-                    "message": "No recent performance data available"
+                    "message": "No recent performance data available",
                 }
 
             # Overall summary
@@ -485,13 +535,17 @@ class PerformanceAgent:
             slow_endpoints = []
             for endpoint, times in endpoint_performance.items():
                 avg_time = statistics.mean(times)
-                slow_endpoints.append({
-                    "endpoint": endpoint,
-                    "avg_response_time": round(avg_time, 3),
-                    "request_count": len(times)
-                })
+                slow_endpoints.append(
+                    {
+                        "endpoint": endpoint,
+                        "avg_response_time": round(avg_time, 3),
+                        "request_count": len(times),
+                    }
+                )
 
-            slow_endpoints = sorted(slow_endpoints, key=lambda x: x["avg_response_time"], reverse=True)[:5]
+            slow_endpoints = sorted(
+                slow_endpoints, key=lambda x: x["avg_response_time"], reverse=True
+            )[:5]
 
             # Active alerts
             active_alerts = await self._get_active_alerts()
@@ -505,16 +559,20 @@ class PerformanceAgent:
                 "health_score": health_score,
                 "slow_endpoints": slow_endpoints,
                 "active_alerts": len(active_alerts),
-                "critical_alerts": len([a for a in active_alerts if a.severity == "critical"]),
-                "performance_trends": await self._calculate_performance_trends(recent_metrics),
+                "critical_alerts": len(
+                    [a for a in active_alerts if a.severity == "critical"]
+                ),
+                "performance_trends": await self._calculate_performance_trends(
+                    recent_metrics
+                ),
                 "monitoring_status": "active" if self.monitoring_active else "inactive",
-                "total_metrics_collected": len(self.metrics_buffer)
+                "total_metrics_collected": len(self.metrics_buffer),
             }
 
         except Exception as e:
             return {
                 "error": f"Failed to get dashboard data: {str(e)}",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
     def stop_monitoring(self):
@@ -530,26 +588,29 @@ class PerformanceAgent:
             "metrics_in_buffer": len(self.metrics_buffer),
             "alerts_history_count": len(self.alerts_history),
             "baselines_count": len(self.performance_baselines),
-            "uptime": "Runtime monitoring active"
+            "uptime": "Runtime monitoring active",
         }
+
 
 # Usage example and testing
 if __name__ == "__main__":
+
     async def test_performance_agent():
         agent = PerformanceAgent()
 
         # Create sample performance metrics
         sample_metrics = [
             PerformanceMetric(
-                timestamp=datetime.now() - timedelta(seconds=i*10),
+                timestamp=datetime.now() - timedelta(seconds=i * 10),
                 endpoint="/api/users",
                 method="GET",
                 response_time=1.5 + (i * 0.1),  # Gradually increasing response time
                 status_code=200 if i < 8 else 500,  # Some errors at the end
                 content_length=1024,
                 memory_usage=50.0,
-                cpu_usage=25.0
-            ) for i in range(10)
+                cpu_usage=25.0,
+            )
+            for i in range(10)
         ]
 
         # Record metrics

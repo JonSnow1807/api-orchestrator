@@ -5,33 +5,33 @@ Automatically generates beautiful, comprehensive API documentation with examples
 
 import asyncio
 import json
-import re
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 from dataclasses import dataclass, asdict
-from pathlib import Path
-import yaml
 from jinja2 import Template
 
 # Conditional imports for production resilience
 try:
     import markdown
+
     MARKDOWN_AVAILABLE = True
 except ImportError:
     MARKDOWN_AVAILABLE = False
-    print("⚠️ Warning: markdown package not available, falling back to basic text processing")
+    print(
+        "⚠️ Warning: markdown package not available, falling back to basic text processing"
+    )
 
 try:
-    import weasyprint
     PDF_GENERATION_AVAILABLE = True
-except (ImportError, OSError) as e:
+except (ImportError, OSError):
     PDF_GENERATION_AVAILABLE = False
     # Suppress weasyprint warning for cleaner output - pango library missing is expected
-    pass
+
 
 @dataclass
 class APIEndpoint:
     """Represents an API endpoint for documentation"""
+
     path: str
     method: str
     summary: str
@@ -43,14 +43,17 @@ class APIEndpoint:
     security: List[Dict[str, Any]]
     examples: List[Dict[str, Any]]
 
+
 @dataclass
 class DocumentationSection:
     """Represents a documentation section"""
+
     title: str
     content: str
     order: int
     section_type: str  # overview, getting_started, endpoints, examples, guides
     subsections: List[Dict[str, Any]]
+
 
 class DocumentationAgent:
     """
@@ -179,13 +182,15 @@ class DocumentationAgent:
     {% endfor %}
     {% endif %}
 </div>
-            """
+            """,
         }
 
-    async def generate_documentation(self,
-                                   openapi_spec: Dict[str, Any],
-                                   format: str = "html",
-                                   options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def generate_documentation(
+        self,
+        openapi_spec: Dict[str, Any],
+        format: str = "html",
+        options: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         """Generate comprehensive API documentation from OpenAPI specification"""
         try:
             options = options or {}
@@ -197,10 +202,14 @@ class DocumentationAgent:
             sections = await self._generate_sections(openapi_spec, options)
 
             # Format the documentation
-            formatted_docs = await self._format_documentation(sections, format, api_info)
+            formatted_docs = await self._format_documentation(
+                sections, format, api_info
+            )
 
             # Generate additional resources
-            additional_resources = await self._generate_additional_resources(openapi_spec, options)
+            additional_resources = await self._generate_additional_resources(
+                openapi_spec, options
+            )
 
             return {
                 "status": "success",
@@ -210,20 +219,24 @@ class DocumentationAgent:
                 "documentation": formatted_docs,
                 "sections_count": len(sections),
                 "additional_resources": additional_resources,
-                "download_links": await self._generate_download_links(formatted_docs, format),
+                "download_links": await self._generate_download_links(
+                    formatted_docs, format
+                ),
                 "statistics": {
                     "total_endpoints": len(openapi_spec.get("paths", {})),
-                    "total_schemas": len(openapi_spec.get("components", {}).get("schemas", {})),
+                    "total_schemas": len(
+                        openapi_spec.get("components", {}).get("schemas", {})
+                    ),
                     "documentation_size": len(formatted_docs),
-                    "generation_time": "< 1 second"
-                }
+                    "generation_time": "< 1 second",
+                },
             }
 
         except Exception as e:
             return {
                 "status": "error",
                 "error": f"Documentation generation failed: {str(e)}",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
     async def _extract_api_info(self, openapi_spec: Dict[str, Any]) -> Dict[str, Any]:
@@ -237,11 +250,15 @@ class DocumentationAgent:
             "contact": info.get("contact", {}),
             "license": info.get("license", {}),
             "servers": openapi_spec.get("servers", []),
-            "base_url": openapi_spec.get("servers", [{}])[0].get("url", "") if openapi_spec.get("servers") else "",
-            "tags": openapi_spec.get("tags", [])
+            "base_url": openapi_spec.get("servers", [{}])[0].get("url", "")
+            if openapi_spec.get("servers")
+            else "",
+            "tags": openapi_spec.get("tags", []),
         }
 
-    async def _generate_sections(self, openapi_spec: Dict[str, Any], options: Dict[str, Any]) -> List[DocumentationSection]:
+    async def _generate_sections(
+        self, openapi_spec: Dict[str, Any], options: Dict[str, Any]
+    ) -> List[DocumentationSection]:
         """Generate documentation sections"""
         sections = []
 
@@ -281,7 +298,9 @@ class DocumentationAgent:
 
         return sections
 
-    async def _generate_overview_section(self, openapi_spec: Dict[str, Any]) -> DocumentationSection:
+    async def _generate_overview_section(
+        self, openapi_spec: Dict[str, Any]
+    ) -> DocumentationSection:
         """Generate API overview section"""
         info = openapi_spec.get("info", {})
 
@@ -331,14 +350,16 @@ Need help? We're here to support you:
             content=content.strip(),
             order=1,
             section_type="overview",
-            subsections=[]
+            subsections=[],
         )
 
-    async def _generate_getting_started_section(self, openapi_spec: Dict[str, Any]) -> DocumentationSection:
+    async def _generate_getting_started_section(
+        self, openapi_spec: Dict[str, Any]
+    ) -> DocumentationSection:
         """Generate getting started section"""
         base_url = ""
-        if openapi_spec.get('servers'):
-            base_url = openapi_spec['servers'][0].get('url', 'https://api.example.com')
+        if openapi_spec.get("servers"):
+            base_url = openapi_spec["servers"][0].get("url", "https://api.example.com")
 
         content = f"""
 # Getting Started
@@ -435,10 +456,12 @@ Common status codes:
             content=content.strip(),
             order=2,
             section_type="getting_started",
-            subsections=[]
+            subsections=[],
         )
 
-    async def _generate_auth_section(self, openapi_spec: Dict[str, Any]) -> Optional[DocumentationSection]:
+    async def _generate_auth_section(
+        self, openapi_spec: Dict[str, Any]
+    ) -> Optional[DocumentationSection]:
         """Generate authentication section"""
         components = openapi_spec.get("components", {})
         security_schemes = components.get("securitySchemes", {})
@@ -534,14 +557,18 @@ curl -X GET "https://api.example.com/api/auth/verify" \\
             content=content.strip(),
             order=3,
             section_type="authentication",
-            subsections=[]
+            subsections=[],
         )
 
-    async def _generate_endpoints_section(self, openapi_spec: Dict[str, Any]) -> DocumentationSection:
+    async def _generate_endpoints_section(
+        self, openapi_spec: Dict[str, Any]
+    ) -> DocumentationSection:
         """Generate endpoints documentation section"""
         paths = openapi_spec.get("paths", {})
 
-        content = "# API Endpoints\n\nComplete reference for all available API endpoints.\n\n"
+        content = (
+            "# API Endpoints\n\nComplete reference for all available API endpoints.\n\n"
+        )
 
         # Group endpoints by tags
         tagged_endpoints = {}
@@ -553,7 +580,7 @@ curl -X GET "https://api.example.com/api/auth/verify" \\
                     endpoint = {
                         "path": path,
                         "method": method.upper(),
-                        "info": method_info
+                        "info": method_info,
                     }
 
                     tags = method_info.get("tags", [])
@@ -583,7 +610,7 @@ curl -X GET "https://api.example.com/api/auth/verify" \\
             content=content,
             order=4,
             section_type="endpoints",
-            subsections=[]
+            subsections=[],
         )
 
     async def _format_endpoint_documentation(self, endpoint: Dict[str, Any]) -> str:
@@ -598,7 +625,7 @@ curl -X GET "https://api.example.com/api/auth/verify" \\
             "POST": "🔵",
             "PUT": "🟡",
             "DELETE": "🔴",
-            "PATCH": "🟠"
+            "PATCH": "🟠",
         }
 
         doc = f"""
@@ -623,7 +650,11 @@ curl -X GET "https://api.example.com/api/auth/verify" \\
         request_body = info.get("requestBody")
         if request_body:
             doc += "#### Request Body\n\n"
-            content_type = list(request_body.get("content", {}).keys())[0] if request_body.get("content") else "application/json"
+            content_type = (
+                list(request_body.get("content", {}).keys())[0]
+                if request_body.get("content")
+                else "application/json"
+            )
             doc += f"Content-Type: `{content_type}`\n\n"
 
             # Add example if available
@@ -649,7 +680,9 @@ curl -X GET "https://api.example.com/api/auth/verify" \\
         doc += "---\n\n"
         return doc
 
-    async def _generate_models_section(self, openapi_spec: Dict[str, Any]) -> Optional[DocumentationSection]:
+    async def _generate_models_section(
+        self, openapi_spec: Dict[str, Any]
+    ) -> Optional[DocumentationSection]:
         """Generate data models section"""
         components = openapi_spec.get("components", {})
         schemas = components.get("schemas", {})
@@ -666,7 +699,9 @@ This section describes the data structures used by the API.
 
         for schema_name, schema_info in schemas.items():
             content += f"## {schema_name}\n\n"
-            content += f"{schema_info.get('description', 'No description provided')}\n\n"
+            content += (
+                f"{schema_info.get('description', 'No description provided')}\n\n"
+            )
 
             properties = schema_info.get("properties", {})
             if properties:
@@ -683,7 +718,9 @@ This section describes the data structures used by the API.
             # Add example if available
             example = schema_info.get("example")
             if example:
-                content += f"### Example\n\n```json\n{json.dumps(example, indent=2)}\n```\n\n"
+                content += (
+                    f"### Example\n\n```json\n{json.dumps(example, indent=2)}\n```\n\n"
+                )
 
             content += "---\n\n"
 
@@ -692,14 +729,16 @@ This section describes the data structures used by the API.
             content=content.strip(),
             order=5,
             section_type="models",
-            subsections=[]
+            subsections=[],
         )
 
-    async def _generate_examples_section(self, openapi_spec: Dict[str, Any]) -> DocumentationSection:
+    async def _generate_examples_section(
+        self, openapi_spec: Dict[str, Any]
+    ) -> DocumentationSection:
         """Generate code examples section"""
         base_url = ""
-        if openapi_spec.get('servers'):
-            base_url = openapi_spec['servers'][0].get('url', 'https://api.example.com')
+        if openapi_spec.get("servers"):
+            base_url = openapi_spec["servers"][0].get("url", "https://api.example.com")
 
         content = f"""
 # Code Examples
@@ -864,10 +903,12 @@ except requests.exceptions.RequestException as e:
             content=content.strip(),
             order=6,
             section_type="examples",
-            subsections=[]
+            subsections=[],
         )
 
-    async def _generate_sdks_section(self, openapi_spec: Dict[str, Any]) -> DocumentationSection:
+    async def _generate_sdks_section(
+        self, openapi_spec: Dict[str, Any]
+    ) -> DocumentationSection:
         """Generate SDKs and tools section"""
         content = """
 # SDKs and Tools
@@ -1036,10 +1077,12 @@ seq 1 100 | xargs -n1 -P10 -I {} \\
             content=content.strip(),
             order=7,
             section_type="sdks",
-            subsections=[]
+            subsections=[],
         )
 
-    async def _generate_errors_section(self, openapi_spec: Dict[str, Any]) -> DocumentationSection:
+    async def _generate_errors_section(
+        self, openapi_spec: Dict[str, Any]
+    ) -> DocumentationSection:
         """Generate error handling section"""
         content = """
 # Error Handling
@@ -1293,26 +1336,34 @@ If you encounter errors that aren't covered in this documentation:
             content=content.strip(),
             order=8,
             section_type="errors",
-            subsections=[]
+            subsections=[],
         )
 
-    async def _format_documentation(self, sections: List[DocumentationSection],
-                                  format: str, api_info: Dict[str, Any]) -> str:
+    async def _format_documentation(
+        self,
+        sections: List[DocumentationSection],
+        format: str,
+        api_info: Dict[str, Any],
+    ) -> str:
         """Format documentation in the specified format"""
         if format == "html":
             return await self._format_as_html(sections, api_info)
         elif format == "markdown":
             return await self._format_as_markdown(sections, api_info)
         elif format == "json":
-            return json.dumps({
-                "api_info": api_info,
-                "sections": [asdict(section) for section in sections]
-            }, indent=2)
+            return json.dumps(
+                {
+                    "api_info": api_info,
+                    "sections": [asdict(section) for section in sections],
+                },
+                indent=2,
+            )
         else:
             return await self._format_as_markdown(sections, api_info)
 
-    async def _format_as_html(self, sections: List[DocumentationSection],
-                            api_info: Dict[str, Any]) -> str:
+    async def _format_as_html(
+        self, sections: List[DocumentationSection], api_info: Dict[str, Any]
+    ) -> str:
         """Format documentation as HTML"""
         template = Template(self.templates["html_main"])
 
@@ -1322,23 +1373,26 @@ If you encounter errors that aren't covered in this documentation:
 
             # Convert Markdown to HTML (with fallback)
             if MARKDOWN_AVAILABLE:
-                html_content = markdown.markdown(section.content, extensions=['codehilite', 'tables'])
+                html_content = markdown.markdown(
+                    section.content, extensions=["codehilite", "tables"]
+                )
             else:
                 # Fallback: basic HTML conversion
-                html_content = section.content.replace('\n', '<br>\n')
+                html_content = section.content.replace("\n", "<br>\n")
             content += html_content
-            content += '</div>\n'
+            content += "</div>\n"
 
         return template.render(
             api_title=api_info["title"],
             api_description=api_info["description"],
             api_version=api_info["version"],
             generation_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            content=content
+            content=content,
         )
 
-    async def _format_as_markdown(self, sections: List[DocumentationSection],
-                                api_info: Dict[str, Any]) -> str:
+    async def _format_as_markdown(
+        self, sections: List[DocumentationSection], api_info: Dict[str, Any]
+    ) -> str:
         """Format documentation as Markdown"""
         content = f"""# {api_info["title"]}
 
@@ -1356,37 +1410,44 @@ If you encounter errors that aren't covered in this documentation:
 
         return content
 
-    async def _generate_additional_resources(self, openapi_spec: Dict[str, Any],
-                                           options: Dict[str, Any]) -> Dict[str, Any]:
+    async def _generate_additional_resources(
+        self, openapi_spec: Dict[str, Any], options: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate additional documentation resources"""
         return {
             "postman_collection": await self._generate_postman_collection(openapi_spec),
             "openapi_spec": openapi_spec,
             "changelog": await self._generate_changelog(openapi_spec),
             "glossary": await self._generate_glossary(openapi_spec),
-            "tutorials": await self._generate_tutorials(openapi_spec)
+            "tutorials": await self._generate_tutorials(openapi_spec),
         }
 
-    async def _generate_postman_collection(self, openapi_spec: Dict[str, Any]) -> Dict[str, Any]:
+    async def _generate_postman_collection(
+        self, openapi_spec: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate Postman collection from OpenAPI spec"""
         collection = {
             "info": {
                 "name": openapi_spec.get("info", {}).get("title", "API Collection"),
                 "description": openapi_spec.get("info", {}).get("description", ""),
                 "version": openapi_spec.get("info", {}).get("version", "1.0.0"),
-                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
             },
-            "item": []
+            "item": [],
         }
 
         # Convert paths to Postman requests
         paths = openapi_spec.get("paths", {})
-        base_url = openapi_spec.get("servers", [{}])[0].get("url", "{{base_url}}") if openapi_spec.get("servers") else "{{base_url}}"
+        base_url = (
+            openapi_spec.get("servers", [{}])[0].get("url", "{{base_url}}")
+            if openapi_spec.get("servers")
+            else "{{base_url}}"
+        )
 
         for path, path_info in paths.items():
             folder = {
                 "name": path.replace("/api/", "").replace("/", " ").title(),
-                "item": []
+                "item": [],
             }
 
             for method, method_info in path_info.items():
@@ -1399,20 +1460,20 @@ If you encounter errors that aren't covered in this documentation:
                                 {
                                     "key": "Authorization",
                                     "value": "Bearer {{api_key}}",
-                                    "type": "text"
+                                    "type": "text",
                                 },
                                 {
                                     "key": "Content-Type",
                                     "value": "application/json",
-                                    "type": "text"
-                                }
+                                    "type": "text",
+                                },
                             ],
                             "url": {
                                 "raw": f"{base_url}{path}",
                                 "host": [base_url],
-                                "path": path.split("/")[1:]
-                            }
-                        }
+                                "path": path.split("/")[1:],
+                            },
+                        },
                     }
 
                     folder["item"].append(request)
@@ -1469,38 +1530,44 @@ If you encounter errors that aren't covered in this documentation:
 **SDK**: Software Development Kit, a collection of tools for integrating with the API
         """
 
-    async def _generate_tutorials(self, openapi_spec: Dict[str, Any]) -> List[Dict[str, str]]:
+    async def _generate_tutorials(
+        self, openapi_spec: Dict[str, Any]
+    ) -> List[Dict[str, str]]:
         """Generate API tutorials"""
         return [
             {
                 "title": "Quick Start Tutorial",
                 "description": "Get up and running with the API in 5 minutes",
-                "content": "Step-by-step guide to making your first API request"
+                "content": "Step-by-step guide to making your first API request",
             },
             {
                 "title": "Authentication Guide",
                 "description": "Complete guide to API authentication",
-                "content": "Learn how to securely authenticate with the API"
+                "content": "Learn how to securely authenticate with the API",
             },
             {
                 "title": "Error Handling Best Practices",
                 "description": "Handle API errors like a pro",
-                "content": "Comprehensive guide to error handling and retry logic"
-            }
+                "content": "Comprehensive guide to error handling and retry logic",
+            },
         ]
 
-    async def _generate_download_links(self, formatted_docs: str, format: str) -> Dict[str, str]:
+    async def _generate_download_links(
+        self, formatted_docs: str, format: str
+    ) -> Dict[str, str]:
         """Generate download links for documentation"""
         return {
             "html": "/docs/download?format=html",
             "pdf": "/docs/download?format=pdf",
             "markdown": "/docs/download?format=markdown",
             "postman": "/docs/download?format=postman",
-            "openapi": "/docs/download?format=openapi"
+            "openapi": "/docs/download?format=openapi",
         }
+
 
 # Usage example and testing
 if __name__ == "__main__":
+
     async def test_documentation_agent():
         agent = DocumentationAgent()
 
@@ -1510,11 +1577,9 @@ if __name__ == "__main__":
             "info": {
                 "title": "Sample API",
                 "description": "A sample API for testing documentation generation",
-                "version": "1.0.0"
+                "version": "1.0.0",
             },
-            "servers": [
-                {"url": "https://api.example.com"}
-            ],
+            "servers": [{"url": "https://api.example.com"}],
             "paths": {
                 "/api/users": {
                     "get": {
@@ -1526,11 +1591,17 @@ if __name__ == "__main__":
                                 "description": "List of users",
                                 "content": {
                                     "application/json": {
-                                        "example": [{"id": 1, "name": "John", "email": "john@example.com"}]
+                                        "example": [
+                                            {
+                                                "id": 1,
+                                                "name": "John",
+                                                "email": "john@example.com",
+                                            }
+                                        ]
                                     }
-                                }
+                                },
                             }
-                        }
+                        },
                     },
                     "post": {
                         "summary": "Create user",
@@ -1539,30 +1610,30 @@ if __name__ == "__main__":
                         "requestBody": {
                             "content": {
                                 "application/json": {
-                                    "example": {"name": "John", "email": "john@example.com"}
+                                    "example": {
+                                        "name": "John",
+                                        "email": "john@example.com",
+                                    }
                                 }
                             }
                         },
-                        "responses": {
-                            "201": {"description": "User created"}
-                        }
-                    }
+                        "responses": {"201": {"description": "User created"}},
+                    },
                 }
             },
             "components": {
-                "securitySchemes": {
-                    "bearerAuth": {
-                        "type": "http",
-                        "scheme": "bearer"
-                    }
-                }
-            }
+                "securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer"}}
+            },
         }
 
         # Generate documentation
         result = await agent.generate_documentation(sample_spec, format="markdown")
         print("Generated Documentation:")
-        print(json.dumps(result, indent=2)[:1000] + "..." if len(str(result)) > 1000 else json.dumps(result, indent=2))
+        print(
+            json.dumps(result, indent=2)[:1000] + "..."
+            if len(str(result)) > 1000
+            else json.dumps(result, indent=2)
+        )
 
     # Run test
     asyncio.run(test_documentation_agent())
