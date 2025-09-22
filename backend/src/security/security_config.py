@@ -9,6 +9,7 @@ from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from pathlib import Path
 
+
 @dataclass
 class SecuritySettings:
     """Centralized security configuration"""
@@ -20,7 +21,9 @@ class SecuritySettings:
 
     # Password policy
     MIN_PASSWORD_LENGTH: int = int(os.getenv("MIN_PASSWORD_LENGTH", "12"))
-    REQUIRE_PASSWORD_COMPLEXITY: bool = os.getenv("REQUIRE_PASSWORD_COMPLEXITY", "true").lower() == "true"
+    REQUIRE_PASSWORD_COMPLEXITY: bool = (
+        os.getenv("REQUIRE_PASSWORD_COMPLEXITY", "true").lower() == "true"
+    )
     PASSWORD_HISTORY_COUNT: int = int(os.getenv("PASSWORD_HISTORY_COUNT", "5"))
 
     # Rate limiting
@@ -43,9 +46,17 @@ class SecuritySettings:
     HSTS_MAX_AGE: int = int(os.getenv("HSTS_MAX_AGE", "31536000"))  # 1 year
 
     # CORS settings
-    ALLOWED_ORIGINS: List[str] = field(default_factory=lambda: os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else [])
-    ALLOWED_METHODS: List[str] = field(default_factory=lambda: ["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-    ALLOWED_HEADERS: List[str] = field(default_factory=lambda: ["Content-Type", "Authorization", "X-Requested-With"])
+    ALLOWED_ORIGINS: List[str] = field(
+        default_factory=lambda: os.getenv("ALLOWED_ORIGINS", "").split(",")
+        if os.getenv("ALLOWED_ORIGINS")
+        else []
+    )
+    ALLOWED_METHODS: List[str] = field(
+        default_factory=lambda: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    )
+    ALLOWED_HEADERS: List[str] = field(
+        default_factory=lambda: ["Content-Type", "Authorization", "X-Requested-With"]
+    )
 
     # Content Security Policy
     CSP_DEFAULT_SRC: str = "'self'"
@@ -56,8 +67,21 @@ class SecuritySettings:
 
     # File upload security
     MAX_FILE_SIZE_MB: int = int(os.getenv("MAX_FILE_SIZE_MB", "10"))
-    ALLOWED_FILE_EXTENSIONS: List[str] = field(default_factory=lambda: [".jpg", ".jpeg", ".png", ".gif", ".pdf", ".txt", ".csv", ".json"])
-    UPLOAD_SCAN_VIRUSES: bool = os.getenv("UPLOAD_SCAN_VIRUSES", "false").lower() == "true"
+    ALLOWED_FILE_EXTENSIONS: List[str] = field(
+        default_factory=lambda: [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".pdf",
+            ".txt",
+            ".csv",
+            ".json",
+        ]
+    )
+    UPLOAD_SCAN_VIRUSES: bool = (
+        os.getenv("UPLOAD_SCAN_VIRUSES", "false").lower() == "true"
+    )
 
     # Database security
     DB_CONNECTION_TIMEOUT: int = int(os.getenv("DB_CONNECTION_TIMEOUT", "30"))
@@ -66,7 +90,9 @@ class SecuritySettings:
     # Logging and monitoring
     SECURITY_LOG_LEVEL: str = os.getenv("SECURITY_LOG_LEVEL", "INFO")
     LOG_FAILED_LOGINS: bool = os.getenv("LOG_FAILED_LOGINS", "true").lower() == "true"
-    LOG_SENSITIVE_DATA: bool = os.getenv("LOG_SENSITIVE_DATA", "false").lower() == "true"
+    LOG_SENSITIVE_DATA: bool = (
+        os.getenv("LOG_SENSITIVE_DATA", "false").lower() == "true"
+    )
 
     # 2FA settings
     ENABLE_2FA: bool = os.getenv("ENABLE_2FA", "false").lower() == "true"
@@ -79,6 +105,7 @@ class SecuritySettings:
     # Development/Debug settings
     DEBUG_MODE: bool = os.getenv("DEBUG", "false").lower() == "true"
     DEVELOPMENT_MODE: bool = os.getenv("DEVELOPMENT_MODE", "false").lower() == "true"
+
 
 class SecurityValidator:
     """Validate security configuration and environment"""
@@ -93,10 +120,14 @@ class SecurityValidator:
 
         # Critical security checks
         if not self.settings.JWT_SECRET_KEY or len(self.settings.JWT_SECRET_KEY) < 32:
-            issues.append("CRITICAL: JWT_SECRET_KEY is missing or too short (minimum 32 characters)")
+            issues.append(
+                "CRITICAL: JWT_SECRET_KEY is missing or too short (minimum 32 characters)"
+            )
 
         if not self.settings.ENCRYPTION_KEY:
-            issues.append("WARNING: ENCRYPTION_KEY not set - data encryption will use random key")
+            issues.append(
+                "WARNING: ENCRYPTION_KEY not set - data encryption will use random key"
+            )
 
         # Production security checks
         if not self.settings.DEBUG_MODE:  # Production environment
@@ -114,11 +145,15 @@ class SecurityValidator:
 
         # Password policy validation
         if self.settings.MIN_PASSWORD_LENGTH < 8:
-            issues.append("MEDIUM: Minimum password length is below recommended (8 characters)")
+            issues.append(
+                "MEDIUM: Minimum password length is below recommended (8 characters)"
+            )
 
         # Rate limiting validation
         if self.settings.LOGIN_RATE_LIMIT > 10:
-            issues.append("MEDIUM: Login rate limit is high - consider reducing for better security")
+            issues.append(
+                "MEDIUM: Login rate limit is high - consider reducing for better security"
+            )
 
         # Session security
         if self.settings.SESSION_TIMEOUT_MINUTES > 480:  # 8 hours
@@ -141,7 +176,7 @@ class SecurityValidator:
         # Required variables
         required_vars = {
             "JWT_SECRET_KEY": "JWT secret key for token signing",
-            "DATABASE_URL": "Database connection string"
+            "DATABASE_URL": "Database connection string",
         }
 
         for var, description in required_vars.items():
@@ -152,7 +187,7 @@ class SecurityValidator:
         recommended_vars = {
             "ENCRYPTION_KEY": "Key for data encryption",
             "ALLOWED_ORIGINS": "CORS allowed origins",
-            "RATE_LIMIT_WINDOW_MINUTES": "Rate limiting window"
+            "RATE_LIMIT_WINDOW_MINUTES": "Rate limiting window",
         }
 
         for var, description in recommended_vars.items():
@@ -162,7 +197,7 @@ class SecurityValidator:
         # Check for default/weak values
         weak_defaults = {
             "JWT_SECRET_KEY": ["secret", "changeme", "password", "default"],
-            "DATABASE_URL": ["localhost", "password", "admin"]
+            "DATABASE_URL": ["localhost", "password", "admin"],
         }
 
         for var, weak_values in weak_defaults.items():
@@ -180,12 +215,24 @@ class SecurityValidator:
         env_issues = self.check_environment_variables()
 
         # Categorize issues by severity
-        critical_issues = [issue for issue in config_issues + env_issues if issue.startswith("CRITICAL")]
-        high_issues = [issue for issue in config_issues + env_issues if issue.startswith("HIGH")]
-        medium_issues = [issue for issue in config_issues + env_issues if issue.startswith("MEDIUM")]
-        low_issues = [issue for issue in config_issues + env_issues if issue.startswith("LOW")]
+        critical_issues = [
+            issue
+            for issue in config_issues + env_issues
+            if issue.startswith("CRITICAL")
+        ]
+        high_issues = [
+            issue for issue in config_issues + env_issues if issue.startswith("HIGH")
+        ]
+        medium_issues = [
+            issue for issue in config_issues + env_issues if issue.startswith("MEDIUM")
+        ]
+        low_issues = [
+            issue for issue in config_issues + env_issues if issue.startswith("LOW")
+        ]
         missing_issues = [issue for issue in env_issues if issue.startswith("MISSING")]
-        recommended_issues = [issue for issue in env_issues if issue.startswith("RECOMMENDED")]
+        recommended_issues = [
+            issue for issue in env_issues if issue.startswith("RECOMMENDED")
+        ]
 
         report = {
             "timestamp": "2025-09-21T23:52:00Z",
@@ -193,14 +240,16 @@ class SecurityValidator:
             "critical_issues": len(critical_issues),
             "high_issues": len(high_issues),
             "medium_issues": len(medium_issues),
-            "security_score": self._calculate_security_score(critical_issues, high_issues, medium_issues),
+            "security_score": self._calculate_security_score(
+                critical_issues, high_issues, medium_issues
+            ),
             "issues": {
                 "critical": critical_issues,
                 "high": high_issues,
                 "medium": medium_issues,
                 "low": low_issues,
                 "missing": missing_issues,
-                "recommended": recommended_issues
+                "recommended": recommended_issues,
             },
             "configuration": {
                 "force_https": self.settings.FORCE_HTTPS,
@@ -208,56 +257,72 @@ class SecurityValidator:
                 "password_min_length": self.settings.MIN_PASSWORD_LENGTH,
                 "session_timeout": self.settings.SESSION_TIMEOUT_MINUTES,
                 "2fa_enabled": self.settings.ENABLE_2FA,
-                "debug_mode": self.settings.DEBUG_MODE
+                "debug_mode": self.settings.DEBUG_MODE,
             },
-            "recommendations": self._generate_recommendations(critical_issues, high_issues, medium_issues)
+            "recommendations": self._generate_recommendations(
+                critical_issues, high_issues, medium_issues
+            ),
         }
 
         return report
 
-    def _calculate_security_score(self, critical: List[str], high: List[str], medium: List[str]) -> int:
+    def _calculate_security_score(
+        self, critical: List[str], high: List[str], medium: List[str]
+    ) -> int:
         """Calculate security score (0-100)"""
         base_score = 100
 
         # Deduct points for issues
         base_score -= len(critical) * 20  # Critical issues: -20 points each
-        base_score -= len(high) * 10      # High issues: -10 points each
-        base_score -= len(medium) * 5     # Medium issues: -5 points each
+        base_score -= len(high) * 10  # High issues: -10 points each
+        base_score -= len(medium) * 5  # Medium issues: -5 points each
 
         return max(0, base_score)
 
-    def _generate_recommendations(self, critical: List[str], high: List[str], medium: List[str]) -> List[str]:
+    def _generate_recommendations(
+        self, critical: List[str], high: List[str], medium: List[str]
+    ) -> List[str]:
         """Generate security recommendations"""
         recommendations = []
 
         if critical:
-            recommendations.append("URGENT: Address all critical security issues immediately")
-            recommendations.append("Consider temporarily disabling affected features until fixed")
+            recommendations.append(
+                "URGENT: Address all critical security issues immediately"
+            )
+            recommendations.append(
+                "Consider temporarily disabling affected features until fixed"
+            )
 
         if high:
             recommendations.append("Address high-severity issues within 24 hours")
 
         if medium:
-            recommendations.append("Schedule medium-severity fixes within the next sprint")
+            recommendations.append(
+                "Schedule medium-severity fixes within the next sprint"
+            )
 
         # General recommendations
-        recommendations.extend([
-            "Implement automated security scanning in CI/CD pipeline",
-            "Regular security training for development team",
-            "Enable comprehensive security logging and monitoring",
-            "Conduct regular penetration testing",
-            "Implement dependency vulnerability scanning",
-            "Use secrets management system (e.g., HashiCorp Vault, AWS Secrets Manager)",
-            "Enable database encryption at rest",
-            "Implement Web Application Firewall (WAF)",
-            "Regular security audits and code reviews"
-        ])
+        recommendations.extend(
+            [
+                "Implement automated security scanning in CI/CD pipeline",
+                "Regular security training for development team",
+                "Enable comprehensive security logging and monitoring",
+                "Conduct regular penetration testing",
+                "Implement dependency vulnerability scanning",
+                "Use secrets management system (e.g., HashiCorp Vault, AWS Secrets Manager)",
+                "Enable database encryption at rest",
+                "Implement Web Application Firewall (WAF)",
+                "Regular security audits and code reviews",
+            ]
+        )
 
         return recommendations
+
 
 # Global security settings instance
 security_settings = SecuritySettings()
 security_validator = SecurityValidator(security_settings)
+
 
 def get_security_headers() -> Dict[str, str]:
     """Get HTTP security headers based on configuration"""
@@ -266,12 +331,14 @@ def get_security_headers() -> Dict[str, str]:
         "X-Frame-Options": "DENY",
         "X-XSS-Protection": "1; mode=block",
         "Referrer-Policy": "strict-origin-when-cross-origin",
-        "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+        "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
     }
 
     # HSTS header (only for HTTPS)
     if security_settings.FORCE_HTTPS:
-        headers["Strict-Transport-Security"] = f"max-age={security_settings.HSTS_MAX_AGE}; includeSubDomains"
+        headers[
+            "Strict-Transport-Security"
+        ] = f"max-age={security_settings.HSTS_MAX_AGE}; includeSubDomains"
 
     # Content Security Policy
     csp_parts = [
@@ -279,30 +346,38 @@ def get_security_headers() -> Dict[str, str]:
         f"script-src {security_settings.CSP_SCRIPT_SRC}",
         f"style-src {security_settings.CSP_STYLE_SRC}",
         f"img-src {security_settings.CSP_IMG_SRC}",
-        f"connect-src {security_settings.CSP_CONNECT_SRC}"
+        f"connect-src {security_settings.CSP_CONNECT_SRC}",
     ]
     headers["Content-Security-Policy"] = "; ".join(csp_parts)
 
     return headers
+
 
 def validate_file_upload(filename: str, file_size: int) -> tuple[bool, Optional[str]]:
     """Validate file upload based on security settings"""
     # Check file size
     max_size_bytes = security_settings.MAX_FILE_SIZE_MB * 1024 * 1024
     if file_size > max_size_bytes:
-        return False, f"File size exceeds maximum allowed ({security_settings.MAX_FILE_SIZE_MB}MB)"
+        return (
+            False,
+            f"File size exceeds maximum allowed ({security_settings.MAX_FILE_SIZE_MB}MB)",
+        )
 
     # Check file extension
     file_ext = Path(filename).suffix.lower()
     if file_ext not in security_settings.ALLOWED_FILE_EXTENSIONS:
-        return False, f"File type not allowed. Allowed types: {', '.join(security_settings.ALLOWED_FILE_EXTENSIONS)}"
+        return (
+            False,
+            f"File type not allowed. Allowed types: {', '.join(security_settings.ALLOWED_FILE_EXTENSIONS)}",
+        )
 
     # Check for dangerous filenames
-    dangerous_patterns = ['..', '/', '\\', '<', '>', ':', '"', '|', '?', '*']
+    dangerous_patterns = ["..", "/", "\\", "<", ">", ":", '"', "|", "?", "*"]
     if any(pattern in filename for pattern in dangerous_patterns):
         return False, "Filename contains dangerous characters"
 
     return True, None
+
 
 if __name__ == "__main__":
     # Generate and display security report
@@ -315,24 +390,24 @@ if __name__ == "__main__":
     print(f"Total Issues: {report['total_issues']}")
     print()
 
-    if report['issues']['critical']:
+    if report["issues"]["critical"]:
         print("🚨 CRITICAL ISSUES:")
-        for issue in report['issues']['critical']:
+        for issue in report["issues"]["critical"]:
             print(f"  - {issue}")
         print()
 
-    if report['issues']['high']:
+    if report["issues"]["high"]:
         print("⚠️  HIGH ISSUES:")
-        for issue in report['issues']['high']:
+        for issue in report["issues"]["high"]:
             print(f"  - {issue}")
         print()
 
-    if report['issues']['medium']:
+    if report["issues"]["medium"]:
         print("📋 MEDIUM ISSUES:")
-        for issue in report['issues']['medium']:
+        for issue in report["issues"]["medium"]:
             print(f"  - {issue}")
         print()
 
     print("📝 RECOMMENDATIONS:")
-    for rec in report['recommendations'][:5]:  # Show top 5
+    for rec in report["recommendations"][:5]:  # Show top 5
         print(f"  - {rec}")
