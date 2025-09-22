@@ -5,16 +5,9 @@ Writes actual production code, not just tests
 This is what makes us a true AI employee, not just a tool
 """
 
-import ast
-import json
 import re
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
-from datetime import datetime
-import asyncio
-import subprocess
-import os
-from pathlib import Path
 
 # Language templates for code generation
 LANGUAGE_TEMPLATES = {
@@ -57,9 +50,8 @@ class {class_name}Client:
         )
         response.raise_for_status()
         return response.json() if response.text else {{}}
-"""
+""",
     },
-
     "javascript": {
         "client": """
 class {class_name}Client {{
@@ -101,9 +93,8 @@ module.exports = {class_name}Client;
 
         return response.json();
     }}
-"""
+""",
     },
-
     "go": {
         "client": """
 package {package_name}
@@ -166,14 +157,15 @@ func (c *{class_name}Client) {method_name}({params}) (map[string]interface{{}}, 
 
     return result, nil
 }}
-"""
-    }
+""",
+    },
 }
 
 
 @dataclass
 class CodeGenerationRequest:
     """Request for code generation"""
+
     api_spec: Dict[str, Any]
     language: str
     output_path: Optional[str] = None
@@ -186,6 +178,7 @@ class CodeGenerationRequest:
 @dataclass
 class GeneratedCode:
     """Generated code result"""
+
     language: str
     code: str
     file_path: str
@@ -241,10 +234,7 @@ class FeatureImplementation:
         return feature_code
 
     async def generate_api_client(
-        self,
-        api_spec: Dict[str, Any],
-        language: str,
-        client_name: Optional[str] = None
+        self, api_spec: Dict[str, Any], language: str, client_name: Optional[str] = None
     ) -> GeneratedCode:
         """Generate a complete API client in any language"""
 
@@ -274,7 +264,7 @@ class FeatureImplementation:
             class_name=class_name,
             api_name=api_name,
             package_name=api_name.lower().replace(" ", "_"),
-            methods="\n".join(methods)
+            methods="\n".join(methods),
         )
 
         # Generate tests if requested
@@ -289,7 +279,7 @@ class FeatureImplementation:
             "javascript": "js",
             "go": "go",
             "java": "java",
-            "csharp": "cs"
+            "csharp": "cs",
         }
 
         file_path = f"{class_name.lower()}.{file_extensions.get(language, 'txt')}"
@@ -305,7 +295,7 @@ class FeatureImplementation:
             documentation=docs,
             dependencies=self._get_dependencies(language),
             complexity_analysis=pattern_analysis,
-            framework="requests" if language == "python" else None
+            framework="requests" if language == "python" else None,
         )
 
         self.generation_history.append(result)
@@ -318,7 +308,7 @@ class FeatureImplementation:
         code: str,
         error_message: str,
         language: str,
-        context: Optional[Dict] = None
+        context: Optional[Dict] = None,
     ) -> str:
         """Automatically fix broken code based on error messages"""
 
@@ -330,8 +320,13 @@ class FeatureImplementation:
         # Apply fixes based on error patterns
         fixed_code = code
 
-        if "undefined" in error_message.lower() or "not defined" in error_message.lower():
-            fixed_code = self._fix_undefined_variable(fixed_code, error_message, language)
+        if (
+            "undefined" in error_message.lower()
+            or "not defined" in error_message.lower()
+        ):
+            fixed_code = self._fix_undefined_variable(
+                fixed_code, error_message, language
+            )
 
         elif "syntax" in error_message.lower():
             fixed_code = self._fix_syntax_error(fixed_code, error_message, language)
@@ -342,7 +337,9 @@ class FeatureImplementation:
         elif "type" in error_message.lower():
             fixed_code = self._fix_type_error(fixed_code, error_message, language)
 
-        elif "connection" in error_message.lower() or "timeout" in error_message.lower():
+        elif (
+            "connection" in error_message.lower() or "timeout" in error_message.lower()
+        ):
             fixed_code = self._add_retry_logic(fixed_code, language)
 
         else:
@@ -354,9 +351,7 @@ class FeatureImplementation:
         return fixed_code
 
     async def generate_microservice(
-        self,
-        spec: Dict[str, Any],
-        framework: str = "fastapi"
+        self, spec: Dict[str, Any], framework: str = "fastapi"
     ) -> Dict[str, str]:
         """Generate an entire microservice from specification"""
 
@@ -392,10 +387,7 @@ class FeatureImplementation:
         return files
 
     async def refactor_legacy_code(
-        self,
-        code: str,
-        language: str,
-        target_patterns: List[str] = None
+        self, code: str, language: str, target_patterns: List[str] = None
     ) -> str:
         """Refactor legacy code to modern patterns"""
 
@@ -414,7 +406,9 @@ class FeatureImplementation:
             for pattern in target_patterns:
                 refactored = self._apply_pattern(refactored, pattern, language)
 
-        print(f"   ✅ Refactored {self._count_improvements(code, refactored)} improvements")
+        print(
+            f"   ✅ Refactored {self._count_improvements(code, refactored)} improvements"
+        )
 
         return refactored
 
@@ -422,7 +416,7 @@ class FeatureImplementation:
         self,
         from_spec: Dict[str, Any],
         to_spec: Dict[str, Any],
-        database_type: str = "postgresql"
+        database_type: str = "postgresql",
     ) -> str:
         """Generate database migration scripts"""
 
@@ -442,11 +436,13 @@ class FeatureImplementation:
         http_method: str,
         operation: Dict,
         language: str,
-        class_name: str
+        class_name: str,
     ) -> str:
         """Generate a single method"""
 
-        method_name = self._to_method_name(operation.get("operationId", f"{http_method}_{path}"))
+        method_name = self._to_method_name(
+            operation.get("operationId", f"{http_method}_{path}")
+        )
         description = operation.get("summary", "API method")
 
         # Extract parameters
@@ -495,12 +491,16 @@ class FeatureImplementation:
             class_name=class_name,
             description=description,
             params=params_str,
-            param_docs="\n         * ".join(param_docs) if language == "javascript" else "\n        ".join(param_docs),
+            param_docs="\n         * ".join(param_docs)
+            if language == "javascript"
+            else "\n        ".join(param_docs),
             endpoint=path,
-            http_method=http_method.upper() if language != "python" else http_method.lower(),
+            http_method=http_method.upper()
+            if language != "python"
+            else http_method.lower(),
             body_setup=body_setup,
             request_args=request_args,
-            request_body=request_body
+            request_body=request_body,
         )
 
     def _generate_fastapi_app(self, spec: Dict) -> str:
@@ -587,7 +587,7 @@ def test_client_initialization(client):
 '''
 
         elif language == "javascript":
-            return f'''
+            return f"""
 const {class_name}Client = require('./{class_name.lower()}');
 
 describe('{class_name}Client', () => {{
@@ -605,17 +605,17 @@ describe('{class_name}Client', () => {{
     // Auto-generated tests
     {self._generate_js_tests(spec)}
 }});
-'''
+"""
 
         return ""
 
     def _to_class_name(self, name: str) -> str:
         """Convert to class name"""
-        return "".join(word.capitalize() for word in re.split(r'[\s_-]+', name))
+        return "".join(word.capitalize() for word in re.split(r"[\s_-]+", name))
 
     def _to_method_name(self, name: str) -> str:
         """Convert to method name"""
-        parts = re.split(r'[\s_-]+', name)
+        parts = re.split(r"[\s_-]+", name)
         return parts[0].lower() + "".join(p.capitalize() for p in parts[1:])
 
     def _to_param_name(self, name: str) -> str:
@@ -632,7 +632,7 @@ describe('{class_name}Client', () => {{
                 "number": "float",
                 "boolean": "bool",
                 "array": "List",
-                "object": "Dict"
+                "object": "Dict",
             },
             "javascript": {
                 "string": "string",
@@ -640,7 +640,7 @@ describe('{class_name}Client', () => {{
                 "number": "number",
                 "boolean": "boolean",
                 "array": "Array",
-                "object": "Object"
+                "object": "Object",
             },
             "go": {
                 "string": "string",
@@ -648,8 +648,8 @@ describe('{class_name}Client', () => {{
                 "number": "float64",
                 "boolean": "bool",
                 "array": "[]interface{}",
-                "object": "map[string]interface{}"
-            }
+                "object": "map[string]interface{}",
+            },
         }
 
         schema_type = schema.get("type", "string")
@@ -663,7 +663,7 @@ describe('{class_name}Client', () => {{
             "javascript": ["node-fetch", "jest"],
             "go": ["github.com/stretchr/testify"],
             "java": ["okhttp3", "junit"],
-            "csharp": ["Newtonsoft.Json", "xunit"]
+            "csharp": ["Newtonsoft.Json", "xunit"],
         }
 
         return deps.get(language, [])
@@ -729,12 +729,14 @@ if __name__ == '__main__':
             for method, operation in path_item.items():
                 if method in ["get", "post", "put", "delete"]:
                     test_name = f"test_{method}_{path.replace('/', '_').strip('_')}"
-                    tests.append(f"""
+                    tests.append(
+                        f"""
 def {test_name}(client):
     # Test {method.upper()} {path}
     response = client.{self._to_method_name(operation.get('operationId', f'{method}_{path}'))}()
     assert response is not None
-""")
+"""
+                    )
         return "\n".join(tests)
 
     def _generate_js_tests(self, spec: Dict) -> str:
@@ -743,17 +745,23 @@ def {test_name}(client):
         for path, path_item in spec.get("paths", {}).items():
             for method, operation in path_item.items():
                 if method in ["get", "post", "put", "delete"]:
-                    test_name = f"{method}_{path.replace('/', '_').strip('_')}"
-                    method_name = self._to_method_name(operation.get('operationId', f'{method}_{path}'))
-                    tests.append(f"""
+                    f"{method}_{path.replace('/', '_').strip('_')}"
+                    method_name = self._to_method_name(
+                        operation.get("operationId", f"{method}_{path}")
+                    )
+                    tests.append(
+                        f"""
     test('should {method} {path}', async () => {{
         const response = await client.{method_name}();
         expect(response).toBeDefined();
     }});
-""")
+"""
+                    )
         return "\n".join(tests)
 
-    def _generate_documentation(self, class_name: str, spec: Dict, language: str) -> str:
+    def _generate_documentation(
+        self, class_name: str, spec: Dict, language: str
+    ) -> str:
         """Generate API documentation"""
 
         return f"""
@@ -816,14 +824,17 @@ This code was auto-generated. To update, regenerate from the OpenAPI specificati
 
             if language == "python":
                 # Fix the specific case where 'c' should be 'b'
-                if var_name == 'c' and 'return a + c' in code:
-                    code = code.replace('return a + c', 'return a + b')
+                if var_name == "c" and "return a + c" in code:
+                    code = code.replace("return a + c", "return a + b")
                 else:
                     # Add variable initialization
                     lines = code.split("\n")
                     for i, line in enumerate(lines):
                         if var_name in line and "=" not in line:
-                            lines.insert(i, f"{var_name} = None  # Auto-fixed: initialized variable")
+                            lines.insert(
+                                i,
+                                f"{var_name} = None  # Auto-fixed: initialized variable",
+                            )
                             break
                     code = "\n".join(lines)
 
@@ -868,12 +879,17 @@ This code was auto-generated. To update, regenerate from the OpenAPI specificati
 
                 for i, line in enumerate(lines):
                     if line.startswith("import") or line.startswith("from"):
-                        lines.insert(i + 1, f"import {module}  # Auto-fixed: added missing import")
+                        lines.insert(
+                            i + 1,
+                            f"import {module}  # Auto-fixed: added missing import",
+                        )
                         import_added = True
                         break
 
                 if not import_added:
-                    lines.insert(0, f"import {module}  # Auto-fixed: added missing import")
+                    lines.insert(
+                        0, f"import {module}  # Auto-fixed: added missing import"
+                    )
 
                 code = "\n".join(lines)
 
@@ -884,9 +900,17 @@ This code was auto-generated. To update, regenerate from the OpenAPI specificati
 
         # Add type conversion
         if "expected str" in error:
-            code = re.sub(r'(\w+)\s*=\s*(\d+)', r'\1 = str(\2)  # Auto-fixed: type conversion', code)
+            code = re.sub(
+                r"(\w+)\s*=\s*(\d+)",
+                r"\1 = str(\2)  # Auto-fixed: type conversion",
+                code,
+            )
         elif "expected int" in error:
-            code = re.sub(r'(\w+)\s*=\s*"(\d+)"', r'\1 = int("\2")  # Auto-fixed: type conversion', code)
+            code = re.sub(
+                r'(\w+)\s*=\s*"(\d+)"',
+                r'\1 = int("\2")  # Auto-fixed: type conversion',
+                code,
+            )
 
         return code
 
@@ -917,7 +941,7 @@ def retry_on_failure(max_retries=3, delay=1):
             code = retry_decorator + code
 
             # Add decorator to methods
-            code = re.sub(r'(\s+def\s+\w+)', r'    @retry_on_failure()\n\1', code)
+            code = re.sub(r"(\s+def\s+\w+)", r"    @retry_on_failure()\n\1", code)
 
         return code
 
@@ -925,13 +949,18 @@ def retry_on_failure(max_retries=3, delay=1):
         """Identify the type of error"""
 
         error_patterns = {
-            "syntax": ["SyntaxError", "IndentationError", "unexpected", "invalid syntax"],
+            "syntax": [
+                "SyntaxError",
+                "IndentationError",
+                "unexpected",
+                "invalid syntax",
+            ],
             "import": ["ImportError", "ModuleNotFoundError", "No module named"],
             "undefined": ["NameError", "is not defined", "undefined"],
             "type": ["TypeError", "expected", "cannot convert"],
             "connection": ["ConnectionError", "timeout", "refused", "unreachable"],
             "permission": ["PermissionError", "denied", "unauthorized"],
-            "value": ["ValueError", "invalid value", "out of range"]
+            "value": ["ValueError", "invalid value", "out of range"],
         }
 
         for error_type, patterns in error_patterns.items():
@@ -945,15 +974,18 @@ def retry_on_failure(max_retries=3, delay=1):
 
         return {
             "python": {
-                "missing_self": (r'def (\w+)\(([^)]*)\):', r'def \1(self, \2):'),
-                "old_print": (r'print\s+([^(].*?)$', r'print(\1)'),
+                "missing_self": (r"def (\w+)\(([^)]*)\):", r"def \1(self, \2):"),
+                "old_print": (r"print\s+([^(].*?)$", r"print(\1)"),
                 "old_string_format": (r'"%s"\s*%\s*\((.*?)\)', r'f"{\1}"'),
             },
             "javascript": {
-                "var_to_const": (r'\bvar\s+(\w+)\s*=', r'const \1 ='),
-                "callback_to_async": (r'function\s*\((.*?)\)\s*{', r'async (\1) => {'),
-                "require_to_import": (r'const\s+(\w+)\s*=\s*require\(["\'](.+?)["\']\)', r'import \1 from "\2"'),
-            }
+                "var_to_const": (r"\bvar\s+(\w+)\s*=", r"const \1 ="),
+                "callback_to_async": (r"function\s*\((.*?)\)\s*{", r"async (\1) => {"),
+                "require_to_import": (
+                    r'const\s+(\w+)\s*=\s*require\(["\'](.+?)["\']\)',
+                    r'import \1 from "\2"',
+                ),
+            },
         }
 
     def _refactor_python(self, code: str) -> str:
@@ -964,18 +996,18 @@ def retry_on_failure(max_retries=3, delay=1):
         code = re.sub(r'"{}".format\((.*?)\)', r'f"{\1}"', code)
 
         # Add type hints
-        code = re.sub(r'def (\w+)\(self\):', r'def \1(self) -> None:', code)
+        code = re.sub(r"def (\w+)\(self\):", r"def \1(self) -> None:", code)
 
         # Use pathlib
-        code = re.sub(r'os\.path\.join\((.*?)\)', r'Path(\1)', code)
+        code = re.sub(r"os\.path\.join\((.*?)\)", r"Path(\1)", code)
 
         # Add dataclasses where appropriate
-        class_pattern = r'class (\w+):\s*\n\s*def __init__\(self(.*?)\):(.*?)\n\n'
+        class_pattern = r"class (\w+):\s*\n\s*def __init__\(self(.*?)\):(.*?)\n\n"
 
         def convert_to_dataclass(match):
             class_name = match.group(1)
             params = match.group(2)
-            body = match.group(3)
+            match.group(3)
 
             # Extract parameters
             param_list = []
@@ -986,10 +1018,10 @@ def retry_on_failure(max_retries=3, delay=1):
                     param_list.append(f"    {param_name}: Any")
 
             if param_list:
-                return f'''@dataclass
+                return f"""@dataclass
 class {class_name}:
 {chr(10).join(param_list)}
-'''
+"""
             return match.group(0)
 
         code = re.sub(class_pattern, convert_to_dataclass, code, flags=re.DOTALL)
@@ -1000,28 +1032,41 @@ class {class_name}:
         """Refactor JavaScript to modern patterns"""
 
         # Convert var to const/let
-        code = re.sub(r'\bvar\s+', 'const ', code)
+        code = re.sub(r"\bvar\s+", "const ", code)
 
         # Convert function to arrow functions
-        code = re.sub(r'function\s*\((.*?)\)\s*{', r'(\1) => {', code)
+        code = re.sub(r"function\s*\((.*?)\)\s*{", r"(\1) => {", code)
 
         # Convert callbacks to async/await
-        code = re.sub(r'\.then\((.*?)\)', r'await \1', code)
+        code = re.sub(r"\.then\((.*?)\)", r"await \1", code)
 
         # Use template literals
-        code = re.sub(r"'([^']*?)'\s*\+\s*(\w+)\s*\+\s*'([^']*?)'", r'`\1${\2}\3`', code)
+        code = re.sub(
+            r"'([^']*?)'\s*\+\s*(\w+)\s*\+\s*'([^']*?)'", r"`\1${\2}\3`", code
+        )
 
         # Convert require to import
-        code = re.sub(r'const\s+(\w+)\s*=\s*require\(["\'](.+?)["\']\)', r'import \1 from "\2"', code)
+        code = re.sub(
+            r'const\s+(\w+)\s*=\s*require\(["\'](.+?)["\']\)',
+            r'import \1 from "\2"',
+            code,
+        )
 
         return code
 
     def _generate_pydantic_models(self, spec: Dict) -> str:
         """Generate Pydantic models from OpenAPI spec"""
 
-        models = ["from pydantic import BaseModel, Field", "from typing import Optional, List", "from datetime import datetime", ""]
+        models = [
+            "from pydantic import BaseModel, Field",
+            "from typing import Optional, List",
+            "from datetime import datetime",
+            "",
+        ]
 
-        for schema_name, schema_def in spec.get("components", {}).get("schemas", {}).items():
+        for schema_name, schema_def in (
+            spec.get("components", {}).get("schemas", {}).items()
+        ):
             model = f"\nclass {schema_name}(BaseModel):"
 
             properties = schema_def.get("properties", {})
@@ -1050,7 +1095,7 @@ class {class_name}:
             "number": "float",
             "boolean": "bool",
             "array": "List",
-            "object": "Dict"
+            "object": "Dict",
         }
 
         prop_type = prop_def.get("type", "string")
@@ -1067,7 +1112,7 @@ class {class_name}:
         improvements = 0
 
         # Count f-string conversions
-        improvements += refactored.count("f\"") - original.count("f\"")
+        improvements += refactored.count('f"') - original.count('f"')
 
         # Count const usage
         improvements += refactored.count("const ") - original.count("const ")
@@ -1080,7 +1125,9 @@ class {class_name}:
 
         return max(improvements, 1)  # At least 1 improvement
 
-    async def _generate_with_ai(self, spec: Dict, language: str, client_name: str) -> GeneratedCode:
+    async def _generate_with_ai(
+        self, spec: Dict, language: str, client_name: str
+    ) -> GeneratedCode:
         """Fallback to AI generation for unsupported languages"""
 
         # This would integrate with LLM for languages not in templates
@@ -1092,10 +1139,12 @@ class {class_name}:
             file_path=f"{client_name.lower()}.{language}",
             tests=None,
             documentation=None,
-            dependencies=[]
+            dependencies=[],
         )
 
-    async def _fix_with_ai(self, code: str, error: str, language: str, context: Dict) -> str:
+    async def _fix_with_ai(
+        self, code: str, error: str, language: str, context: Dict
+    ) -> str:
         """Use AI to fix complex errors"""
 
         # This would integrate with LLM for complex fixes
@@ -1104,7 +1153,7 @@ class {class_name}:
     def _generate_database_setup(self, spec: Dict) -> str:
         """Generate database setup code"""
 
-        return '''
+        return """
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -1126,13 +1175,13 @@ def get_db():
 
 def init_db():
     Base.metadata.create_all(bind=engine)
-'''
+"""
 
     def _generate_requirements(self, framework: str) -> str:
         """Generate requirements file"""
 
         if framework == "fastapi":
-            return '''fastapi==0.104.1
+            return """fastapi==0.104.1
 uvicorn==0.24.0
 sqlalchemy==2.0.23
 pydantic==2.5.3
@@ -1142,7 +1191,7 @@ python-multipart==0.0.6
 python-dotenv==1.0.0
 pytest==7.4.3
 pytest-asyncio==0.21.1
-httpx==0.25.2'''
+httpx==0.25.2"""
 
         return ""
 
@@ -1150,7 +1199,7 @@ httpx==0.25.2'''
         """Generate Dockerfile"""
 
         dockerfiles = {
-            "python": '''FROM python:3.11-slim
+            "python": """FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -1159,9 +1208,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]''',
-
-            "node": '''FROM node:18-alpine
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]""",
+            "node": """FROM node:18-alpine
 
 WORKDIR /app
 
@@ -1170,9 +1218,8 @@ RUN npm ci --only=production
 
 COPY . .
 
-CMD ["node", "app.js"]''',
-
-            "go": '''FROM golang:1.21-alpine AS builder
+CMD ["node", "app.js"]""",
+            "go": """FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 COPY go.* ./
@@ -1186,7 +1233,7 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=builder /app/main .
 
-CMD ["./main"]'''
+CMD ["./main"]""",
         }
 
         return dockerfiles.get(language, "")
@@ -1194,7 +1241,7 @@ CMD ["./main"]'''
     def _generate_docker_compose(self, spec: Dict) -> str:
         """Generate docker-compose.yml"""
 
-        return f'''version: '3.8'
+        return f"""version: '3.8'
 
 services:
   app:
@@ -1223,12 +1270,12 @@ services:
     image: redis:7-alpine
 
 volumes:
-  postgres_data:'''
+  postgres_data:"""
 
     def _generate_env_example(self, spec: Dict) -> str:
         """Generate .env.example file"""
 
-        return '''# Database
+        return """# Database
 DATABASE_URL=postgresql://user:password@localhost:5432/app
 
 # Redis
@@ -1244,12 +1291,12 @@ ANTHROPIC_API_KEY=your-anthropic-key
 
 # Environment
 ENVIRONMENT=development
-DEBUG=true'''
+DEBUG=true"""
 
     def _generate_readme(self, spec: Dict) -> str:
         """Generate README.md"""
 
-        return f'''# {spec.get("info", {}).get("title", "API Service")}
+        return f"""# {spec.get("info", {}).get("title", "API Service")}
 
 {spec.get("info", {}).get("description", "Auto-generated microservice")}
 
@@ -1283,7 +1330,7 @@ pytest
 ## Auto-generated
 
 This service was auto-generated by AI Code Generation Agent.
-'''
+"""
 
     def _analyze_api_patterns(self, api_spec: Dict) -> Dict[str, Any]:
         """Analyze API specification to understand patterns and complexity"""
@@ -1292,7 +1339,7 @@ This service was auto-generated by AI Code Generation Agent.
             "auth_type": None,
             "data_models": [],
             "common_patterns": [],
-            "optimization_opportunities": []
+            "optimization_opportunities": [],
         }
 
         # Analyze endpoints
@@ -1303,17 +1350,21 @@ This service was auto-generated by AI Code Generation Agent.
             patterns["complexity"] = "medium"
 
         # Analyze security
-        if "security" in api_spec or "securitySchemes" in api_spec.get("components", {}):
+        if "security" in api_spec or "securitySchemes" in api_spec.get(
+            "components", {}
+        ):
             patterns["auth_type"] = "oauth2"  # Simplified detection
 
         # Analyze data models
         schemas = api_spec.get("components", {}).get("schemas", {})
         for schema_name, schema_def in schemas.items():
-            patterns["data_models"].append({
-                "name": schema_name,
-                "properties": len(schema_def.get("properties", {})),
-                "required": schema_def.get("required", [])
-            })
+            patterns["data_models"].append(
+                {
+                    "name": schema_name,
+                    "properties": len(schema_def.get("properties", {})),
+                    "required": schema_def.get("required", []),
+                }
+            )
 
         # Detect common patterns
         for path in paths:
@@ -1326,7 +1377,9 @@ This service was auto-generated by AI Code Generation Agent.
 
         return patterns
 
-    async def _generate_intelligent_client(self, api_spec: Dict, language: str, class_name: str, patterns: Dict) -> str:
+    async def _generate_intelligent_client(
+        self, api_spec: Dict, language: str, class_name: str, patterns: Dict
+    ) -> str:
         """Generate client using intelligent code generation based on patterns"""
 
         # Base structure
@@ -1358,7 +1411,9 @@ class {class_name}:
             for path, path_item in api_spec.get("paths", {}).items():
                 for method, operation in path_item.items():
                     if method in ["get", "post", "put", "delete", "patch"]:
-                        method_code = self._generate_intelligent_method(path, method, operation, patterns)
+                        method_code = self._generate_intelligent_method(
+                            path, method, operation, patterns
+                        )
                         code_parts.append(method_code)
 
             # Add helper methods based on patterns
@@ -1370,7 +1425,9 @@ class {class_name}:
 
         return "\n".join(code_parts)
 
-    async def _generate_optimized_client(self, api_spec: Dict, language: str, class_name: str) -> str:
+    async def _generate_optimized_client(
+        self, api_spec: Dict, language: str, class_name: str
+    ) -> str:
         """Generate optimized client for simpler APIs"""
 
         # Use templates but optimize them
@@ -1382,7 +1439,9 @@ class {class_name}:
             for path, path_item in api_spec.get("paths", {}).items():
                 for method, operation in path_item.items():
                     if method in ["get", "post", "put", "delete", "patch"]:
-                        method_code = self._generate_method(path, method, operation, language, class_name)
+                        method_code = self._generate_method(
+                            path, method, operation, language, class_name
+                        )
                         # Optimize the method code
                         method_code = self._optimize_method_code(method_code, language)
                         methods.append(method_code)
@@ -1390,8 +1449,11 @@ class {class_name}:
             return template.format(
                 class_name=class_name,
                 api_name=api_spec.get("info", {}).get("title", "API"),
-                package_name=api_spec.get("info", {}).get("title", "API").lower().replace(" ", "_"),
-                methods="\n".join(methods)
+                package_name=api_spec.get("info", {})
+                .get("title", "API")
+                .lower()
+                .replace(" ", "_"),
+                methods="\n".join(methods),
             )
 
         # Fallback to basic generation
@@ -1429,7 +1491,9 @@ class {class_name}:
 
         return code
 
-    async def _generate_intelligent_tests(self, class_name: str, api_spec: Dict, language: str, code: str) -> str:
+    async def _generate_intelligent_tests(
+        self, class_name: str, api_spec: Dict, language: str, code: str
+    ) -> str:
         """Generate comprehensive tests using code analysis"""
 
         if language == "python":
@@ -1460,7 +1524,9 @@ class Test{class_name}:
 
         return f"// Tests for {class_name}"
 
-    def _generate_comprehensive_docs(self, class_name: str, api_spec: Dict, language: str, patterns: Dict) -> str:
+    def _generate_comprehensive_docs(
+        self, class_name: str, api_spec: Dict, language: str, patterns: Dict
+    ) -> str:
         """Generate comprehensive documentation"""
 
         docs = f"""
@@ -1506,14 +1572,16 @@ response = client.get_users()
 
         return docs
 
-    def _deep_analyze_error(self, code: str, error_message: str, language: str) -> Dict[str, Any]:
+    def _deep_analyze_error(
+        self, code: str, error_message: str, language: str
+    ) -> Dict[str, Any]:
         """Deeply analyze error to understand root cause"""
 
         analysis = {
             "type": "unknown",
             "location": None,
             "suggested_fixes": [],
-            "confidence": 0.0
+            "confidence": 0.0,
         }
 
         # Extract error type
@@ -1521,6 +1589,7 @@ response = client.get_users()
             analysis["type"] = "syntax"
             # Extract line number if present
             import re
+
             line_match = re.search(r"line (\d+)", error_message)
             if line_match:
                 analysis["location"] = int(line_match.group(1))
@@ -1540,7 +1609,9 @@ response = client.get_users()
         # Add suggested fixes based on type
         if analysis["type"] == "undefined_variable":
             analysis["suggested_fixes"].append("Define the variable before use")
-            analysis["suggested_fixes"].append("Import the variable from correct module")
+            analysis["suggested_fixes"].append(
+                "Import the variable from correct module"
+            )
 
         analysis["confidence"] = 0.8 if analysis["type"] != "unknown" else 0.3
 
@@ -1553,28 +1624,34 @@ response = client.get_users()
 
             # Try to parse the code
             try:
-                tree = ast.parse(code)
-            except SyntaxError as e:
+                ast.parse(code)
+            except SyntaxError:
                 # Fix syntax errors
                 if error_analysis["type"] == "indentation":
                     # Fix indentation
-                    lines = code.split('\n')
+                    lines = code.split("\n")
                     fixed_lines = []
                     indent_level = 0
                     for line in lines:
                         stripped = line.lstrip()
-                        if stripped.startswith('def ') or stripped.startswith('class '):
-                            fixed_lines.append('    ' * indent_level + stripped)
+                        if stripped.startswith("def ") or stripped.startswith("class "):
+                            fixed_lines.append("    " * indent_level + stripped)
                             indent_level += 1
-                        elif stripped.startswith('return') or stripped == 'pass':
+                        elif stripped.startswith("return") or stripped == "pass":
                             indent_level = max(0, indent_level - 1)
-                            fixed_lines.append('    ' * indent_level + stripped)
+                            fixed_lines.append("    " * indent_level + stripped)
                         else:
-                            fixed_lines.append('    ' * indent_level + stripped if stripped else '')
-                    return '\n'.join(fixed_lines)
+                            fixed_lines.append(
+                                "    " * indent_level + stripped if stripped else ""
+                            )
+                    return "\n".join(fixed_lines)
                 else:
                     # Try to fix common syntax errors
-                    code = code.replace('true', 'True').replace('false', 'False').replace('null', 'None')
+                    code = (
+                        code.replace("true", "True")
+                        .replace("false", "False")
+                        .replace("null", "None")
+                    )
                     return code
 
             # Fix based on error type
@@ -1582,14 +1659,18 @@ response = client.get_users()
                 var_name = error_analysis.get("variable")
                 if var_name:
                     # Add variable definition
-                    code = f"{var_name} = None  # Auto-added variable definition\n" + code
+                    code = (
+                        f"{var_name} = None  # Auto-added variable definition\n" + code
+                    )
 
             return code
 
         except Exception:
             return code
 
-    async def _fix_javascript_intelligently(self, code: str, error_analysis: Dict) -> str:
+    async def _fix_javascript_intelligently(
+        self, code: str, error_analysis: Dict
+    ) -> str:
         """Fix JavaScript code intelligently"""
 
         if error_analysis["type"] == "undefined_variable":
@@ -1601,17 +1682,19 @@ response = client.get_users()
             # Fix common JS syntax errors
             code = code.replace("===", "==").replace("!==", "!=")
             # Ensure semicolons
-            lines = code.split('\n')
+            lines = code.split("\n")
             fixed_lines = []
             for line in lines:
-                if line.strip() and not line.strip().endswith((';', '{', '}')):
-                    line = line.rstrip() + ';'
+                if line.strip() and not line.strip().endswith((";", "{", "}")):
+                    line = line.rstrip() + ";"
                 fixed_lines.append(line)
-            code = '\n'.join(fixed_lines)
+            code = "\n".join(fixed_lines)
 
         return code
 
-    async def _apply_intelligent_fix(self, code: str, error_analysis: Dict, language: str) -> str:
+    async def _apply_intelligent_fix(
+        self, code: str, error_analysis: Dict, language: str
+    ) -> str:
         """Apply intelligent fix for any language"""
 
         # Generic fixes that work for most languages
@@ -1631,15 +1714,18 @@ response = client.get_users()
         if language == "python":
             try:
                 import ast
+
                 ast.parse(code)
                 return True
-            except:
+            except Exception:
                 return False
 
         # For other languages, do basic validation
         return True  # Assume valid for now
 
-    async def _apply_alternative_fixes(self, code: str, error_analysis: Dict, language: str) -> str:
+    async def _apply_alternative_fixes(
+        self, code: str, error_analysis: Dict, language: str
+    ) -> str:
         """Apply alternative fixing strategies"""
 
         # Try wrapping in try-catch
@@ -1665,20 +1751,28 @@ try {{
         """Load library of code patterns"""
         return {
             "python": {
-                "imports": ["import requests", "import json", "from typing import Dict, Any, Optional"],
+                "imports": [
+                    "import requests",
+                    "import json",
+                    "from typing import Dict, Any, Optional",
+                ],
                 "error_handling": "try:\n    {code}\nexcept Exception as e:\n    raise",
-                "logging": "import logging\nlogger = logging.getLogger(__name__)"
+                "logging": "import logging\nlogger = logging.getLogger(__name__)",
             },
             "javascript": {
                 "imports": ["const axios = require('axios');"],
                 "error_handling": "try { {code} } catch (error) { throw error; }",
-                "logging": "console.log"
-            }
+                "logging": "console.log",
+            },
         }
 
     def _generate_smart_imports(self, patterns: Dict) -> str:
         """Generate smart imports based on patterns"""
-        imports = ["import requests", "import json", "from typing import Dict, Any, Optional, List"]
+        imports = [
+            "import requests",
+            "import json",
+            "from typing import Dict, Any, Optional, List",
+        ]
 
         if "user_management" in patterns["common_patterns"]:
             imports.append("import jwt")
@@ -1690,7 +1784,9 @@ try {{
 
         return "\n".join(imports)
 
-    def _generate_intelligent_method(self, path: str, method: str, operation: Dict, patterns: Dict) -> str:
+    def _generate_intelligent_method(
+        self, path: str, method: str, operation: Dict, patterns: Dict
+    ) -> str:
         """Generate method with intelligent features"""
 
         method_name = operation.get("operationId", f"{method}_{path.replace('/', '_')}")
@@ -1780,7 +1876,8 @@ try {{
     def _extract_functions(self, code: str) -> List[str]:
         """Extract function names from code"""
         import re
-        functions = re.findall(r'def (\w+)\(', code)
+
+        functions = re.findall(r"def (\w+)\(", code)
         return functions
 
     def _generate_function_test(self, func_name: str, class_name: str) -> str:
@@ -1832,70 +1929,82 @@ try {{
         """Add type hints to Python code"""
         # Add -> Dict to methods without return types
         import re
-        code = re.sub(r'def (\w+)\((.*?)\):', r'def \1(\2) -> Dict[str, Any]:', code)
+
+        code = re.sub(r"def (\w+)\((.*?)\):", r"def \1(\2) -> Dict[str, Any]:", code)
         return code
 
     def _add_python_docstrings(self, code: str) -> str:
         """Add docstrings to Python functions"""
         import re
-        lines = code.split('\n')
+
+        lines = code.split("\n")
         result = []
         for i, line in enumerate(lines):
             result.append(line)
-            if line.strip().startswith('def ') and i + 1 < len(lines) and not lines[i + 1].strip().startswith('"""'):
-                func_name = re.search(r'def (\w+)', line)
+            if (
+                line.strip().startswith("def ")
+                and i + 1 < len(lines)
+                and not lines[i + 1].strip().startswith('"""')
+            ):
+                func_name = re.search(r"def (\w+)", line)
                 if func_name:
-                    result.append(f'        """Auto-generated function: {func_name.group(1)}"""')
-        return '\n'.join(result)
+                    result.append(
+                        f'        """Auto-generated function: {func_name.group(1)}"""'
+                    )
+        return "\n".join(result)
 
     def _ensure_pep8(self, code: str) -> str:
         """Ensure code follows PEP 8"""
         # Basic PEP 8 fixes
-        code = re.sub(r'(\S)=(\S)', r'\1 = \2', code)  # Space around =
-        code = re.sub(r'(\S),(\S)', r'\1, \2', code)   # Space after comma
+        code = re.sub(r"(\S)=(\S)", r"\1 = \2", code)  # Space around =
+        code = re.sub(r"(\S),(\S)", r"\1, \2", code)  # Space after comma
         return code
 
     def _add_jsdoc_comments(self, code: str) -> str:
         """Add JSDoc comments to JavaScript"""
-        import re
-        lines = code.split('\n')
+        lines = code.split("\n")
         result = []
         for line in lines:
-            if 'function' in line or 'async' in line and '(' in line:
-                result.append('    /**\n     * Auto-generated function\n     */')
+            if "function" in line or "async" in line and "(" in line:
+                result.append("    /**\n     * Auto-generated function\n     */")
             result.append(line)
-        return '\n'.join(result)
+        return "\n".join(result)
 
     def _modernize_javascript(self, code: str) -> str:
         """Modernize JavaScript code"""
-        code = code.replace('var ', 'const ')
-        code = re.sub(r'function\s+(\w+)', r'const \1 = function', code)
+        code = code.replace("var ", "const ")
+        code = re.sub(r"function\s+(\w+)", r"const \1 = function", code)
         return code
 
     def _remove_duplicate_imports(self, code: str, language: str) -> str:
         """Remove duplicate import statements"""
-        lines = code.split('\n')
+        lines = code.split("\n")
         seen_imports = set()
         result = []
         for line in lines:
-            if language == "python" and line.startswith('import') or line.startswith('from'):
+            if (
+                language == "python"
+                and line.startswith("import")
+                or line.startswith("from")
+            ):
                 if line not in seen_imports:
                     seen_imports.add(line)
                     result.append(line)
             else:
                 result.append(line)
-        return '\n'.join(result)
+        return "\n".join(result)
 
     def _optimize_loops(self, code: str, language: str) -> str:
         """Optimize loops in code"""
         if language == "python":
             # Convert simple for loops to list comprehensions where appropriate
             import re
+
             # This is simplified - real implementation would use AST
             code = re.sub(
-                r'for (\w+) in (\w+):\n\s+(\w+)\.append\((\w+)\)',
-                r'\3 = [\4 for \1 in \2]',
-                code
+                r"for (\w+) in (\w+):\n\s+(\w+)\.append\((\w+)\)",
+                r"\3 = [\4 for \1 in \2]",
+                code,
             )
         return code
 
@@ -1903,19 +2012,21 @@ try {{
         """Add error handling where missing"""
         if language == "python":
             # Wrap risky operations in try-except
-            if 'requests.' in code and 'try:' not in code:
-                lines = code.split('\n')
+            if "requests." in code and "try:" not in code:
+                lines = code.split("\n")
                 result = []
                 for line in lines:
-                    if 'requests.' in line and not line.strip().startswith('#'):
-                        result.append('        try:')
-                        result.append('    ' + line)
-                        result.append('        except requests.exceptions.RequestException as e:')
+                    if "requests." in line and not line.strip().startswith("#"):
+                        result.append("        try:")
+                        result.append("    " + line)
+                        result.append(
+                            "        except requests.exceptions.RequestException as e:"
+                        )
                         result.append('            print(f"Request failed: {e}")')
-                        result.append('            raise')
+                        result.append("            raise")
                     else:
                         result.append(line)
-                return '\n'.join(result)
+                return "\n".join(result)
         return code
 
 
@@ -1932,12 +2043,13 @@ class CodeAnalyzer:
             "functions": [],
             "classes": [],
             "imports": [],
-            "complexity": 0
+            "complexity": 0,
         }
 
         if language == "python":
             try:
                 import ast
+
                 tree = ast.parse(code)
                 for node in ast.walk(tree):
                     if isinstance(node, ast.FunctionDef):
@@ -1947,7 +2059,7 @@ class CodeAnalyzer:
                     elif isinstance(node, ast.Import):
                         for alias in node.names:
                             analysis["imports"].append(alias.name)
-            except:
+            except Exception:
                 pass
 
         return analysis

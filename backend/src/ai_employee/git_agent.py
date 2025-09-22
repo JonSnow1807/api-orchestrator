@@ -5,15 +5,14 @@ Creates branches, commits, PRs, and merges WITHOUT human intervention
 Handles merge conflicts intelligently
 """
 
-import os
 import subprocess
-import json
 import re
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-import difflib
+import asyncio
+
 try:
     import git
 except ImportError:
@@ -33,6 +32,7 @@ except ImportError:
 @dataclass
 class PullRequestInfo:
     """Information about a pull request"""
+
     pr_number: int
     title: str
     description: str
@@ -50,6 +50,7 @@ class PullRequestInfo:
 @dataclass
 class CommitInfo:
     """Information about a commit"""
+
     sha: str
     message: str
     author: str
@@ -87,9 +88,7 @@ class GitAgent:
             print(f"   Current branch: No branch yet (empty repository)")
 
     async def create_feature_branch(
-        self,
-        feature_name: str,
-        from_branch: str = "main"
+        self, feature_name: str, from_branch: str = "main"
     ) -> str:
         """Create a new feature branch"""
 
@@ -115,7 +114,7 @@ class GitAgent:
         self,
         message: Optional[str] = None,
         files: Optional[List[str]] = None,
-        auto_generate_message: bool = True
+        auto_generate_message: bool = True,
     ) -> CommitInfo:
         """Commit changes with intelligent message generation"""
 
@@ -135,9 +134,9 @@ class GitAgent:
             try:
                 self.repo.git.add(A=True)
                 print("   ➕ Staged all changes")
-            except Exception as e:
+            except Exception:
                 # Try adding with '.' instead
-                self.repo.git.add('.')
+                self.repo.git.add(".")
                 print("   ➕ Staged all changes")
 
         # Get diff for message generation
@@ -166,7 +165,7 @@ class GitAgent:
             author=str(commit.author),
             timestamp=datetime.fromtimestamp(commit.committed_date),
             files_changed=self._parse_changed_files(stats),
-            stats={"additions": 0, "deletions": 0}  # Simplified
+            stats={"additions": 0, "deletions": 0},  # Simplified
         )
 
         print(f"   ✅ Committed: {commit.hexsha[:8]}")
@@ -178,7 +177,7 @@ class GitAgent:
         title: Optional[str] = None,
         description: Optional[str] = None,
         base_branch: str = "main",
-        auto_merge_on_success: bool = True
+        auto_merge_on_success: bool = True,
     ) -> PullRequestInfo:
         """Create a pull request"""
 
@@ -195,7 +194,9 @@ class GitAgent:
 
         # Get diff information
         diff = self.repo.git.diff(f"{base_branch}...{current_branch}")
-        files_changed = self.repo.git.diff(f"{base_branch}...{current_branch}", name_only=True).splitlines()
+        files_changed = self.repo.git.diff(
+            f"{base_branch}...{current_branch}", name_only=True
+        ).splitlines()
 
         # Generate title and description if not provided
         if not title:
@@ -222,7 +223,7 @@ class GitAgent:
                 mergeable=pr.mergeable if pr.mergeable is not None else True,
                 conflicts=[],
                 checks_passed=False,  # Will be updated
-                url=pr.html_url
+                url=pr.html_url,
             )
 
             print(f"   ✅ PR created: #{pr.number} - {pr.html_url}")
@@ -250,13 +251,11 @@ class GitAgent:
                 mergeable=True,
                 conflicts=[],
                 checks_passed=False,
-                url=""
+                url="",
             )
 
     async def handle_merge_conflicts(
-        self,
-        pr_info: PullRequestInfo,
-        strategy: str = "auto"
+        self, pr_info: PullRequestInfo, strategy: str = "auto"
     ) -> bool:
         """Intelligently handle merge conflicts"""
 
@@ -278,7 +277,9 @@ class GitAgent:
             print("   ⚠️ Conflicts detected, resolving...")
 
         # Get conflicted files
-        conflicted_files = self.repo.git.diff(name_only=True, unmerged=True).splitlines()
+        conflicted_files = self.repo.git.diff(
+            name_only=True, unmerged=True
+        ).splitlines()
 
         resolved_count = 0
         for file in conflicted_files:
@@ -302,7 +303,9 @@ class GitAgent:
 
         if resolved_count == len(conflicted_files):
             # Commit the resolution
-            self.repo.index.commit(f"Resolve merge conflicts from {pr_info.base_branch}")
+            self.repo.index.commit(
+                f"Resolve merge conflicts from {pr_info.base_branch}"
+            )
             self.repo.git.push()
             print(f"   ✅ All {resolved_count} conflicts resolved")
             return True
@@ -311,9 +314,7 @@ class GitAgent:
             return False
 
     async def auto_merge_when_ready(
-        self,
-        pr_info: PullRequestInfo,
-        required_checks: List[str] = None
+        self, pr_info: PullRequestInfo, required_checks: List[str] = None
     ) -> bool:
         """Automatically merge PR when all checks pass"""
 
@@ -341,9 +342,7 @@ class GitAgent:
         return False
 
     async def cherry_pick_commits(
-        self,
-        commits: List[str],
-        target_branch: str
+        self, commits: List[str], target_branch: str
     ) -> List[CommitInfo]:
         """Cherry-pick specific commits to another branch"""
 
@@ -363,21 +362,27 @@ class GitAgent:
 
                 # Get commit info
                 commit = self.repo.commit(commit_sha)
-                picked_commits.append(CommitInfo(
-                    sha=commit.hexsha,
-                    message=commit.message,
-                    author=str(commit.author),
-                    timestamp=datetime.fromtimestamp(commit.committed_date),
-                    files_changed=[],
-                    stats={}
-                ))
+                picked_commits.append(
+                    CommitInfo(
+                        sha=commit.hexsha,
+                        message=commit.message,
+                        author=str(commit.author),
+                        timestamp=datetime.fromtimestamp(commit.committed_date),
+                        files_changed=[],
+                        stats={},
+                    )
+                )
 
             except git.GitCommandError as e:
                 if "conflict" in str(e).lower():
-                    print(f"   ⚠️ Conflict in {commit_sha[:8]}, attempting resolution...")
+                    print(
+                        f"   ⚠️ Conflict in {commit_sha[:8]}, attempting resolution..."
+                    )
 
                     # Try to resolve conflicts
-                    conflicted_files = self.repo.git.diff(name_only=True, unmerged=True).splitlines()
+                    conflicted_files = self.repo.git.diff(
+                        name_only=True, unmerged=True
+                    ).splitlines()
 
                     for file in conflicted_files:
                         await self._auto_resolve_conflict(file)
@@ -387,7 +392,7 @@ class GitAgent:
                     try:
                         self.repo.git.cherry_pick(continue_=True)
                         print(f"   ✅ Resolved and cherry-picked: {commit_sha[:8]}")
-                    except:
+                    except Exception:
                         self.repo.git.cherry_pick(abort=True)
                         print(f"   ❌ Failed to cherry-pick: {commit_sha[:8]}")
                 else:
@@ -401,9 +406,7 @@ class GitAgent:
         return picked_commits
 
     async def auto_tag_release(
-        self,
-        version: Optional[str] = None,
-        message: Optional[str] = None
+        self, version: Optional[str] = None, message: Optional[str] = None
     ) -> str:
         """Automatically create release tags"""
 
@@ -418,10 +421,7 @@ class GitAgent:
             message = await self._generate_release_notes(version)
 
         # Create tag
-        tag = self.repo.create_tag(
-            version,
-            message=message
-        )
+        tag = self.repo.create_tag(version, message=message)
 
         # Push tag
         self.repo.git.push("origin", version)
@@ -435,8 +435,7 @@ class GitAgent:
         return version
 
     async def analyze_code_quality(
-        self,
-        branch: Optional[str] = None
+        self, branch: Optional[str] = None
     ) -> Dict[str, Any]:
         """Analyze code quality before merge"""
 
@@ -449,7 +448,7 @@ class GitAgent:
             "issues": [],
             "suggestions": [],
             "quality_score": 100,
-            "ready_to_merge": True
+            "ready_to_merge": True,
         }
 
         # Check for common issues
@@ -458,53 +457,63 @@ class GitAgent:
         # Large files
         large_files = self._find_large_files()
         if large_files:
-            issues.append({
-                "type": "large_files",
-                "severity": "warning",
-                "files": large_files,
-                "suggestion": "Consider using Git LFS for large files"
-            })
+            issues.append(
+                {
+                    "type": "large_files",
+                    "severity": "warning",
+                    "files": large_files,
+                    "suggestion": "Consider using Git LFS for large files",
+                }
+            )
             analysis["quality_score"] -= 10
 
         # Sensitive data
         sensitive_data = self._scan_for_secrets()
         if sensitive_data:
-            issues.append({
-                "type": "sensitive_data",
-                "severity": "critical",
-                "files": sensitive_data,
-                "suggestion": "Remove sensitive data immediately"
-            })
+            issues.append(
+                {
+                    "type": "sensitive_data",
+                    "severity": "critical",
+                    "files": sensitive_data,
+                    "suggestion": "Remove sensitive data immediately",
+                }
+            )
             analysis["quality_score"] -= 50
             analysis["ready_to_merge"] = False
 
         # Code complexity
         complexity_issues = await self._analyze_complexity()
         if complexity_issues:
-            issues.append({
-                "type": "high_complexity",
-                "severity": "warning",
-                "files": complexity_issues,
-                "suggestion": "Refactor complex code for better maintainability"
-            })
+            issues.append(
+                {
+                    "type": "high_complexity",
+                    "severity": "warning",
+                    "files": complexity_issues,
+                    "suggestion": "Refactor complex code for better maintainability",
+                }
+            )
             analysis["quality_score"] -= 5 * len(complexity_issues)
 
         # Test coverage
         coverage = await self._check_test_coverage()
         if coverage < 80:
-            issues.append({
-                "type": "low_coverage",
-                "severity": "warning",
-                "coverage": coverage,
-                "suggestion": f"Increase test coverage from {coverage}% to at least 80%"
-            })
+            issues.append(
+                {
+                    "type": "low_coverage",
+                    "severity": "warning",
+                    "coverage": coverage,
+                    "suggestion": f"Increase test coverage from {coverage}% to at least 80%",
+                }
+            )
             analysis["quality_score"] -= (80 - coverage) // 2
 
         analysis["issues"] = issues
 
         # Generate suggestions
         if analysis["quality_score"] < 70:
-            analysis["suggestions"].append("Consider addressing critical issues before merge")
+            analysis["suggestions"].append(
+                "Consider addressing critical issues before merge"
+            )
 
         if not analysis["ready_to_merge"]:
             analysis["suggestions"].append("BLOCKING: Critical issues must be resolved")
@@ -557,7 +566,11 @@ class GitAgent:
         if len(file_changes) == 1:
             file = list(file_changes.keys())[0]
             component = Path(file).stem
-            action = "update" if file_changes[file]["added"] > file_changes[file]["removed"] else "fix"
+            action = (
+                "update"
+                if file_changes[file]["added"] > file_changes[file]["removed"]
+                else "fix"
+            )
             message = f"{commit_type}({component}): {action} {component}"
         else:
             message = f"{commit_type}: update {len(file_changes)} files"
@@ -628,11 +641,11 @@ class GitAgent:
         """Automatically resolve merge conflict"""
 
         try:
-            with open(self.repo_path / file, 'r') as f:
+            with open(self.repo_path / file, "r") as f:
                 content = f.read()
 
             # Find conflict markers
-            conflict_pattern = r'<<<<<<< .+?\n(.*?)\n=======\n(.*?)\n>>>>>>> .+?\n'
+            conflict_pattern = r"<<<<<<< .+?\n(.*?)\n=======\n(.*?)\n>>>>>>> .+?\n"
             conflicts = re.findall(conflict_pattern, content, re.DOTALL)
 
             if not conflicts:
@@ -645,10 +658,12 @@ class GitAgent:
 
                 # Replace conflict with resolution
                 conflict_block = f"<<<<<<< .+?\n{re.escape(ours)}\n=======\n{re.escape(theirs)}\n>>>>>>> .+?\n"
-                content = re.sub(conflict_block, resolution, content, count=1, flags=re.DOTALL)
+                content = re.sub(
+                    conflict_block, resolution, content, count=1, flags=re.DOTALL
+                )
 
             # Write resolved content
-            with open(self.repo_path / file, 'w') as f:
+            with open(self.repo_path / file, "w") as f:
                 f.write(content)
 
             return True
@@ -694,7 +709,7 @@ class GitAgent:
                 try:
                     self.repo.git.ls_files(item)
                     large_files.append(str(item.relative_to(self.repo_path)))
-                except:
+                except Exception:
                     pass  # File not tracked
 
         return large_files
@@ -708,7 +723,7 @@ class GitAgent:
             r'password\s*=\s*["\'].+["\']',
             r'token\s*=\s*["\'][\w\d]+["\']',
             r'aws[_-]?access[_-]?key[_-]?id\s*=\s*["\'][\w\d]+["\']',
-            r'private[_-]?key\s*=\s*["\'].+["\']'
+            r'private[_-]?key\s*=\s*["\'].+["\']',
         ]
 
         files_with_secrets = []
@@ -722,7 +737,7 @@ class GitAgent:
                         file = line.split(":")[0]
                         if file not in files_with_secrets:
                             files_with_secrets.append(file)
-            except:
+            except Exception:
                 pass  # Pattern not found
 
         return files_with_secrets
@@ -735,14 +750,16 @@ class GitAgent:
         # Simple complexity check - functions longer than 50 lines
         for file in self.repo_path.rglob("*.py"):
             try:
-                with open(file, 'r') as f:
+                with open(file, "r") as f:
                     lines = f.readlines()
 
                 in_function = False
                 function_lines = 0
 
                 for line in lines:
-                    if line.strip().startswith("def ") or line.strip().startswith("async def "):
+                    if line.strip().startswith("def ") or line.strip().startswith(
+                        "async def "
+                    ):
                         in_function = True
                         function_lines = 0
                     elif in_function:
@@ -750,7 +767,7 @@ class GitAgent:
                         if function_lines > 50:
                             complex_files.append(str(file.relative_to(self.repo_path)))
                             break
-            except:
+            except Exception:
                 pass
 
         return complex_files
@@ -764,15 +781,15 @@ class GitAgent:
                 ["coverage", "report", "--format=total"],
                 cwd=self.repo_path,
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             if result.returncode == 0:
                 # Extract coverage percentage
-                match = re.search(r'(\d+)%', result.stdout)
+                match = re.search(r"(\d+)%", result.stdout)
                 if match:
                     return float(match.group(1))
-        except:
+        except Exception:
             pass
 
         # Default to 0 if coverage not available
@@ -781,11 +798,11 @@ class GitAgent:
     def _sanitize_branch_name(self, name: str) -> str:
         """Sanitize branch name"""
         # Remove special characters
-        name = re.sub(r'[^a-zA-Z0-9\-_]', '-', name)
+        name = re.sub(r"[^a-zA-Z0-9\-_]", "-", name)
         # Remove consecutive hyphens
-        name = re.sub(r'-+', '-', name)
+        name = re.sub(r"-+", "-", name)
         # Remove leading/trailing hyphens
-        name = name.strip('-')
+        name = name.strip("-")
         # Lowercase
         name = name.lower()
         # Truncate if too long
@@ -812,7 +829,7 @@ class GitAgent:
             "style": "Formatting, missing semicolons, etc",
             "refactor": "Code restructuring",
             "test": "Adding missing tests",
-            "chore": "Maintenance tasks"
+            "chore": "Maintenance tasks",
         }
 
     def _load_merge_strategies(self) -> Dict:
@@ -821,7 +838,7 @@ class GitAgent:
             "imports": "combine",
             "functions": "prefer_longer",
             "constants": "prefer_theirs",
-            "comments": "combine"
+            "comments": "combine",
         }
 
     def _generate_next_version(self) -> str:
@@ -834,7 +851,7 @@ class GitAgent:
                 latest = tags[-1].name
 
                 # Parse version
-                match = re.match(r'v?(\d+)\.(\d+)\.(\d+)', latest)
+                match = re.match(r"v?(\d+)\.(\d+)\.(\d+)", latest)
                 if match:
                     major, minor, patch = map(int, match.groups())
 
@@ -842,7 +859,7 @@ class GitAgent:
                     # This is simplified - in reality would analyze commits
                     return f"v{major}.{minor}.{patch + 1}"
 
-        except:
+        except Exception:
             pass
 
         return "v1.0.0"  # Default for first release
@@ -858,7 +875,7 @@ class GitAgent:
             tags = sorted(self.repo.tags, key=lambda t: t.commit.committed_datetime)
             if len(tags) > 0:
                 last_tag = tags[-1]
-                commits = list(self.repo.iter_commits(f'{last_tag}..HEAD'))
+                commits = list(self.repo.iter_commits(f"{last_tag}..HEAD"))
 
                 # Categorize commits
                 features = []
@@ -893,13 +910,14 @@ class GitAgent:
                         notes += f"- {other}\n"
                     notes += "\n"
 
-        except:
+        except Exception:
             notes += "## Changes\n\n- Various improvements and bug fixes\n\n"
 
         notes += "---\n\n"
         notes += "*Generated automatically by Git Agent*"
 
         return notes
+
     async def create_branch(self, branch_name: str) -> None:
         """Create a new branch"""
         self.repo.create_head(branch_name)
@@ -910,13 +928,13 @@ class GitAgent:
         """Analyze current changes in the repository"""
         if not self.repo:
             return {"files_changed": 0, "additions": 0, "deletions": 0}
-        
+
         diff = self.repo.index.diff(None)
         staged = self.repo.index.diff("HEAD")
-        
+
         return {
             "files_changed": len(diff) + len(staged),
             "additions": sum(d.a_blob.size if d.a_blob else 0 for d in diff),
             "deletions": sum(d.b_blob.size if d.b_blob else 0 for d in diff),
-            "has_conflicts": False
+            "has_conflicts": False,
         }

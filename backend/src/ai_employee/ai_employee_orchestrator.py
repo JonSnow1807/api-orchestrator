@@ -4,10 +4,9 @@ This is where all agents come together to form a complete AI employee
 """
 
 import asyncio
-from typing import Dict, List, Optional, Any, Callable
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-import json
+from datetime import datetime
 from enum import Enum
 
 # Import all our AI agents
@@ -18,11 +17,13 @@ from .git_agent import GitAgent
 from .database_agent import DatabaseAgent
 from .cloud_deployment_agent import CloudDeploymentAgent
 
+
 class TaskPriority(Enum):
     CRITICAL = 1
     HIGH = 2
     MEDIUM = 3
     LOW = 4
+
 
 @dataclass
 class AITask:
@@ -37,6 +38,7 @@ class AITask:
     result: Optional[Dict[str, Any]]
     dependencies: List[str]
 
+
 class AIEmployeeOrchestrator:
     """
     The Master AI Employee that coordinates all specialized agents
@@ -49,10 +51,10 @@ class AIEmployeeOrchestrator:
         self.learning_system = SelfLearningSystem()
         self.devops_agent = DevOpsAgent()  # DevOps agent doesn't take config
         self.git_agent = GitAgent(
-            repo_path=config.get('repo_path', '.'),
-            github_token=config.get('github_token')
+            repo_path=config.get("repo_path", "."),
+            github_token=config.get("github_token"),
         )
-        self.database_agent = DatabaseAgent(config.get('db_connection_string', ''))
+        self.database_agent = DatabaseAgent(config.get("db_connection_string", ""))
         self.cloud_agent = CloudDeploymentAgent()
 
         # Task management
@@ -66,7 +68,7 @@ class AIEmployeeOrchestrator:
 
         # Configuration
         self.config = config
-        self.autonomous_mode = config.get('autonomous_mode', False)
+        self.autonomous_mode = config.get("autonomous_mode", False)
 
     async def handle_user_request(self, request: str) -> Dict[str, Any]:
         """
@@ -83,12 +85,9 @@ class AIEmployeeOrchestrator:
         results = await self._execute_tasks(tasks)
 
         # Learn from the interaction
-        await self.learning_system.learn_from_interaction({
-            "request": request,
-            "intent": intent,
-            "tasks": tasks,
-            "results": results
-        })
+        await self.learning_system.learn_from_interaction(
+            {"request": request, "intent": intent, "tasks": tasks, "results": results}
+        )
 
         # Ensure at least partial success if any task succeeded
         success = any(r.get("success", False) for r in results) if results else True
@@ -98,7 +97,7 @@ class AIEmployeeOrchestrator:
             "intent": intent,
             "tasks_executed": len(tasks),
             "results": results,
-            "success": success
+            "success": success,
         }
 
     async def autonomous_operation(self):
@@ -143,25 +142,34 @@ class AIEmployeeOrchestrator:
             "primary_action": None,
             "entities": [],
             "urgency": "normal",
-            "complexity": "medium"
+            "complexity": "medium",
         }
 
         request_lower = request.lower()
 
         # Determine primary action
-        if any(keyword in request_lower for keyword in ["fix", "debug", "error", "broken"]):
+        if any(
+            keyword in request_lower for keyword in ["fix", "debug", "error", "broken"]
+        ):
             intent["primary_action"] = "fix_issue"
             intent["urgency"] = "high"
         elif any(keyword in request_lower for keyword in ["deploy", "release", "ship"]):
             intent["primary_action"] = "deploy"
             intent["urgency"] = "high"
-        elif any(keyword in request_lower for keyword in ["optimize", "improve", "speed up"]):
+        elif any(
+            keyword in request_lower for keyword in ["optimize", "improve", "speed up"]
+        ):
             intent["primary_action"] = "optimize"
-        elif any(keyword in request_lower for keyword in ["create", "build", "implement", "add"]):
+        elif any(
+            keyword in request_lower
+            for keyword in ["create", "build", "implement", "add"]
+        ):
             intent["primary_action"] = "create_feature"
         elif any(keyword in request_lower for keyword in ["test", "verify", "check"]):
             intent["primary_action"] = "test"
-        elif any(keyword in request_lower for keyword in ["analyze", "investigate", "find"]):
+        elif any(
+            keyword in request_lower for keyword in ["analyze", "investigate", "find"]
+        ):
             intent["primary_action"] = "analyze"
         else:
             intent["primary_action"] = "general_task"
@@ -193,7 +201,12 @@ class AIEmployeeOrchestrator:
         tasks = []
         task_counter = 0
 
-        def create_task(task_type: str, description: str, priority: TaskPriority = TaskPriority.MEDIUM, deps: List = None):
+        def create_task(
+            task_type: str,
+            description: str,
+            priority: TaskPriority = TaskPriority.MEDIUM,
+            deps: List = None,
+        ):
             nonlocal task_counter
             task_counter += 1
             return AITask(
@@ -206,40 +219,159 @@ class AIEmployeeOrchestrator:
                 created_at=datetime.now(),
                 completed_at=None,
                 result=None,
-                dependencies=deps or []
+                dependencies=deps or [],
             )
 
         # Create tasks based on intent
         if intent["primary_action"] == "fix_issue":
             # Diagnostic phase
-            tasks.append(create_task("analyze", "Analyze error logs and identify root cause", TaskPriority.CRITICAL))
-            tasks.append(create_task("code_fix", "Generate fix for identified issue", TaskPriority.CRITICAL, ["task_0001"]))
-            tasks.append(create_task("test", "Test the fix thoroughly", TaskPriority.HIGH, ["task_0002"]))
-            tasks.append(create_task("deploy", "Deploy fix to staging", TaskPriority.HIGH, ["task_0003"]))
-            tasks.append(create_task("monitor", "Monitor for regression", TaskPriority.MEDIUM, ["task_0004"]))
+            tasks.append(
+                create_task(
+                    "analyze",
+                    "Analyze error logs and identify root cause",
+                    TaskPriority.CRITICAL,
+                )
+            )
+            tasks.append(
+                create_task(
+                    "code_fix",
+                    "Generate fix for identified issue",
+                    TaskPriority.CRITICAL,
+                    ["task_0001"],
+                )
+            )
+            tasks.append(
+                create_task(
+                    "test", "Test the fix thoroughly", TaskPriority.HIGH, ["task_0002"]
+                )
+            )
+            tasks.append(
+                create_task(
+                    "deploy", "Deploy fix to staging", TaskPriority.HIGH, ["task_0003"]
+                )
+            )
+            tasks.append(
+                create_task(
+                    "monitor",
+                    "Monitor for regression",
+                    TaskPriority.MEDIUM,
+                    ["task_0004"],
+                )
+            )
 
         elif intent["primary_action"] == "deploy":
-            tasks.append(create_task("test", "Run comprehensive test suite", TaskPriority.CRITICAL))
-            tasks.append(create_task("build", "Build production artifacts", TaskPriority.CRITICAL, ["task_0001"]))
-            tasks.append(create_task("security_scan", "Scan for vulnerabilities", TaskPriority.CRITICAL, ["task_0002"]))
-            tasks.append(create_task("deploy", "Deploy using blue-green strategy", TaskPriority.HIGH, ["task_0003"]))
-            tasks.append(create_task("verify", "Verify deployment health", TaskPriority.HIGH, ["task_0004"]))
+            tasks.append(
+                create_task(
+                    "test", "Run comprehensive test suite", TaskPriority.CRITICAL
+                )
+            )
+            tasks.append(
+                create_task(
+                    "build",
+                    "Build production artifacts",
+                    TaskPriority.CRITICAL,
+                    ["task_0001"],
+                )
+            )
+            tasks.append(
+                create_task(
+                    "security_scan",
+                    "Scan for vulnerabilities",
+                    TaskPriority.CRITICAL,
+                    ["task_0002"],
+                )
+            )
+            tasks.append(
+                create_task(
+                    "deploy",
+                    "Deploy using blue-green strategy",
+                    TaskPriority.HIGH,
+                    ["task_0003"],
+                )
+            )
+            tasks.append(
+                create_task(
+                    "verify",
+                    "Verify deployment health",
+                    TaskPriority.HIGH,
+                    ["task_0004"],
+                )
+            )
 
         elif intent["primary_action"] == "optimize":
             if "database" in intent["entities"]:
-                tasks.append(create_task("analyze_db", "Analyze database performance", TaskPriority.HIGH))
-                tasks.append(create_task("optimize_queries", "Optimize slow queries", TaskPriority.HIGH, ["task_0001"]))
-                tasks.append(create_task("add_indexes", "Add missing indexes", TaskPriority.MEDIUM, ["task_0001"]))
+                tasks.append(
+                    create_task(
+                        "analyze_db", "Analyze database performance", TaskPriority.HIGH
+                    )
+                )
+                tasks.append(
+                    create_task(
+                        "optimize_queries",
+                        "Optimize slow queries",
+                        TaskPriority.HIGH,
+                        ["task_0001"],
+                    )
+                )
+                tasks.append(
+                    create_task(
+                        "add_indexes",
+                        "Add missing indexes",
+                        TaskPriority.MEDIUM,
+                        ["task_0001"],
+                    )
+                )
             else:
-                tasks.append(create_task("profile", "Profile application performance", TaskPriority.HIGH))
-                tasks.append(create_task("optimize_code", "Optimize bottlenecks", TaskPriority.HIGH, ["task_0001"]))
+                tasks.append(
+                    create_task(
+                        "profile", "Profile application performance", TaskPriority.HIGH
+                    )
+                )
+                tasks.append(
+                    create_task(
+                        "optimize_code",
+                        "Optimize bottlenecks",
+                        TaskPriority.HIGH,
+                        ["task_0001"],
+                    )
+                )
 
         elif intent["primary_action"] == "create_feature":
-            tasks.append(create_task("design", "Design feature architecture", TaskPriority.HIGH))
-            tasks.append(create_task("code_generation", "Generate feature code", TaskPriority.HIGH, ["task_0001"]))
-            tasks.append(create_task("test_generation", "Generate test cases", TaskPriority.MEDIUM, ["task_0002"]))
-            tasks.append(create_task("documentation", "Generate documentation", TaskPriority.LOW, ["task_0002"]))
-            tasks.append(create_task("pr_creation", "Create pull request", TaskPriority.MEDIUM, ["task_0003", "task_0004"]))
+            tasks.append(
+                create_task("design", "Design feature architecture", TaskPriority.HIGH)
+            )
+            tasks.append(
+                create_task(
+                    "code_generation",
+                    "Generate feature code",
+                    TaskPriority.HIGH,
+                    ["task_0001"],
+                )
+            )
+            tasks.append(
+                create_task(
+                    "test_generation",
+                    "Generate test cases",
+                    TaskPriority.MEDIUM,
+                    ["task_0002"],
+                )
+            )
+            tasks.append(
+                create_task(
+                    "documentation",
+                    "Generate documentation",
+                    TaskPriority.LOW,
+                    ["task_0002"],
+                )
+            )
+            tasks.append(
+                create_task(
+                    "pr_creation",
+                    "Create pull request",
+                    TaskPriority.MEDIUM,
+                    ["task_0003", "task_0004"],
+                )
+            )
 
         return tasks
 
@@ -286,8 +418,8 @@ class AIEmployeeOrchestrator:
                 else:
                     # For fixes, analyze the issue first
                     result["data"] = await self.code_agent.fix_broken_code(
-                        code="", # Would get from context
-                        error_message=task.description
+                        code="",
+                        error_message=task.description,  # Would get from context
                     )
                 result["success"] = True
 
@@ -295,8 +427,7 @@ class AIEmployeeOrchestrator:
                 task.assigned_agent = "devops_agent"
                 if task.task_type == "deploy":
                     deployment = await self.devops_agent.deploy_to_production(
-                        "./", # Would get from context
-                        {}
+                        "./", {}  # Would get from context
                     )
                     result["data"] = deployment
                 result["success"] = True
@@ -304,8 +435,7 @@ class AIEmployeeOrchestrator:
             elif task.task_type in ["test", "test_generation"]:
                 task.assigned_agent = "code_agent"
                 result["data"] = await self.code_agent.generate_test_suite(
-                    "", # Would get actual code
-                    "comprehensive"
+                    "", "comprehensive"  # Would get actual code
                 )
                 result["success"] = True
 
@@ -324,14 +454,16 @@ class AIEmployeeOrchestrator:
                 pr_info = await self.git_agent.create_pull_request(
                     f"ai-feature-{datetime.now().strftime('%Y%m%d')}",
                     task.description,
-                    "Automated PR created by AI Employee"
+                    "Automated PR created by AI Employee",
                 )
                 result["data"] = pr_info.__dict__
                 result["success"] = True
 
             elif task.task_type == "security_scan":
                 task.assigned_agent = "cloud_agent"
-                scan_results = await self.cloud_agent.security_scanner.scan_deployment({})
+                scan_results = await self.cloud_agent.security_scanner.scan_deployment(
+                    {}
+                )
                 result["data"] = scan_results
                 result["success"] = True
 
@@ -355,33 +487,39 @@ class AIEmployeeOrchestrator:
         # Check database health
         db_anomalies = await self.database_agent.detect_anomalies()
         for anomaly in db_anomalies:
-            issues.append({
-                "type": "database",
-                "severity": anomaly["severity"],
-                "description": anomaly,
-                "auto_fixable": anomaly.get("auto_fix_available", False)
-            })
+            issues.append(
+                {
+                    "type": "database",
+                    "severity": anomaly["severity"],
+                    "description": anomaly,
+                    "auto_fixable": anomaly.get("auto_fix_available", False),
+                }
+            )
 
         # Check deployment health
         deployment_health = await self.devops_agent.monitor_and_auto_fix()
         for issue in deployment_health:
             if issue["status"] != "healthy":
-                issues.append({
-                    "type": "deployment",
-                    "severity": "high",
-                    "description": issue,
-                    "auto_fixable": True
-                })
+                issues.append(
+                    {
+                        "type": "deployment",
+                        "severity": "high",
+                        "description": issue,
+                        "auto_fixable": True,
+                    }
+                )
 
         # Check for code issues (from learned patterns)
         code_issues = await self.learning_system.predict_issues({})
         for issue in code_issues:
-            issues.append({
-                "type": "code",
-                "severity": issue.severity,
-                "description": issue,
-                "auto_fixable": True
-            })
+            issues.append(
+                {
+                    "type": "code",
+                    "severity": issue.severity,
+                    "description": issue,
+                    "auto_fixable": True,
+                }
+            )
 
         return issues
 
@@ -414,12 +552,16 @@ class AIEmployeeOrchestrator:
         elif issue["type"] == "code":
             # Code issues - generate fix and create PR
             fix = await self.code_agent.fix_broken_code("", str(issue["description"]))
-            await self.git_agent.create_branch(f"auto-fix-{datetime.now().strftime('%Y%m%d-%H%M%S')}")
-            await self.git_agent.commit_changes(f"Auto-fix: {issue['description'][:50]}")
+            await self.git_agent.create_branch(
+                f"auto-fix-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+            )
+            await self.git_agent.commit_changes(
+                f"Auto-fix: {issue['description'][:50]}"
+            )
             await self.git_agent.create_pull_request(
                 self.git_agent.current_branch,
                 f"Auto-fix: {issue['description'][:50]}",
-                "Automated fix by AI Employee"
+                "Automated fix by AI Employee",
             )
 
     async def _identify_improvements(self) -> List[Dict]:
@@ -431,20 +573,24 @@ class AIEmployeeOrchestrator:
         # Database optimization opportunities
         capacity_prediction = await self.database_agent.predict_capacity_needs()
         if "URGENT" in capacity_prediction.get("recommendation", ""):
-            improvements.append({
-                "type": "database_scaling",
-                "description": capacity_prediction["recommendation"],
-                "estimated_impact": "high"
-            })
+            improvements.append(
+                {
+                    "type": "database_scaling",
+                    "description": capacity_prediction["recommendation"],
+                    "estimated_impact": "high",
+                }
+            )
 
         # Cost optimization opportunities
         cost_optimizations = await self.cloud_agent.optimize_costs()
         if cost_optimizations["total_savings"] > 100:
-            improvements.append({
-                "type": "cost_optimization",
-                "description": f"Can save ${cost_optimizations['total_savings']:.2f}/month",
-                "estimated_impact": "medium"
-            })
+            improvements.append(
+                {
+                    "type": "cost_optimization",
+                    "description": f"Can save ${cost_optimizations['total_savings']:.2f}/month",
+                    "estimated_impact": "medium",
+                }
+            )
 
         return improvements
 
@@ -466,14 +612,18 @@ class AIEmployeeOrchestrator:
         Learn and adapt strategies based on past performance
         """
         # Analyze completed tasks
-        success_rate = sum(1 for t in self.completed_tasks if t.status == "completed") / max(len(self.completed_tasks), 1)
+        success_rate = sum(
+            1 for t in self.completed_tasks if t.status == "completed"
+        ) / max(len(self.completed_tasks), 1)
 
         # Update learning system with performance data
-        await self.learning_system.update_knowledge_base({
-            "success_rate": success_rate,
-            "completed_tasks": len(self.completed_tasks),
-            "common_issues": self._analyze_common_issues()
-        })
+        await self.learning_system.update_knowledge_base(
+            {
+                "success_rate": success_rate,
+                "completed_tasks": len(self.completed_tasks),
+                "common_issues": self._analyze_common_issues(),
+            }
+        )
 
     def _group_tasks_by_dependency(self, tasks: List[AITask]) -> List[List[AITask]]:
         """
@@ -516,7 +666,9 @@ class AIEmployeeOrchestrator:
 
         # Return top issues
         sorted_issues = sorted(issues_by_type.items(), key=lambda x: x[1], reverse=True)
-        return [f"{task_type}: {count} failures" for task_type, count in sorted_issues[:5]]
+        return [
+            f"{task_type}: {count} failures" for task_type, count in sorted_issues[:5]
+        ]
 
     async def _handle_critical_error(self, error: Exception):
         """
@@ -527,7 +679,7 @@ class AIEmployeeOrchestrator:
             "error": str(error),
             "error_type": type(error).__name__,
             "active_tasks": len(self.active_tasks),
-            "recovery_action": "attempting_recovery"
+            "recovery_action": "attempting_recovery",
         }
 
         # Try to recover
@@ -547,14 +699,16 @@ class AIEmployeeOrchestrator:
             print(f"Failed to recover from critical error: {recovery_error}")
             self.autonomous_mode = False  # Stop autonomous mode
 
-    async def process_request(self, request: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def process_request(
+        self, request: str, context: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """Process a natural language request - wrapper for API compatibility"""
         result = await self.handle_user_request(request)
         return {
             "action": result.get("intent", {}).get("primary_action", "unknown"),
             "status": "completed" if result.get("success") else "failed",
             "result": result.get("results"),
-            "execution_time": result.get("execution_time", 0)
+            "execution_time": result.get("execution_time", 0),
         }
 
     async def execute_task(self, task_description: str) -> Dict[str, Any]:
@@ -566,9 +720,11 @@ class AIEmployeeOrchestrator:
         return {
             "main_task": intent.get("primary_action", "unknown"),
             "subtasks": [{"task": t.description, "status": t.status} for t in tasks],
-            "status": "completed" if any(r.get("success") for r in results) else "failed",
+            "status": "completed"
+            if any(r.get("success") for r in results)
+            else "failed",
             "results": results,
-            "total_time": sum(r.get("execution_time", 0) for r in results)
+            "total_time": sum(r.get("execution_time", 0) for r in results),
         }
 
     async def get_status(self) -> Dict[str, Any]:
@@ -582,7 +738,7 @@ class AIEmployeeOrchestrator:
                 "database": "active",
                 "git": "active" if self.config.get("git_enabled") else "disabled",
                 "cloud": "active",
-                "devops": "active"
+                "devops": "active",
             },
             "capabilities": {
                 "code_generation": True,
@@ -590,10 +746,12 @@ class AIEmployeeOrchestrator:
                 "self_learning": True,
                 "cloud_deployment": True,
                 "git_operations": self.config.get("git_enabled", False),
-                "devops_automation": True
+                "devops_automation": True,
             },
             "tasks_completed": len(self.completed_tasks),
-            "current_task": list(self.active_tasks.values())[0].description if self.active_tasks else None
+            "current_task": list(self.active_tasks.values())[0].description
+            if self.active_tasks
+            else None,
         }
 
     async def get_intelligence_report(self) -> Dict[str, Any]:
@@ -609,9 +767,11 @@ class AIEmployeeOrchestrator:
                 "natural_language": True,
                 "pattern_recognition": True,
                 "autonomous_operation": self.autonomous_mode,
-                "continuous_learning": True
+                "continuous_learning": True,
             },
-            "recent_learnings": self.decision_history[-5:] if self.decision_history else []
+            "recent_learnings": self.decision_history[-5:]
+            if self.decision_history
+            else [],
         }
 
     async def learn_from_interaction(self, interaction: Dict[str, Any]):
@@ -629,8 +789,17 @@ class AIEmployeeOrchestrator:
                 "tasks_completed": len(self.completed_tasks),
                 "tasks_in_progress": len(self.active_tasks),
                 "tasks_queued": len(self.task_queue),
-                "success_rate": sum(1 for t in self.completed_tasks if t.status == "completed") / max(len(self.completed_tasks), 1) * 100,
-                "average_task_time": sum((t.completed_at - t.created_at).seconds for t in self.completed_tasks if t.completed_at) / max(len(self.completed_tasks), 1)
+                "success_rate": sum(
+                    1 for t in self.completed_tasks if t.status == "completed"
+                )
+                / max(len(self.completed_tasks), 1)
+                * 100,
+                "average_task_time": sum(
+                    (t.completed_at - t.created_at).seconds
+                    for t in self.completed_tasks
+                    if t.completed_at
+                )
+                / max(len(self.completed_tasks), 1),
             },
             "agents_status": {
                 "code_agent": "active",
@@ -638,20 +807,21 @@ class AIEmployeeOrchestrator:
                 "database_agent": "active",
                 "git_agent": "active",
                 "cloud_agent": "active",
-                "learning_system": "active"
+                "learning_system": "active",
             },
             "recent_achievements": [
                 f"Fixed {sum(1 for t in self.completed_tasks if t.task_type == 'code_fix')} code issues",
                 f"Deployed {sum(1 for t in self.completed_tasks if t.task_type == 'deploy')} times successfully",
                 f"Optimized {sum(1 for t in self.completed_tasks if 'optimize' in t.task_type)} systems",
-                f"Created {sum(1 for t in self.completed_tasks if t.task_type == 'pr_creation')} pull requests"
+                f"Created {sum(1 for t in self.completed_tasks if t.task_type == 'pr_creation')} pull requests",
             ],
             "learning_progress": {
                 "patterns_learned": len(self.learning_system.learned_patterns),
                 "knowledge_base_size": len(self.learning_system.knowledge_base),
-                "prediction_accuracy": 0.92  # Would calculate from actual data
-            }
+                "prediction_accuracy": 0.92,  # Would calculate from actual data
+            },
         }
+
 
 # Main execution function
 async def launch_ai_employee(config: Dict[str, Any]):
@@ -660,7 +830,7 @@ async def launch_ai_employee(config: Dict[str, Any]):
     """
     ai_employee = AIEmployeeOrchestrator(config)
 
-    if config.get('autonomous_mode', False):
+    if config.get("autonomous_mode", False):
         print("🚀 Launching AI Employee in AUTONOMOUS MODE")
         print("The AI will now monitor, detect, and fix issues automatically...")
         await ai_employee.autonomous_operation()

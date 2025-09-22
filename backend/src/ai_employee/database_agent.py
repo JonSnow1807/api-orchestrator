@@ -3,19 +3,15 @@ Database Optimization Agent - The AI DBA
 Optimizes queries, manages migrations, handles scaling decisions
 """
 
-import asyncio
-import re
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Any
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-import json
+from datetime import datetime
 import sqlparse
-from sqlalchemy import create_engine, text, MetaData, inspect
-from sqlalchemy.exc import SQLAlchemyError
-import pandas as pd
+from sqlalchemy import create_engine, text
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 import hashlib
+
 
 @dataclass
 class QueryOptimization:
@@ -35,7 +31,10 @@ class QueryOptimization:
             if self.optimization_type:
                 self.improvements.append(self.optimization_type)
             if self.indexes_suggested:
-                self.improvements.extend([f"Index: {idx}" for idx in self.indexes_suggested])
+                self.improvements.extend(
+                    [f"Index: {idx}" for idx in self.indexes_suggested]
+                )
+
 
 @dataclass
 class MigrationPlan:
@@ -47,6 +46,7 @@ class MigrationPlan:
     pre_checks: List[str]
     post_checks: List[str]
 
+
 @dataclass
 class PerformanceMetrics:
     query_time: float
@@ -55,6 +55,7 @@ class PerformanceMetrics:
     io_operations: int
     lock_wait_time: float
     cache_hit_ratio: float
+
 
 class DatabaseAgent:
     """
@@ -100,7 +101,9 @@ class DatabaseAgent:
 
         # Remove SELECT * and specify columns
         if "SELECT *" in query_upper:
-            optimized_query = await self._replace_select_star(optimized_query, tables_involved)
+            optimized_query = await self._replace_select_star(
+                optimized_query, tables_involved
+            )
             optimization_types.append("select_star_elimination")
 
         # Add WHERE clause optimizations
@@ -109,7 +112,9 @@ class DatabaseAgent:
             optimization_types.append("where_clause_optimization")
 
         # Strategy 2: Index optimization
-        missing_indexes = await self._find_missing_indexes_advanced(tables_involved, conditions)
+        missing_indexes = await self._find_missing_indexes_advanced(
+            tables_involved, conditions
+        )
         if missing_indexes:
             indexes_suggested = missing_indexes
             optimization_types.append("index_addition")
@@ -139,7 +144,10 @@ class DatabaseAgent:
                 optimization_types.append("exists_optimization")
 
         # Strategy 5: Aggregation optimization
-        if any(agg in query_upper for agg in ["GROUP BY", "COUNT", "SUM", "AVG", "MAX", "MIN"]):
+        if any(
+            agg in query_upper
+            for agg in ["GROUP BY", "COUNT", "SUM", "AVG", "MAX", "MIN"]
+        ):
             optimized_query = self._optimize_aggregations(optimized_query)
             optimization_types.append("aggregation_optimization")
 
@@ -160,19 +168,29 @@ class DatabaseAgent:
         # Calculate real improvement
         actual_improvement = 0
         if current_metrics.query_time > 0:
-            actual_improvement = (current_metrics.query_time - new_metrics.query_time) / current_metrics.query_time * 100
+            actual_improvement = (
+                (current_metrics.query_time - new_metrics.query_time)
+                / current_metrics.query_time
+                * 100
+            )
             # Ensure we show improvement even for optimizations that don't change timing
             if actual_improvement < 10 and optimization_types:
-                actual_improvement = 15 + len(optimization_types) * 5  # Estimated improvement
+                actual_improvement = (
+                    15 + len(optimization_types) * 5
+                )  # Estimated improvement
 
         optimization = QueryOptimization(
             original_query=query,
             optimized_query=optimized_query,
-            expected_improvement=max(actual_improvement, 10),  # Minimum 10% improvement claim
-            optimization_type=", ".join(optimization_types) if optimization_types else "none",
+            expected_improvement=max(
+                actual_improvement, 10
+            ),  # Minimum 10% improvement claim
+            optimization_type=", ".join(optimization_types)
+            if optimization_types
+            else "none",
             execution_plan_before=execution_plan_before,
             execution_plan_after=execution_plan_after,
-            indexes_suggested=indexes_suggested
+            indexes_suggested=indexes_suggested,
         )
 
         self.optimization_cache[query_hash] = optimization
@@ -196,28 +214,31 @@ class DatabaseAgent:
             "predicted_load": predicted_load,
             "current_capacity": current_metrics["capacity"],
             "recommended_capacity": current_metrics["capacity"],
-            "confidence": 0.0
+            "confidence": 0.0,
         }
 
         # Scale up if predicted load > 80% capacity
         if predicted_load > current_metrics["capacity"] * 0.8:
             decision["action"] = "scale_up"
-            decision["reason"] = f"Predicted load ({predicted_load:.1f}%) exceeds 80% threshold"
+            decision[
+                "reason"
+            ] = f"Predicted load ({predicted_load:.1f}%) exceeds 80% threshold"
             decision["recommended_capacity"] = current_metrics["capacity"] * 1.5
             decision["confidence"] = 0.95
 
         # Scale down if predicted load < 30% capacity
         elif predicted_load < current_metrics["capacity"] * 0.3:
             decision["action"] = "scale_down"
-            decision["reason"] = f"Predicted load ({predicted_load:.1f}%) below 30% threshold"
+            decision[
+                "reason"
+            ] = f"Predicted load ({predicted_load:.1f}%) below 30% threshold"
             decision["recommended_capacity"] = current_metrics["capacity"] * 0.7
             decision["confidence"] = 0.90
 
         # Add cost optimization
         if decision["action"] != "none":
             decision["estimated_cost_impact"] = self._calculate_cost_impact(
-                current_metrics["capacity"],
-                decision["recommended_capacity"]
+                current_metrics["capacity"], decision["recommended_capacity"]
             )
 
         return decision
@@ -234,21 +255,25 @@ class DatabaseAgent:
 
         for change_type, details in schema_changes.items():
             if change_type == "add_column":
-                changes.append({
-                    "type": "add_column",
-                    "sql": f"ALTER TABLE {details['table']} ADD COLUMN {details['column']} {details['type']}",
-                    "safe": True
-                })
+                changes.append(
+                    {
+                        "type": "add_column",
+                        "sql": f"ALTER TABLE {details['table']} ADD COLUMN {details['column']} {details['type']}",
+                        "safe": True,
+                    }
+                )
                 rollback_statements.append(
                     f"ALTER TABLE {details['table']} DROP COLUMN {details['column']}"
                 )
 
             elif change_type == "add_index":
-                changes.append({
-                    "type": "add_index",
-                    "sql": f"CREATE INDEX CONCURRENTLY idx_{details['table']}_{details['column']} ON {details['table']}({details['column']})",
-                    "safe": True
-                })
+                changes.append(
+                    {
+                        "type": "add_index",
+                        "sql": f"CREATE INDEX CONCURRENTLY idx_{details['table']}_{details['column']} ON {details['table']}({details['column']})",
+                        "safe": True,
+                    }
+                )
                 rollback_statements.append(
                     f"DROP INDEX idx_{details['table']}_{details['column']}"
                 )
@@ -256,34 +281,60 @@ class DatabaseAgent:
             elif change_type == "modify_column":
                 # Complex migration with temporary column
                 temp_col = f"{details['column']}_new"
-                changes.extend([
-                    {"type": "add_temp_column", "sql": f"ALTER TABLE {details['table']} ADD COLUMN {temp_col} {details['new_type']}", "safe": True},
-                    {"type": "copy_data", "sql": f"UPDATE {details['table']} SET {temp_col} = {details['column']}::{details['new_type']}", "safe": False},
-                    {"type": "swap_columns", "sql": f"ALTER TABLE {details['table']} RENAME COLUMN {details['column']} TO {details['column']}_old", "safe": False},
-                    {"type": "rename_new", "sql": f"ALTER TABLE {details['table']} RENAME COLUMN {temp_col} TO {details['column']}", "safe": False},
-                    {"type": "drop_old", "sql": f"ALTER TABLE {details['table']} DROP COLUMN {details['column']}_old", "safe": True}
-                ])
+                changes.extend(
+                    [
+                        {
+                            "type": "add_temp_column",
+                            "sql": f"ALTER TABLE {details['table']} ADD COLUMN {temp_col} {details['new_type']}",
+                            "safe": True,
+                        },
+                        {
+                            "type": "copy_data",
+                            "sql": f"UPDATE {details['table']} SET {temp_col} = {details['column']}::{details['new_type']}",
+                            "safe": False,
+                        },
+                        {
+                            "type": "swap_columns",
+                            "sql": f"ALTER TABLE {details['table']} RENAME COLUMN {details['column']} TO {details['column']}_old",
+                            "safe": False,
+                        },
+                        {
+                            "type": "rename_new",
+                            "sql": f"ALTER TABLE {details['table']} RENAME COLUMN {temp_col} TO {details['column']}",
+                            "safe": False,
+                        },
+                        {
+                            "type": "drop_old",
+                            "sql": f"ALTER TABLE {details['table']} DROP COLUMN {details['column']}_old",
+                            "safe": True,
+                        },
+                    ]
+                )
 
         # Calculate estimated downtime
         unsafe_changes = [c for c in changes if not c.get("safe", True)]
         estimated_downtime = len(unsafe_changes) * 0.5  # 0.5 seconds per unsafe change
 
         # Determine risk level
-        risk_level = "low" if len(unsafe_changes) == 0 else ("high" if len(unsafe_changes) > 3 else "medium")
+        risk_level = (
+            "low"
+            if len(unsafe_changes) == 0
+            else ("high" if len(unsafe_changes) > 3 else "medium")
+        )
 
         # Generate pre and post checks
         pre_checks = [
             "ANALYZE ALL TABLES",
             "CHECK REPLICATION STATUS",
             "VERIFY BACKUP COMPLETION",
-            "CHECK DISK SPACE > 20%"
+            "CHECK DISK SPACE > 20%",
         ]
 
         post_checks = [
             "VERIFY ALL INDEXES VALID",
             "CHECK QUERY PERFORMANCE",
             "VALIDATE DATA INTEGRITY",
-            "MONITOR ERROR LOGS"
+            "MONITOR ERROR LOGS",
         ]
 
         migration = MigrationPlan(
@@ -293,7 +344,7 @@ class DatabaseAgent:
             estimated_downtime=estimated_downtime,
             risk_level=risk_level,
             pre_checks=pre_checks,
-            post_checks=post_checks
+            post_checks=post_checks,
         )
 
         self.migration_history.append(migration)
@@ -309,49 +360,57 @@ class DatabaseAgent:
         # Check for slow queries
         slow_queries = await self._find_slow_queries()
         for query in slow_queries:
-            anomalies.append({
-                "type": "slow_query",
-                "severity": "warning",
-                "query": query["query"],
-                "avg_time": query["avg_time"],
-                "suggested_action": "Run query optimization",
-                "auto_fix_available": True
-            })
+            anomalies.append(
+                {
+                    "type": "slow_query",
+                    "severity": "warning",
+                    "query": query["query"],
+                    "avg_time": query["avg_time"],
+                    "suggested_action": "Run query optimization",
+                    "auto_fix_available": True,
+                }
+            )
 
         # Check for table bloat
         bloated_tables = await self._find_bloated_tables()
         for table in bloated_tables:
-            anomalies.append({
-                "type": "table_bloat",
-                "severity": "warning",
-                "table": table["name"],
-                "bloat_ratio": table["bloat_ratio"],
-                "suggested_action": f"VACUUM ANALYZE {table['name']}",
-                "auto_fix_available": True
-            })
+            anomalies.append(
+                {
+                    "type": "table_bloat",
+                    "severity": "warning",
+                    "table": table["name"],
+                    "bloat_ratio": table["bloat_ratio"],
+                    "suggested_action": f"VACUUM ANALYZE {table['name']}",
+                    "auto_fix_available": True,
+                }
+            )
 
         # Check for missing indexes
         missing_indexes = await self._detect_missing_indexes()
         for index in missing_indexes:
-            anomalies.append({
-                "type": "missing_index",
-                "severity": "info",
-                "table": index["table"],
-                "columns": index["columns"],
-                "suggested_action": f"CREATE INDEX ON {index['table']}({','.join(index['columns'])})",
-                "auto_fix_available": True
-            })
+            anomalies.append(
+                {
+                    "type": "missing_index",
+                    "severity": "info",
+                    "table": index["table"],
+                    "columns": index["columns"],
+                    "suggested_action": f"CREATE INDEX ON {index['table']}({','.join(index['columns'])})",
+                    "auto_fix_available": True,
+                }
+            )
 
         # Check for lock contention
         lock_issues = await self._check_lock_contention()
         if lock_issues:
-            anomalies.append({
-                "type": "lock_contention",
-                "severity": "critical",
-                "blocking_queries": lock_issues,
-                "suggested_action": "Kill blocking queries or optimize transaction logic",
-                "auto_fix_available": False
-            })
+            anomalies.append(
+                {
+                    "type": "lock_contention",
+                    "severity": "critical",
+                    "blocking_queries": lock_issues,
+                    "suggested_action": "Kill blocking queries or optimize transaction logic",
+                    "auto_fix_available": False,
+                }
+            )
 
         return anomalies
 
@@ -370,7 +429,7 @@ class DatabaseAgent:
                 "anomaly": anomaly["type"],
                 "status": "pending",
                 "fix_applied": "",
-                "error": None
+                "error": None,
             }
 
             try:
@@ -383,7 +442,9 @@ class DatabaseAgent:
 
                 elif anomaly["type"] == "table_bloat":
                     # Run vacuum
-                    await self._execute_maintenance(f"VACUUM ANALYZE {anomaly['table']}")
+                    await self._execute_maintenance(
+                        f"VACUUM ANALYZE {anomaly['table']}"
+                    )
                     result["fix_applied"] = f"Vacuum completed on {anomaly['table']}"
                     result["status"] = "fixed"
 
@@ -431,8 +492,10 @@ class DatabaseAgent:
                 "predicted_qps": predicted_load,
                 "recommended_cpu": self._calculate_cpu_needs(predicted_load),
                 "recommended_memory": self._calculate_memory_needs(predicted_load),
-                "recommended_storage": self._calculate_storage_needs(predicted_load, day),
-                "estimated_cost": self._estimate_cost(predicted_load)
+                "recommended_storage": self._calculate_storage_needs(
+                    predicted_load, day
+                ),
+                "estimated_cost": self._estimate_cost(predicted_load),
             }
 
             # Update current metrics for next prediction
@@ -443,7 +506,7 @@ class DatabaseAgent:
             "predictions": predictions,
             "confidence": 0.85,
             "recommendation": self._generate_capacity_recommendation(predictions),
-            "cost_projection": sum(p["estimated_cost"] for p in predictions.values())
+            "cost_projection": sum(p["estimated_cost"] for p in predictions.values()),
         }
 
     # Helper methods
@@ -453,19 +516,20 @@ class DatabaseAgent:
             with self.engine.connect() as conn:
                 result = conn.execute(text(f"EXPLAIN (FORMAT JSON) {query}"))
                 return result.fetchone()[0]
-        except:
+        except Exception:
             return {}
 
     async def _measure_query_performance(self, query: str) -> PerformanceMetrics:
         """Measure actual query performance"""
         import time
+
         start = time.time()
 
         try:
             with self.engine.connect() as conn:
                 conn.execute(text(query))
             query_time = time.time() - start
-        except:
+        except Exception:
             query_time = 999.0
 
         return PerformanceMetrics(
@@ -474,7 +538,7 @@ class DatabaseAgent:
             memory_usage=np.random.random() * 100,
             io_operations=int(np.random.random() * 1000),
             lock_wait_time=np.random.random() * 0.1,
-            cache_hit_ratio=0.8 + np.random.random() * 0.2
+            cache_hit_ratio=0.8 + np.random.random() * 0.2,
         )
 
     def _extract_tables(self, parsed_query) -> List[str]:
@@ -501,7 +565,9 @@ class DatabaseAgent:
                 joins.append(str(token))
         return joins
 
-    async def _find_missing_indexes_advanced(self, tables: List[str], conditions: List[str]) -> List[str]:
+    async def _find_missing_indexes_advanced(
+        self, tables: List[str], conditions: List[str]
+    ) -> List[str]:
         """Find potentially missing indexes using real analysis"""
         missing = []
 
@@ -513,18 +579,21 @@ class DatabaseAgent:
                     # Parse condition to extract column names
                     # Look for patterns like table.column or just column
                     import re
+
                     # Match table.column or just column names
                     pattern = rf"{re.escape(table)}\.(\w+)|\b(\w+)\s*[=<>]"
                     matches = re.findall(pattern, condition)
                     for match in matches:
                         col = match[0] if match[0] else match[1]
-                        if col and col not in ['AND', 'OR', 'NOT', 'NULL']:
+                        if col and col not in ["AND", "OR", "NOT", "NULL"]:
                             columns_in_conditions.add(col)
 
             # Suggest composite indexes for multiple columns
             if len(columns_in_conditions) > 1:
                 cols = sorted(list(columns_in_conditions))
-                missing.append(f"CREATE INDEX idx_{table}_{'_'.join(cols)} ON {table} ({', '.join(cols)})")
+                missing.append(
+                    f"CREATE INDEX idx_{table}_{'_'.join(cols)} ON {table} ({', '.join(cols)})"
+                )
             elif len(columns_in_conditions) == 1:
                 col = list(columns_in_conditions)[0]
                 missing.append(f"CREATE INDEX idx_{table}_{col} ON {table} ({col})")
@@ -584,16 +653,19 @@ class DatabaseAgent:
         # Optimization 1: Replace OR with IN
         # Pattern: WHERE col = 'a' OR col = 'b' -> WHERE col IN ('a', 'b')
         import re
+
         or_pattern = r"(\w+)\s*=\s*'([^']+)'\s+OR\s+\1\s*=\s*'([^']+)'"
         optimized = re.sub(or_pattern, r"\1 IN ('\2', '\3')", optimized)
 
         # Optimization 2: Move non-sargable functions
         # Pattern: WHERE YEAR(date_col) = 2024 -> WHERE date_col >= '2024-01-01' AND date_col < '2025-01-01'
         year_pattern = r"YEAR\((\w+)\)\s*=\s*(\d{4})"
+
         def replace_year(match):
             col = match.group(1)
             year = match.group(2)
             return f"{col} >= '{year}-01-01' AND {col} < '{int(year)+1}-01-01'"
+
         optimized = re.sub(year_pattern, replace_year, optimized)
 
         return optimized
@@ -609,6 +681,7 @@ class DatabaseAgent:
             if "idx_" in idx:
                 # Extract index name
                 import re
+
                 match = re.search(r"(idx_\w+)", idx)
                 if match:
                     index_names.append(match.group(1))
@@ -640,6 +713,7 @@ class DatabaseAgent:
         """Optimize EXISTS clauses"""
         # Add LIMIT 1 to EXISTS subqueries for early termination
         import re
+
         exists_pattern = r"EXISTS\s*\(([^)]+)\)"
 
         def add_limit(match):
@@ -657,6 +731,7 @@ class DatabaseAgent:
         # Add FILTER clause for conditional aggregations
         # Pattern: SUM(CASE WHEN condition THEN value END) -> SUM(value) FILTER (WHERE condition)
         import re
+
         case_pattern = r"SUM\(CASE\s+WHEN\s+([^T]+)THEN\s+([^E]+)END\)"
         optimized = re.sub(case_pattern, r"SUM(\2) FILTER (WHERE \1)", optimized)
 
@@ -670,11 +745,12 @@ class DatabaseAgent:
         """Optimize pagination queries"""
         # Use keyset pagination instead of OFFSET for better performance
         import re
+
         offset_pattern = r"LIMIT\s+(\d+)\s+OFFSET\s+(\d+)"
         match = re.search(offset_pattern, query.upper())
 
         if match:
-            limit = match.group(1)
+            match.group(1)
             offset = match.group(2)
             if int(offset) > 1000:  # Large offset, suggest keyset pagination
                 return f"/* Consider keyset pagination for offset > 1000 */ {query}"
@@ -713,12 +789,16 @@ class DatabaseAgent:
                 elif "RIGHT JOIN" in query_upper:
                     join_type = "RIGHT JOIN"
 
-                new_from_clause += f" {join_type} {table} ON {base_table}.id = {table}.{base_table}_id"
+                new_from_clause += (
+                    f" {join_type} {table} ON {base_table}.id = {table}.{base_table}_id"
+                )
 
             # Replace the FROM clause in the original query
             if "FROM" in query_upper:
                 from_start = query_upper.index("FROM")
-                where_start = query_upper.index("WHERE") if "WHERE" in query_upper else len(query)
+                where_start = (
+                    query_upper.index("WHERE") if "WHERE" in query_upper else len(query)
+                )
                 optimized = query[:from_start] + new_from_clause + query[where_start:]
 
         return optimized
@@ -736,21 +816,23 @@ class DatabaseAgent:
             paren_count = 1
             i = in_start + 11  # Skip "IN (SELECT"
             while i < len(query) and paren_count > 0:
-                if query[i] == '(':
+                if query[i] == "(":
                     paren_count += 1
-                elif query[i] == ')':
+                elif query[i] == ")":
                     paren_count -= 1
                 i += 1
 
             if i <= len(query):
-                subquery = query[in_start+4:i-1]  # Extract subquery without IN ( )
+                subquery = query[
+                    in_start + 4 : i - 1
+                ]  # Extract subquery without IN ( )
                 # Convert to EXISTS for better performance
                 optimized = query[:in_start] + f"EXISTS ({subquery})" + query[i:]
 
         # Pattern 2: NOT IN to LEFT JOIN
         if "NOT IN (SELECT" in query_upper:
             # Convert NOT IN to LEFT JOIN with NULL check
-            not_in_start = query_upper.index("NOT IN (SELECT")
+            query_upper.index("NOT IN (SELECT")
             # Similar extraction logic
             optimized = optimized.replace("NOT IN (SELECT", "NOT EXISTS (SELECT")
 
@@ -794,7 +876,7 @@ class DatabaseAgent:
             "memory_usage": np.random.random() * 100,
             "disk_usage": np.random.random() * 100,
             "capacity": 100.0,
-            "current_load": np.random.random() * 100
+            "current_load": np.random.random() * 100,
         }
 
     async def _predict_future_load(self) -> float:
@@ -812,7 +894,10 @@ class DatabaseAgent:
         # Simplified - would query actual slow query log
         return [
             {"query": "SELECT * FROM users WHERE status = 'active'", "avg_time": 2.5},
-            {"query": "SELECT COUNT(*) FROM orders JOIN users ON orders.user_id = users.id", "avg_time": 3.2}
+            {
+                "query": "SELECT COUNT(*) FROM orders JOIN users ON orders.user_id = users.id",
+                "avg_time": 3.2,
+            },
         ]
 
     async def _find_bloated_tables(self) -> List[Dict]:
@@ -820,14 +905,14 @@ class DatabaseAgent:
         # Simplified - would check actual table statistics
         return [
             {"name": "user_sessions", "bloat_ratio": 1.8},
-            {"name": "audit_logs", "bloat_ratio": 2.1}
+            {"name": "audit_logs", "bloat_ratio": 2.1},
         ]
 
     async def _detect_missing_indexes(self) -> List[Dict]:
         """Detect tables that could benefit from indexes"""
         return [
             {"table": "products", "columns": ["category_id", "status"]},
-            {"table": "orders", "columns": ["user_id", "created_at"]}
+            {"table": "orders", "columns": ["user_id", "created_at"]},
         ]
 
     async def _check_lock_contention(self) -> List[Dict]:
@@ -894,7 +979,7 @@ class DatabaseAgent:
                 100 + cpu_metric,  # avg_response_time
                 0.9 if cpu_metric < 60 else 0.7,  # cache_hit_ratio
                 hour,  # hour_of_day
-                day_of_week  # day_of_week
+                day_of_week,  # day_of_week
             ]
             metrics.append(metric_row)
 
@@ -929,7 +1014,9 @@ class DatabaseAgent:
         """Generate human-readable recommendation"""
         max_load = max(p["predicted_qps"] for p in predictions.values())
         if max_load > 1000:
-            return "URGENT: Scale up immediately. Predicted load exceeds current capacity!"
+            return (
+                "URGENT: Scale up immediately. Predicted load exceeds current capacity!"
+            )
         elif max_load > 750:
             return "Plan for scaling within 2-3 days. Load trending upward."
         else:
