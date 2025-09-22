@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: api-orchestrator
+    component: api
+  name: api-orchestrator-service
+  namespace: api-orchestrator-dev
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector:
+    app: api-orchestrator
+    component: api
+  type: ClusterIP

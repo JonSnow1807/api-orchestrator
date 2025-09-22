@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: api-orchestrator
+    component: monitoring
+  name: api-orchestrator-metrics
+  namespace: api-orchestrator
+spec:
+  endpoints:
+  - interval: 30s
+    path: /metrics
+    port: http
+    scrapeTimeout: 10s
+  selector:
+    matchLabels:
+      app: api-orchestrator
+      component: api

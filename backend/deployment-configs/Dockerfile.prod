@@ -1,0 +1,70 @@
+# syntax=docker/dockerfile:1.4
+# Build stage
+FROM python:3.11-slim AS builder
+
+# Set build arguments
+ARG BUILDKIT_INLINE_CACHE=1
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies for building
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd -g 1000 appgroup && \
+    useradd -u 1000 -g appgroup -m appuser
+
+# Set working directory
+WORKDIR /app
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --user -r requirements.txt
+
+# Copy application code
+COPY --chown=appuser:appgroup . .
+
+# Build application (if needed)
+RUN python -m compileall . -b && \
+    find . -name "*.py" -delete && \
+    find . -name "__pycache__" -exec rm -rf {} + || true
+
+# Production stage
+FROM gcr.io/distroless/python3
+
+# Install runtime dependencies
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
+
+# Copy Python packages and application
+COPY --from=builder --chown=1000:1000 /root/.local /home/appuser/.local
+COPY --from=builder --chown=1000:1000 /app /app
+
+# Set environment variables
+ENV PATH="/home/appuser/.local/bin:$PATH"
+ENV PYTHONPATH="/app"
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONHASHSEED=random
+ENV PORT=8000
+
+# Switch to non-root user
+USER 1000:1000
+
+# Set working directory
+WORKDIR /app
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
+
+# Expose port
+EXPOSE $PORT
+
+# Run application
+ENTRYPOINT ["python", "-m", "uvicorn"]
+CMD ["src.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

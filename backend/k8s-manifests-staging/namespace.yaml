@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app: api-orchestrator
+    environment: staging
+    name: api-orchestrator-staging
+  name: api-orchestrator-staging

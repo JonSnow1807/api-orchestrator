@@ -1,0 +1,18 @@
+apiVersion: v1
+data:
+  API_VERSION: v1
+  CORS_ORIGINS: '*'
+  ENABLE_JAEGER_TRACING: 'true'
+  ENABLE_PROMETHEUS_METRICS: 'true'
+  ENVIRONMENT: staging
+  LOG_LEVEL: INFO
+  MAX_WORKERS: '4'
+  REDIS_URL: redis://redis:6379/0
+  WORKER_CLASS: uvicorn.workers.UvicornWorker
+kind: ConfigMap
+metadata:
+  labels:
+    app: api-orchestrator
+    component: config
+  name: api-orchestrator-config
+  namespace: api-orchestrator-staging

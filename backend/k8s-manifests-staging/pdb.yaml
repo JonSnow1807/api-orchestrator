@@ -1,0 +1,14 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+    app: api-orchestrator
+    component: disruption-budget
+  name: api-orchestrator-pdb
+  namespace: api-orchestrator-staging
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: api-orchestrator
+      component: api
