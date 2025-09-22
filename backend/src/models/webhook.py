@@ -1,12 +1,23 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, JSON, ForeignKey, Enum as SQLEnum
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Text,
+    Boolean,
+    DateTime,
+    JSON,
+    ForeignKey,
+    Enum as SQLEnum,
+)
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
-import uuid
 from src.database import Base
+
 
 class WebhookEvent(enum.Enum):
     """Events that can trigger webhooks"""
+
     API_DISCOVERED = "api_discovered"
     API_TESTED = "api_tested"
     SECURITY_ALERT = "security_alert"
@@ -21,20 +32,24 @@ class WebhookEvent(enum.Enum):
     API_DOCUMENTATION_GENERATED = "api_documentation_generated"
     COMPLIANCE_CHECK_FAILED = "compliance_check_failed"
 
+
 class WebhookStatus(enum.Enum):
     """Webhook delivery status"""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     FAILED = "failed"
     SUSPENDED = "suspended"
 
+
 class Webhook(Base):
     """Webhook configuration model"""
+
     __tablename__ = "webhooks"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True)
-    workspace_id = Column(Integer, ForeignKey('workspaces.id'), nullable=False)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=False)
     name = Column(String(100), nullable=False)
     description = Column(Text)
     url = Column(String(500), nullable=False)
@@ -50,30 +65,34 @@ class Webhook(Base):
     last_triggered_at = Column(DateTime)
     failure_count = Column(Integer, default=0)
     success_count = Column(Integer, default=0)
-    
+
     # SSL/TLS settings
     verify_ssl = Column(Boolean, default=True)
-    
+
     # Rate limiting
     rate_limit = Column(Integer, default=100)  # max calls per minute
-    
+
     # Filtering
     filters = Column(JSON)  # Additional filters for events
-    
+
     # Relationships
     workspace = relationship("Workspace", back_populates="webhooks")
-    deliveries = relationship("WebhookDelivery", back_populates="webhook", cascade="all, delete-orphan")
+    deliveries = relationship(
+        "WebhookDelivery", back_populates="webhook", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Webhook(id={self.id}, name='{self.name}', url='{self.url}')>"
 
+
 class WebhookDelivery(Base):
     """Record of webhook delivery attempts"""
+
     __tablename__ = "webhook_deliveries"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True)
-    webhook_id = Column(Integer, ForeignKey('webhooks.id'), nullable=False)
+    webhook_id = Column(Integer, ForeignKey("webhooks.id"), nullable=False)
     event = Column(String(50), nullable=False)
     payload = Column(JSON, nullable=False)
     status_code = Column(Integer)
@@ -86,7 +105,7 @@ class WebhookDelivery(Base):
     delivered_at = Column(DateTime)
     next_retry_at = Column(DateTime)
     duration_ms = Column(Integer)  # Response time in milliseconds
-    
+
     # Relationships
     webhook = relationship("Webhook", back_populates="deliveries")
 
