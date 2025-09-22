@@ -10,16 +10,17 @@ import statistics
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
-from collections import defaultdict, deque
+from collections import deque
 from enum import Enum
-import json
 import logging
+
 
 class MetricType(Enum):
     COUNTER = "counter"
     GAUGE = "gauge"
     HISTOGRAM = "histogram"
     TIMER = "timer"
+
 
 class MetricCategory(Enum):
     CACHE = "cache"
@@ -30,11 +31,13 @@ class MetricCategory(Enum):
     LOAD_TESTING = "load_testing"
     GENERAL = "general"
 
+
 @dataclass
 class MetricPoint:
     timestamp: datetime
     value: float
     labels: Dict[str, str] = field(default_factory=dict)
+
 
 @dataclass
 class EnterpriseMetric:
@@ -45,6 +48,7 @@ class EnterpriseMetric:
     unit: str
     points: deque = field(default_factory=lambda: deque(maxlen=10000))
     labels: Dict[str, str] = field(default_factory=dict)
+
 
 class EnterpriseMetricsCollector:
     """
@@ -86,31 +90,66 @@ class EnterpriseMetricsCollector:
                 pass
         self.logger.info("📊 Enterprise Metrics Collector stopped")
 
-    def record_counter(self, name: str, category: MetricCategory, value: float = 1.0,
-                      labels: Dict[str, str] = None, description: str = ""):
+    def record_counter(
+        self,
+        name: str,
+        category: MetricCategory,
+        value: float = 1.0,
+        labels: Dict[str, str] = None,
+        description: str = "",
+    ):
         """Record a counter metric (always increasing)"""
-        self._ensure_metric_exists(name, category, MetricType.COUNTER, description, "count")
+        self._ensure_metric_exists(
+            name, category, MetricType.COUNTER, description, "count"
+        )
         self._add_point(name, value, labels or {})
 
-    def record_gauge(self, name: str, category: MetricCategory, value: float,
-                    labels: Dict[str, str] = None, description: str = "", unit: str = ""):
+    def record_gauge(
+        self,
+        name: str,
+        category: MetricCategory,
+        value: float,
+        labels: Dict[str, str] = None,
+        description: str = "",
+        unit: str = "",
+    ):
         """Record a gauge metric (can go up or down)"""
         self._ensure_metric_exists(name, category, MetricType.GAUGE, description, unit)
         self._add_point(name, value, labels or {})
 
-    def record_histogram(self, name: str, category: MetricCategory, value: float,
-                        labels: Dict[str, str] = None, description: str = "", unit: str = ""):
+    def record_histogram(
+        self,
+        name: str,
+        category: MetricCategory,
+        value: float,
+        labels: Dict[str, str] = None,
+        description: str = "",
+        unit: str = "",
+    ):
         """Record a histogram metric (for distributions)"""
-        self._ensure_metric_exists(name, category, MetricType.HISTOGRAM, description, unit)
+        self._ensure_metric_exists(
+            name, category, MetricType.HISTOGRAM, description, unit
+        )
         self._add_point(name, value, labels or {})
 
-    def start_timer(self, name: str, category: MetricCategory,
-                   labels: Dict[str, str] = None, description: str = ""):
+    def start_timer(
+        self,
+        name: str,
+        category: MetricCategory,
+        labels: Dict[str, str] = None,
+        description: str = "",
+    ):
         """Start a timer metric"""
         return TimerContext(self, name, category, labels or {}, description)
 
-    def _ensure_metric_exists(self, name: str, category: MetricCategory,
-                            metric_type: MetricType, description: str, unit: str):
+    def _ensure_metric_exists(
+        self,
+        name: str,
+        category: MetricCategory,
+        metric_type: MetricType,
+        description: str,
+        unit: str,
+    ):
         """Ensure a metric exists, create if not"""
         if name not in self.metrics:
             self.metrics[name] = EnterpriseMetric(
@@ -118,17 +157,13 @@ class EnterpriseMetricsCollector:
                 category=category,
                 metric_type=metric_type,
                 description=description,
-                unit=unit
+                unit=unit,
             )
 
     def _add_point(self, name: str, value: float, labels: Dict[str, str]):
         """Add a data point to a metric"""
         if name in self.metrics:
-            point = MetricPoint(
-                timestamp=datetime.now(),
-                value=value,
-                labels=labels
-            )
+            point = MetricPoint(timestamp=datetime.now(), value=value, labels=labels)
             self.metrics[name].points.append(point)
 
             # Invalidate cache for this metric
@@ -152,14 +187,19 @@ class EnterpriseMetricsCollector:
                 self.logger.error(f"Error during metrics cleanup: {e}")
                 await asyncio.sleep(3600)
 
-    def get_metric_stats(self, name: str, time_window_minutes: int = 60) -> Dict[str, Any]:
+    def get_metric_stats(
+        self, name: str, time_window_minutes: int = 60
+    ) -> Dict[str, Any]:
         """Get statistics for a metric within a time window"""
 
         # Check cache first
         cache_key = f"{name}_{time_window_minutes}"
-        if (cache_key in self._stats_cache and
-            cache_key in self._last_cache_update and
-            (datetime.now() - self._last_cache_update[cache_key]).seconds < self._cache_ttl):
+        if (
+            cache_key in self._stats_cache
+            and cache_key in self._last_cache_update
+            and (datetime.now() - self._last_cache_update[cache_key]).seconds
+            < self._cache_ttl
+        ):
             return self._stats_cache[cache_key]
 
         if name not in self.metrics:
@@ -178,7 +218,7 @@ class EnterpriseMetricsCollector:
                 "type": metric.metric_type.value,
                 "time_window_minutes": time_window_minutes,
                 "data_points": 0,
-                "message": "No data points in time window"
+                "message": "No data points in time window",
             }
 
         values = [p.value for p in recent_points]
@@ -195,14 +235,20 @@ class EnterpriseMetricsCollector:
             "last_timestamp": recent_points[-1].timestamp.isoformat(),
         }
 
-        if metric.metric_type in [MetricType.GAUGE, MetricType.HISTOGRAM, MetricType.TIMER]:
-            stats.update({
-                "current_value": values[-1],
-                "min_value": min(values),
-                "max_value": max(values),
-                "avg_value": statistics.mean(values),
-                "median_value": statistics.median(values),
-            })
+        if metric.metric_type in [
+            MetricType.GAUGE,
+            MetricType.HISTOGRAM,
+            MetricType.TIMER,
+        ]:
+            stats.update(
+                {
+                    "current_value": values[-1],
+                    "min_value": min(values),
+                    "max_value": max(values),
+                    "avg_value": statistics.mean(values),
+                    "median_value": statistics.median(values),
+                }
+            )
 
             if len(values) > 1:
                 stats["std_dev"] = statistics.stdev(values)
@@ -210,11 +256,15 @@ class EnterpriseMetricsCollector:
                 stats["p99"] = self._percentile(values, 0.99)
 
         elif metric.metric_type == MetricType.COUNTER:
-            stats.update({
-                "total_value": sum(values),
-                "rate_per_minute": len(values) / time_window_minutes if time_window_minutes > 0 else 0,
-                "last_value": values[-1]
-            })
+            stats.update(
+                {
+                    "total_value": sum(values),
+                    "rate_per_minute": len(values) / time_window_minutes
+                    if time_window_minutes > 0
+                    else 0,
+                    "last_value": values[-1],
+                }
+            )
 
         # Cache the result
         self._stats_cache[cache_key] = stats
@@ -228,24 +278,28 @@ class EnterpriseMetricsCollector:
         index = int(len(sorted_data) * percentile)
         return sorted_data[min(index, len(sorted_data) - 1)]
 
-    def get_category_summary(self, category: MetricCategory,
-                           time_window_minutes: int = 60) -> Dict[str, Any]:
+    def get_category_summary(
+        self, category: MetricCategory, time_window_minutes: int = 60
+    ) -> Dict[str, Any]:
         """Get summary statistics for all metrics in a category"""
-        category_metrics = {name: metric for name, metric in self.metrics.items()
-                          if metric.category == category}
+        category_metrics = {
+            name: metric
+            for name, metric in self.metrics.items()
+            if metric.category == category
+        }
 
         if not category_metrics:
             return {
                 "category": category.value,
                 "metrics_count": 0,
-                "message": "No metrics found for category"
+                "message": "No metrics found for category",
             }
 
         summary = {
             "category": category.value,
             "time_window_minutes": time_window_minutes,
             "metrics_count": len(category_metrics),
-            "metrics": {}
+            "metrics": {},
         }
 
         for name in category_metrics:
@@ -259,7 +313,7 @@ class EnterpriseMetricsCollector:
             "timestamp": datetime.now().isoformat(),
             "time_window_minutes": time_window_minutes,
             "total_metrics": len(self.metrics),
-            "categories": {}
+            "categories": {},
         }
 
         # Group by category
@@ -270,11 +324,18 @@ class EnterpriseMetricsCollector:
 
         return summary
 
+
 class TimerContext:
     """Context manager for timing operations"""
 
-    def __init__(self, collector: EnterpriseMetricsCollector, name: str,
-                 category: MetricCategory, labels: Dict[str, str], description: str):
+    def __init__(
+        self,
+        collector: EnterpriseMetricsCollector,
+        name: str,
+        category: MetricCategory,
+        labels: Dict[str, str],
+        description: str,
+    ):
         self.collector = collector
         self.name = name
         self.category = category
@@ -294,6 +355,7 @@ class TimerContext:
             )
             self.collector._add_point(self.name, duration_ms, self.labels)
 
+
 # Enterprise-specific metric recording functions
 class CacheMetrics:
     """Cache-specific metrics collection"""
@@ -304,31 +366,43 @@ class CacheMetrics:
     def record_hit(self, cache_name: str):
         """Record a cache hit"""
         self.collector.record_counter(
-            "cache_hits", MetricCategory.CACHE, 1.0,
-            {"cache_name": cache_name}, "Number of cache hits"
+            "cache_hits",
+            MetricCategory.CACHE,
+            1.0,
+            {"cache_name": cache_name},
+            "Number of cache hits",
         )
 
     def record_miss(self, cache_name: str):
         """Record a cache miss"""
         self.collector.record_counter(
-            "cache_misses", MetricCategory.CACHE, 1.0,
-            {"cache_name": cache_name}, "Number of cache misses"
+            "cache_misses",
+            MetricCategory.CACHE,
+            1.0,
+            {"cache_name": cache_name},
+            "Number of cache misses",
         )
 
     def record_size(self, cache_name: str, size_bytes: int):
         """Record cache size"""
         self.collector.record_gauge(
-            "cache_size", MetricCategory.CACHE, size_bytes,
-            {"cache_name": cache_name}, "Cache size in bytes", "bytes"
+            "cache_size",
+            MetricCategory.CACHE,
+            size_bytes,
+            {"cache_name": cache_name},
+            "Cache size in bytes",
+            "bytes",
         )
 
     def record_operation_time(self, cache_name: str, operation: str):
         """Get timer for cache operations"""
         return self.collector.start_timer(
-            "cache_operation_time", MetricCategory.CACHE,
+            "cache_operation_time",
+            MetricCategory.CACHE,
             {"cache_name": cache_name, "operation": operation},
-            "Time taken for cache operations"
+            "Time taken for cache operations",
         )
+
 
 class TracingMetrics:
     """Distributed tracing metrics collection"""
@@ -339,24 +413,36 @@ class TracingMetrics:
     def record_span_created(self, service_name: str):
         """Record span creation"""
         self.collector.record_counter(
-            "spans_created", MetricCategory.TRACING, 1.0,
-            {"service": service_name}, "Number of spans created"
+            "spans_created",
+            MetricCategory.TRACING,
+            1.0,
+            {"service": service_name},
+            "Number of spans created",
         )
 
     def record_trace_duration(self, service_name: str, duration_ms: float):
         """Record trace duration"""
         self.collector.record_histogram(
-            "trace_duration", MetricCategory.TRACING, duration_ms,
-            {"service": service_name}, "Trace duration in milliseconds", "ms"
+            "trace_duration",
+            MetricCategory.TRACING,
+            duration_ms,
+            {"service": service_name},
+            "Trace duration in milliseconds",
+            "ms",
         )
 
     def record_error_rate(self, service_name: str, error_count: int, total_count: int):
         """Record service error rate"""
         error_rate = (error_count / total_count * 100) if total_count > 0 else 0
         self.collector.record_gauge(
-            "service_error_rate", MetricCategory.TRACING, error_rate,
-            {"service": service_name}, "Service error rate percentage", "%"
+            "service_error_rate",
+            MetricCategory.TRACING,
+            error_rate,
+            {"service": service_name},
+            "Service error rate percentage",
+            "%",
         )
+
 
 class APIDiscoveryMetrics:
     """API Discovery metrics collection"""
@@ -367,23 +453,33 @@ class APIDiscoveryMetrics:
     def record_api_discovered(self, discovery_method: str):
         """Record API discovery"""
         self.collector.record_counter(
-            "apis_discovered", MetricCategory.API_DISCOVERY, 1.0,
-            {"method": discovery_method}, "Number of APIs discovered"
+            "apis_discovered",
+            MetricCategory.API_DISCOVERY,
+            1.0,
+            {"method": discovery_method},
+            "Number of APIs discovered",
         )
 
     def record_discovery_time(self, discovery_method: str):
         """Get timer for discovery operations"""
         return self.collector.start_timer(
-            "discovery_time", MetricCategory.API_DISCOVERY,
-            {"method": discovery_method}, "Time taken for API discovery"
+            "discovery_time",
+            MetricCategory.API_DISCOVERY,
+            {"method": discovery_method},
+            "Time taken for API discovery",
         )
 
     def record_ml_confidence(self, model_name: str, confidence_score: float):
         """Record ML model confidence scores"""
         self.collector.record_histogram(
-            "ml_confidence_score", MetricCategory.API_DISCOVERY, confidence_score,
-            {"model": model_name}, "ML model confidence scores", "score"
+            "ml_confidence_score",
+            MetricCategory.API_DISCOVERY,
+            confidence_score,
+            {"model": model_name},
+            "ML model confidence scores",
+            "score",
         )
+
 
 # Global metrics collector instance
 enterprise_metrics = EnterpriseMetricsCollector()
@@ -393,18 +489,22 @@ cache_metrics = CacheMetrics(enterprise_metrics)
 tracing_metrics = TracingMetrics(enterprise_metrics)
 api_discovery_metrics = APIDiscoveryMetrics(enterprise_metrics)
 
+
 # Convenience functions
 async def start_metrics_collection():
     """Start the enterprise metrics collection"""
     await enterprise_metrics.start()
 
+
 async def stop_metrics_collection():
     """Stop the enterprise metrics collection"""
     await enterprise_metrics.stop()
 
+
 def get_metrics_summary(time_window_minutes: int = 60):
     """Get comprehensive metrics summary"""
     return enterprise_metrics.get_all_metrics_summary(time_window_minutes)
+
 
 def get_category_metrics(category: str, time_window_minutes: int = 60):
     """Get metrics for a specific category"""
@@ -413,6 +513,7 @@ def get_category_metrics(category: str, time_window_minutes: int = 60):
         return enterprise_metrics.get_category_summary(cat_enum, time_window_minutes)
     except ValueError:
         return {"error": f"Invalid category: {category}"}
+
 
 def get_metric_details(metric_name: str, time_window_minutes: int = 60):
     """Get details for a specific metric"""

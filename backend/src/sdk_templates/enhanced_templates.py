@@ -4,12 +4,13 @@ Enhanced Templates for Multi-Language SDK Generation
 Complete templates for TypeScript, Java, Go, Rust, Swift, and additional modern languages
 """
 
+
 class EnhancedTemplateEngine:
     """Enhanced template engine with complete implementations for all supported languages"""
 
     def get_typescript_client_template(self) -> str:
         """Complete TypeScript client template"""
-        return '''/**
+        return """/**
  * {{ package_name }} - {{ description }}
  * Generated TypeScript API client for {{ base_url }}
  */
@@ -280,11 +281,11 @@ export function createClient(
 }
 
 export default {{ class_name }};
-'''
+"""
 
     def get_java_client_template(self) -> str:
         """Complete Java client template"""
-        return '''package {{ package_name|replace('-', '') }};
+        return """package {{ package_name|replace('-', '') }};
 
 import java.io.IOException;
 import java.net.URI;
@@ -567,11 +568,11 @@ public class {{ class_name }} {
         }
     }
 }
-'''
+"""
 
     def get_go_client_template(self) -> str:
         """Complete Go client template"""
-        return '''// Package {{ package_name|replace('-', '') }} provides a Go client for {{ base_url }}
+        return """// Package {{ package_name|replace('-', '') }} provides a Go client for {{ base_url }}
 package {{ package_name|replace('-', '') }}
 
 import (
@@ -826,11 +827,11 @@ func (c *{{ class_name }}) {{ endpoint.method_name|title }}(ctx context.Context{
 }
 
 {% endfor %}
-'''
+"""
 
     def get_rust_client_template(self) -> str:
         """Complete Rust client template"""
-        return '''//! {{ package_name }} - {{ description }}
+        return """//! {{ package_name }} - {{ description }}
 //! Generated Rust API client for {{ base_url }}
 
 use reqwest::{Client, Error as ReqwestError, Response};
@@ -1131,11 +1132,11 @@ impl {{ class_name }} {
     // Async methods are already implemented above
 }
 {% endif %}
-'''
+"""
 
     def get_swift_client_template(self) -> str:
         """Complete Swift client template"""
-        return '''//
+        return """//
 //  {{ class_name }}.swift
 //  {{ package_name }}
 //
@@ -1532,4 +1533,4 @@ extension {{ class_name }} {
 }
 #endif
 {% endif %}
-'''
+"""

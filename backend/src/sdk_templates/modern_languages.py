@@ -4,12 +4,13 @@ Modern Language Templates for SDK Generation
 Support for Kotlin, Dart/Flutter, C#, PHP, Ruby, and Scala
 """
 
+
 class ModernLanguageTemplates:
     """Templates for modern programming languages"""
 
     def get_kotlin_client_template(self) -> str:
         """Complete Kotlin client template"""
-        return '''package {{ package_name|replace('-', '.') }}
+        return """package {{ package_name|replace('-', '.') }}
 
 import kotlinx.coroutines.*
 import kotlinx.serialization.*
@@ -250,11 +251,11 @@ fun create{{ class_name }}(
 ): {{ class_name }} {
     return {{ class_name }}({% if auth_type == 'api_key' %}apiKey,{% elif auth_type == 'bearer_token' %}token,{% endif %} baseUrl, config)
 }
-'''
+"""
 
     def get_dart_client_template(self) -> str:
         """Complete Dart/Flutter client template"""
-        return '''/// {{ package_name }} - {{ description }}
+        return """/// {{ package_name }} - {{ description }}
 /// Generated Dart API client for {{ base_url }}
 
 library {{ package_name|replace('-', '_') }};
@@ -556,11 +557,11 @@ class {{ class_name }} {
     config: config,
   );
 }
-'''
+"""
 
     def get_csharp_client_template(self) -> str:
         """Complete C# client template"""
-        return '''using System;
+        return """using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
@@ -867,11 +868,11 @@ namespace {{ package_name|replace('-', '.') |title }}
         }
     }
 }
-'''
+"""
 
     def get_php_client_template(self) -> str:
         """Complete PHP client template"""
-        return '''<?php
+        return """<?php
 
 namespace {{ package_name|replace('-', '\\') |title }};
 
@@ -1201,11 +1202,11 @@ function create{{ class_name }}(
         $config
     );
 }
-'''
+"""
 
     def get_ruby_client_template(self) -> str:
         """Complete Ruby client template"""
-        return '''# {{ package_name }} - {{ description }}
+        return """# {{ package_name }} - {{ description }}
 # Generated Ruby API client for {{ base_url }}
 
 require 'net/http'
@@ -1450,4 +1451,4 @@ module {{ package_name|replace('-', '_')|title }}
     )
   end
 end
-'''
+"""

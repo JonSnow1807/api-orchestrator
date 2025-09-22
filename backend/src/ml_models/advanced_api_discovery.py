@@ -4,46 +4,39 @@ Advanced ML Models for Smart API Discovery
 Deep learning models for API pattern recognition, behavior prediction, and anomaly detection
 """
 
-import asyncio
 import logging
-import json
 import numpy as np
-from typing import Dict, List, Any, Optional, Tuple, Set
+from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 import re
-import hashlib
-from collections import defaultdict, deque
-import pickle
-import os
+from collections import defaultdict
 
 # Optional deep learning imports
 try:
-    import torch
-    import torch.nn as nn
-    import torch.optim as optim
-    from torch.utils.data import Dataset, DataLoader
     HAS_PYTORCH = True
 except ImportError:
     HAS_PYTORCH = False
 
 try:
     import tensorflow as tf
-    from tensorflow.keras import layers, models, callbacks
+    from tensorflow.keras import layers
+
     HAS_TENSORFLOW = True
 except ImportError:
     HAS_TENSORFLOW = False
 
 try:
     from sklearn.ensemble import RandomForestClassifier, GradientBoostingRegressor
-    from sklearn.neural_network import MLPClassifier
     from sklearn.preprocessing import StandardScaler, LabelEncoder
     from sklearn.model_selection import train_test_split
-    from sklearn.metrics import classification_report, accuracy_score
+    from sklearn.metrics import accuracy_score
+
     HAS_SKLEARN = True
 except ImportError:
     HAS_SKLEARN = False
+
 
 class ModelType(Enum):
     PATTERN_RECOGNITION = "pattern_recognition"
@@ -54,9 +47,11 @@ class ModelType(Enum):
     SECURITY_ANALYSIS = "security_analysis"
     PERFORMANCE_PREDICTION = "performance_prediction"
 
+
 @dataclass
 class APIFeature:
     """Feature vector for ML models"""
+
     url_length: int
     path_depth: int
     has_parameters: bool
@@ -88,9 +83,11 @@ class APIFeature:
     has_cors_headers: bool
     rate_limited: bool
 
+
 @dataclass
 class ModelPrediction:
     """ML model prediction result"""
+
     model_type: ModelType
     prediction: Any
     confidence: float
@@ -98,6 +95,7 @@ class ModelPrediction:
     model_version: str
     prediction_timestamp: datetime = field(default_factory=datetime.utcnow)
     explanation: Optional[str] = None
+
 
 class APIPatternRecognitionModel:
     """Deep learning model for API pattern recognition"""
@@ -135,10 +133,7 @@ class APIPatternRecognitionModel:
 
         # Train Random Forest model
         self.model = RandomForestClassifier(
-            n_estimators=100,
-            max_depth=10,
-            random_state=42,
-            class_weight='balanced'
+            n_estimators=100, max_depth=10, random_state=42, class_weight="balanced"
         )
 
         self.model.fit(X_train_scaled, y_train)
@@ -147,17 +142,21 @@ class APIPatternRecognitionModel:
         y_pred = self.model.predict(X_test_scaled)
         accuracy = accuracy_score(y_test, y_pred)
 
-        logging.info(f"✅ Pattern recognition model trained with accuracy: {accuracy:.3f}")
+        logging.info(
+            f"✅ Pattern recognition model trained with accuracy: {accuracy:.3f}"
+        )
         self.is_trained = True
 
-    def _prepare_training_data(self, training_data: List[Dict[str, Any]]) -> Tuple[List[List[float]], List[str]]:
+    def _prepare_training_data(
+        self, training_data: List[Dict[str, Any]]
+    ) -> Tuple[List[List[float]], List[str]]:
         """Prepare training features and labels"""
         features = []
         labels = []
 
         for item in training_data:
             feature_vector = self._extract_features(item)
-            api_category = item.get('category', 'unknown')
+            api_category = item.get("category", "unknown")
 
             features.append(feature_vector)
             labels.append(api_category)
@@ -166,23 +165,23 @@ class APIPatternRecognitionModel:
 
     def _extract_features(self, api_data: Dict[str, Any]) -> List[float]:
         """Extract numerical features from API data"""
-        url = api_data.get('url', '')
-        method = api_data.get('method', 'GET')
+        url = api_data.get("url", "")
+        method = api_data.get("method", "GET")
 
         features = [
             len(url),  # URL length
-            url.count('/'),  # Path depth
-            1 if '?' in url else 0,  # Has parameters
-            1 if re.search(r'/v\d+/', url) else 0,  # Has versioning
+            url.count("/"),  # Path depth
+            1 if "?" in url else 0,  # Has parameters
+            1 if re.search(r"/v\d+/", url) else 0,  # Has versioning
             hash(method) % 1000,  # Method hash
-            api_data.get('response_time', 0),
-            api_data.get('status_code', 200),
-            api_data.get('payload_size', 0),
-            1 if api_data.get('auth_required', False) else 0,
-            1 if url.startswith('https') else 0,
+            api_data.get("response_time", 0),
+            api_data.get("status_code", 200),
+            api_data.get("payload_size", 0),
+            1 if api_data.get("auth_required", False) else 0,
+            1 if url.startswith("https") else 0,
             self._calculate_entropy(url),  # URL entropy
-            url.count('='),  # Parameter count
-            url.count('.'),  # Subdomain count
+            url.count("="),  # Parameter count
+            url.count("."),  # Subdomain count
         ]
 
         return features
@@ -216,7 +215,7 @@ class APIPatternRecognitionModel:
                 confidence=0.0,
                 features_used=[],
                 model_version="1.0",
-                explanation="Model not trained"
+                explanation="Model not trained",
             )
 
         # Extract features
@@ -231,9 +230,10 @@ class APIPatternRecognitionModel:
             model_type=ModelType.PATTERN_RECOGNITION,
             prediction=prediction,
             confidence=float(confidence),
-            features_used=['url_length', 'path_depth', 'has_parameters', 'entropy'],
-            model_version="1.0"
+            features_used=["url_length", "path_depth", "has_parameters", "entropy"],
+            model_version="1.0",
         )
+
 
 class BehaviorPredictionModel:
     """Model for predicting API behavior patterns"""
@@ -268,25 +268,29 @@ class BehaviorPredictionModel:
             epochs=50,
             batch_size=32,
             validation_split=0.2,
-            verbose=0
+            verbose=0,
         )
 
         self.is_trained = True
         logging.info("✅ Behavior prediction model trained successfully")
 
-    def _prepare_sequences(self, traffic_data: List[Dict[str, Any]]) -> Tuple[List, List]:
+    def _prepare_sequences(
+        self, traffic_data: List[Dict[str, Any]]
+    ) -> Tuple[List, List]:
         """Prepare sequential data for LSTM training"""
         # Group traffic by endpoint
         endpoint_traffic = defaultdict(list)
 
         for item in traffic_data:
-            endpoint = item.get('url', '')
-            endpoint_traffic[endpoint].append({
-                'timestamp': item.get('timestamp', datetime.utcnow()),
-                'response_time': item.get('response_time', 0),
-                'status_code': item.get('status_code', 200),
-                'payload_size': item.get('payload_size', 0)
-            })
+            endpoint = item.get("url", "")
+            endpoint_traffic[endpoint].append(
+                {
+                    "timestamp": item.get("timestamp", datetime.utcnow()),
+                    "response_time": item.get("response_time", 0),
+                    "status_code": item.get("status_code", 200),
+                    "payload_size": item.get("payload_size", 0),
+                }
+            )
 
         sequences = []
         targets = []
@@ -296,19 +300,21 @@ class BehaviorPredictionModel:
                 continue
 
             # Sort by timestamp
-            traffic.sort(key=lambda x: x['timestamp'])
+            traffic.sort(key=lambda x: x["timestamp"])
 
             # Create sequences
             for i in range(len(traffic) - self.sequence_length):
                 sequence = []
                 for j in range(self.sequence_length):
-                    sequence.append([
-                        traffic[i + j]['response_time'],
-                        traffic[i + j]['status_code'],
-                        traffic[i + j]['payload_size']
-                    ])
+                    sequence.append(
+                        [
+                            traffic[i + j]["response_time"],
+                            traffic[i + j]["status_code"],
+                            traffic[i + j]["payload_size"],
+                        ]
+                    )
 
-                target = traffic[i + self.sequence_length]['response_time']
+                target = traffic[i + self.sequence_length]["response_time"]
 
                 sequences.append(sequence)
                 targets.append(target)
@@ -317,19 +323,27 @@ class BehaviorPredictionModel:
 
     def _build_lstm_model(self, feature_count: int):
         """Build LSTM model architecture"""
-        model = tf.keras.Sequential([
-            layers.LSTM(50, return_sequences=True, input_shape=(self.sequence_length, feature_count)),
-            layers.Dropout(0.2),
-            layers.LSTM(50, return_sequences=False),
-            layers.Dropout(0.2),
-            layers.Dense(25),
-            layers.Dense(1)
-        ])
+        model = tf.keras.Sequential(
+            [
+                layers.LSTM(
+                    50,
+                    return_sequences=True,
+                    input_shape=(self.sequence_length, feature_count),
+                ),
+                layers.Dropout(0.2),
+                layers.LSTM(50, return_sequences=False),
+                layers.Dropout(0.2),
+                layers.Dense(25),
+                layers.Dense(1),
+            ]
+        )
 
-        model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+        model.compile(optimizer="adam", loss="mse", metrics=["mae"])
         return model
 
-    async def predict_behavior(self, historical_data: List[Dict[str, Any]]) -> ModelPrediction:
+    async def predict_behavior(
+        self, historical_data: List[Dict[str, Any]]
+    ) -> ModelPrediction:
         """Predict future API behavior"""
         if not self.is_trained or not self.lstm_model:
             return ModelPrediction(
@@ -338,7 +352,7 @@ class BehaviorPredictionModel:
                 confidence=0.0,
                 features_used=[],
                 model_version="1.0",
-                explanation="Model not trained"
+                explanation="Model not trained",
             )
 
         if len(historical_data) < self.sequence_length:
@@ -348,17 +362,19 @@ class BehaviorPredictionModel:
                 confidence=0.5,
                 features_used=[],
                 model_version="1.0",
-                explanation="Insufficient historical data"
+                explanation="Insufficient historical data",
             )
 
         # Prepare input sequence
         sequence = []
-        for item in historical_data[-self.sequence_length:]:
-            sequence.append([
-                item.get('response_time', 0),
-                item.get('status_code', 200),
-                item.get('payload_size', 0)
-            ])
+        for item in historical_data[-self.sequence_length :]:
+            sequence.append(
+                [
+                    item.get("response_time", 0),
+                    item.get("status_code", 200),
+                    item.get("payload_size", 0),
+                ]
+            )
 
         # Predict
         prediction = self.lstm_model.predict(np.array([sequence]))[0][0]
@@ -367,9 +383,10 @@ class BehaviorPredictionModel:
             model_type=ModelType.BEHAVIOR_PREDICTION,
             prediction=float(prediction),
             confidence=0.8,  # Would be calculated based on prediction variance
-            features_used=['response_time', 'status_code', 'payload_size'],
-            model_version="1.0"
+            features_used=["response_time", "status_code", "payload_size"],
+            model_version="1.0",
         )
+
 
 class AnomalyDetectionModel:
     """Advanced anomaly detection for API behavior"""
@@ -408,7 +425,7 @@ class AnomalyDetectionModel:
             epochs=100,
             batch_size=32,
             validation_split=0.1,
-            verbose=0
+            verbose=0,
         )
 
         # Calculate threshold
@@ -419,21 +436,23 @@ class AnomalyDetectionModel:
         self.is_trained = True
         logging.info("✅ Anomaly detection model trained successfully")
 
-    def _extract_anomaly_features(self, traffic_data: List[Dict[str, Any]]) -> List[List[float]]:
+    def _extract_anomaly_features(
+        self, traffic_data: List[Dict[str, Any]]
+    ) -> List[List[float]]:
         """Extract features for anomaly detection"""
         features = []
 
         for item in traffic_data:
             feature_vector = [
-                item.get('response_time', 0),
-                item.get('status_code', 200),
-                item.get('payload_size', 0),
-                len(item.get('url', '')),
-                item.get('url', '').count('/'),
-                1 if item.get('method', 'GET') == 'POST' else 0,
-                1 if item.get('url', '').startswith('https') else 0,
-                item.get('request_count', 1),
-                item.get('error_rate', 0)
+                item.get("response_time", 0),
+                item.get("status_code", 200),
+                item.get("payload_size", 0),
+                len(item.get("url", "")),
+                item.get("url", "").count("/"),
+                1 if item.get("method", "GET") == "POST" else 0,
+                1 if item.get("url", "").startswith("https") else 0,
+                item.get("request_count", 1),
+                item.get("error_rate", 0),
             ]
             features.append(feature_vector)
 
@@ -443,22 +462,24 @@ class AnomalyDetectionModel:
         """Build autoencoder architecture"""
         # Encoder
         input_layer = layers.Input(shape=(input_dim,))
-        encoded = layers.Dense(32, activation='relu')(input_layer)
-        encoded = layers.Dense(16, activation='relu')(encoded)
-        encoded = layers.Dense(8, activation='relu')(encoded)
+        encoded = layers.Dense(32, activation="relu")(input_layer)
+        encoded = layers.Dense(16, activation="relu")(encoded)
+        encoded = layers.Dense(8, activation="relu")(encoded)
 
         # Decoder
-        decoded = layers.Dense(16, activation='relu')(encoded)
-        decoded = layers.Dense(32, activation='relu')(decoded)
-        decoded = layers.Dense(input_dim, activation='linear')(decoded)
+        decoded = layers.Dense(16, activation="relu")(encoded)
+        decoded = layers.Dense(32, activation="relu")(decoded)
+        decoded = layers.Dense(input_dim, activation="linear")(decoded)
 
         # Autoencoder model
         autoencoder = tf.keras.Model(input_layer, decoded)
-        autoencoder.compile(optimizer='adam', loss='mse')
+        autoencoder.compile(optimizer="adam", loss="mse")
 
         return autoencoder
 
-    async def detect_anomalies(self, traffic_data: List[Dict[str, Any]]) -> List[ModelPrediction]:
+    async def detect_anomalies(
+        self, traffic_data: List[Dict[str, Any]]
+    ) -> List[ModelPrediction]:
         """Detect anomalies in API traffic"""
         if not self.is_trained or not self.autoencoder:
             return []
@@ -481,21 +502,29 @@ class AnomalyDetectionModel:
             if error > self.threshold:
                 anomaly_score = min(error / self.threshold, 2.0)  # Cap at 2.0
 
-                anomalies.append(ModelPrediction(
-                    model_type=ModelType.ANOMALY_DETECTION,
-                    prediction={
-                        "is_anomaly": True,
-                        "anomaly_score": float(anomaly_score),
-                        "reconstruction_error": float(error),
-                        "data_point": traffic_data[i]
-                    },
-                    confidence=min(anomaly_score, 1.0),
-                    features_used=['response_time', 'status_code', 'payload_size', 'url_features'],
-                    model_version="1.0",
-                    explanation=f"Reconstruction error {error:.3f} exceeds threshold {self.threshold:.3f}"
-                ))
+                anomalies.append(
+                    ModelPrediction(
+                        model_type=ModelType.ANOMALY_DETECTION,
+                        prediction={
+                            "is_anomaly": True,
+                            "anomaly_score": float(anomaly_score),
+                            "reconstruction_error": float(error),
+                            "data_point": traffic_data[i],
+                        },
+                        confidence=min(anomaly_score, 1.0),
+                        features_used=[
+                            "response_time",
+                            "status_code",
+                            "payload_size",
+                            "url_features",
+                        ],
+                        model_version="1.0",
+                        explanation=f"Reconstruction error {error:.3f} exceeds threshold {self.threshold:.3f}",
+                    )
+                )
 
         return anomalies
+
 
 class SecurityAnalysisModel:
     """ML model for API security analysis"""
@@ -522,10 +551,7 @@ class SecurityAnalysisModel:
 
         # Train gradient boosting classifier
         self.security_classifier = GradientBoostingRegressor(
-            n_estimators=100,
-            learning_rate=0.1,
-            max_depth=6,
-            random_state=42
+            n_estimators=100, learning_rate=0.1, max_depth=6, random_state=42
         )
 
         X_train, X_test, y_train, y_test = train_test_split(
@@ -535,20 +561,22 @@ class SecurityAnalysisModel:
         self.security_classifier.fit(X_train, y_train)
 
         # Evaluate
-        y_pred = self.security_classifier.predict(X_test)
+        self.security_classifier.predict(X_test)
         score = self.security_classifier.score(X_test, y_test)
 
         logging.info(f"✅ Security analysis model trained with R² score: {score:.3f}")
         self.is_trained = True
 
-    def _prepare_security_data(self, security_data: List[Dict[str, Any]]) -> Tuple[List, List]:
+    def _prepare_security_data(
+        self, security_data: List[Dict[str, Any]]
+    ) -> Tuple[List, List]:
         """Prepare security training data"""
         features = []
         labels = []
 
         for item in security_data:
             feature_vector = self._extract_security_features(item)
-            security_score = item.get('security_score', 0.5)
+            security_score = item.get("security_score", 0.5)
 
             features.append(feature_vector)
             labels.append(security_score)
@@ -557,20 +585,20 @@ class SecurityAnalysisModel:
 
     def _extract_security_features(self, api_data: Dict[str, Any]) -> List[float]:
         """Extract security-relevant features"""
-        url = api_data.get('url', '')
-        headers = api_data.get('headers', {})
+        url = api_data.get("url", "")
+        headers = api_data.get("headers", {})
 
         features = [
-            1 if url.startswith('https') else 0,  # HTTPS usage
-            1 if 'authorization' in str(headers).lower() else 0,  # Auth header
-            1 if 'x-api-key' in str(headers).lower() else 0,  # API key
-            1 if 'cors' in str(headers).lower() else 0,  # CORS headers
-            len(re.findall(r'\{.*?\}', url)),  # Path parameters
-            1 if api_data.get('rate_limited', False) else 0,  # Rate limiting
-            api_data.get('auth_failures', 0),  # Authentication failures
-            1 if api_data.get('sensitive_data', False) else 0,  # Sensitive data
-            len(api_data.get('exposed_endpoints', [])),  # Exposed endpoints
-            api_data.get('vulnerability_count', 0)  # Known vulnerabilities
+            1 if url.startswith("https") else 0,  # HTTPS usage
+            1 if "authorization" in str(headers).lower() else 0,  # Auth header
+            1 if "x-api-key" in str(headers).lower() else 0,  # API key
+            1 if "cors" in str(headers).lower() else 0,  # CORS headers
+            len(re.findall(r"\{.*?\}", url)),  # Path parameters
+            1 if api_data.get("rate_limited", False) else 0,  # Rate limiting
+            api_data.get("auth_failures", 0),  # Authentication failures
+            1 if api_data.get("sensitive_data", False) else 0,  # Sensitive data
+            len(api_data.get("exposed_endpoints", [])),  # Exposed endpoints
+            api_data.get("vulnerability_count", 0),  # Known vulnerabilities
         ]
 
         return features
@@ -584,7 +612,7 @@ class SecurityAnalysisModel:
                 confidence=0.0,
                 features_used=[],
                 model_version="1.0",
-                explanation="Model not trained"
+                explanation="Model not trained",
             )
 
         # Extract features
@@ -600,15 +628,26 @@ class SecurityAnalysisModel:
             model_type=ModelType.SECURITY_ANALYSIS,
             prediction={
                 "security_score": float(security_score),
-                "risk_level": "high" if security_score < 0.3 else "medium" if security_score < 0.7 else "low",
-                "recommendations": recommendations
+                "risk_level": "high"
+                if security_score < 0.3
+                else "medium"
+                if security_score < 0.7
+                else "low",
+                "recommendations": recommendations,
             },
             confidence=0.85,
-            features_used=['https_usage', 'auth_headers', 'rate_limiting', 'vulnerabilities'],
-            model_version="1.0"
+            features_used=[
+                "https_usage",
+                "auth_headers",
+                "rate_limiting",
+                "vulnerabilities",
+            ],
+            model_version="1.0",
         )
 
-    def _generate_security_recommendations(self, features: List[float], api_data: Dict[str, Any]) -> List[str]:
+    def _generate_security_recommendations(
+        self, features: List[float], api_data: Dict[str, Any]
+    ) -> List[str]:
         """Generate security recommendations based on analysis"""
         recommendations = []
 
@@ -629,6 +668,7 @@ class SecurityAnalysisModel:
 
         return recommendations
 
+
 class AdvancedAPIDiscoveryEngine:
     """Main engine combining all ML models for API discovery"""
 
@@ -639,10 +679,10 @@ class AdvancedAPIDiscoveryEngine:
         self.security_model = SecurityAnalysisModel()
 
         self.training_data = {
-            'patterns': [],
-            'behaviors': [],
-            'security': [],
-            'anomalies': []
+            "patterns": [],
+            "behaviors": [],
+            "security": [],
+            "anomalies": [],
         }
 
         self.models_trained = False
@@ -655,17 +695,23 @@ class AdvancedAPIDiscoveryEngine:
         await self._load_training_data()
 
         # Train models if we have sufficient data
-        if len(self.training_data['patterns']) >= 10:
-            await self.pattern_model.train_model(self.training_data['patterns'])
+        if len(self.training_data["patterns"]) >= 10:
+            await self.pattern_model.train_model(self.training_data["patterns"])
 
-        if len(self.training_data['behaviors']) >= 50:
-            await self.behavior_model.train_behavior_model(self.training_data['behaviors'])
+        if len(self.training_data["behaviors"]) >= 50:
+            await self.behavior_model.train_behavior_model(
+                self.training_data["behaviors"]
+            )
 
-        if len(self.training_data['anomalies']) >= 100:
-            await self.anomaly_model.train_anomaly_detector(self.training_data['anomalies'])
+        if len(self.training_data["anomalies"]) >= 100:
+            await self.anomaly_model.train_anomaly_detector(
+                self.training_data["anomalies"]
+            )
 
-        if len(self.training_data['security']) >= 20:
-            await self.security_model.train_security_model(self.training_data['security'])
+        if len(self.training_data["security"]) >= 20:
+            await self.security_model.train_security_model(
+                self.training_data["security"]
+            )
 
         self.models_trained = True
         logging.info("✅ Advanced ML models initialized")
@@ -676,53 +722,63 @@ class AdvancedAPIDiscoveryEngine:
         # For now, we'll use mock data
 
         self.training_data = {
-            'patterns': [
-                {'url': '/api/v1/users', 'method': 'GET', 'category': 'rest_api'},
-                {'url': '/api/v1/products', 'method': 'POST', 'category': 'rest_api'},
-                {'url': '/graphql', 'method': 'POST', 'category': 'graphql'},
-                {'url': '/ws/chat', 'method': 'GET', 'category': 'websocket'},
+            "patterns": [
+                {"url": "/api/v1/users", "method": "GET", "category": "rest_api"},
+                {"url": "/api/v1/products", "method": "POST", "category": "rest_api"},
+                {"url": "/graphql", "method": "POST", "category": "graphql"},
+                {"url": "/ws/chat", "method": "GET", "category": "websocket"},
             ],
-            'behaviors': [],  # Would be populated with real traffic data
-            'security': [
-                {'url': 'https://api.example.com/users', 'security_score': 0.8},
-                {'url': 'http://api.example.com/admin', 'security_score': 0.3},
+            "behaviors": [],  # Would be populated with real traffic data
+            "security": [
+                {"url": "https://api.example.com/users", "security_score": 0.8},
+                {"url": "http://api.example.com/admin", "security_score": 0.3},
             ],
-            'anomalies': []  # Would be populated with normal traffic patterns
+            "anomalies": [],  # Would be populated with normal traffic patterns
         }
 
-    async def comprehensive_analysis(self, api_data: Dict[str, Any]) -> Dict[str, ModelPrediction]:
+    async def comprehensive_analysis(
+        self, api_data: Dict[str, Any]
+    ) -> Dict[str, ModelPrediction]:
         """Run comprehensive ML analysis on API data"""
         results = {}
 
         # Pattern recognition
         pattern_result = await self.pattern_model.predict_api_pattern(api_data)
-        results['pattern_recognition'] = pattern_result
+        results["pattern_recognition"] = pattern_result
 
         # Security analysis
         security_result = await self.security_model.analyze_security(api_data)
-        results['security_analysis'] = security_result
+        results["security_analysis"] = security_result
 
         # Behavior prediction (if historical data available)
-        if 'historical_data' in api_data:
-            behavior_result = await self.behavior_model.predict_behavior(api_data['historical_data'])
-            results['behavior_prediction'] = behavior_result
+        if "historical_data" in api_data:
+            behavior_result = await self.behavior_model.predict_behavior(
+                api_data["historical_data"]
+            )
+            results["behavior_prediction"] = behavior_result
 
         return results
 
-    async def detect_api_anomalies(self, traffic_data: List[Dict[str, Any]]) -> List[ModelPrediction]:
+    async def detect_api_anomalies(
+        self, traffic_data: List[Dict[str, Any]]
+    ) -> List[ModelPrediction]:
         """Detect anomalies in API traffic using ML"""
         return await self.anomaly_model.detect_anomalies(traffic_data)
 
-    async def update_training_data(self, data_type: str, new_data: List[Dict[str, Any]]):
+    async def update_training_data(
+        self, data_type: str, new_data: List[Dict[str, Any]]
+    ):
         """Update training data and retrain models if necessary"""
         if data_type in self.training_data:
             self.training_data[data_type].extend(new_data)
 
             # Retrain specific model if enough new data
-            if data_type == 'patterns' and len(new_data) >= 5:
-                await self.pattern_model.train_model(self.training_data['patterns'])
-            elif data_type == 'security' and len(new_data) >= 10:
-                await self.security_model.train_security_model(self.training_data['security'])
+            if data_type == "patterns" and len(new_data) >= 5:
+                await self.pattern_model.train_model(self.training_data["patterns"])
+            elif data_type == "security" and len(new_data) >= 10:
+                await self.security_model.train_security_model(
+                    self.training_data["security"]
+                )
 
     def get_model_status(self) -> Dict[str, Any]:
         """Get status of all ML models"""
@@ -733,30 +789,36 @@ class AdvancedAPIDiscoveryEngine:
             "anomaly_model_trained": self.anomaly_model.is_trained,
             "security_model_trained": self.security_model.is_trained,
             "training_data_counts": {
-                "patterns": len(self.training_data['patterns']),
-                "behaviors": len(self.training_data['behaviors']),
-                "security": len(self.training_data['security']),
-                "anomalies": len(self.training_data['anomalies'])
+                "patterns": len(self.training_data["patterns"]),
+                "behaviors": len(self.training_data["behaviors"]),
+                "security": len(self.training_data["security"]),
+                "anomalies": len(self.training_data["anomalies"]),
             },
             "available_libraries": {
                 "pytorch": HAS_PYTORCH,
                 "tensorflow": HAS_TENSORFLOW,
-                "sklearn": HAS_SKLEARN
-            }
+                "sklearn": HAS_SKLEARN,
+            },
         }
+
 
 # Global instance
 advanced_discovery_engine = AdvancedAPIDiscoveryEngine()
+
 
 # Convenience functions
 async def initialize_advanced_models():
     """Initialize the advanced ML models"""
     await advanced_discovery_engine.initialize_models()
 
+
 async def analyze_api_with_ml(api_data: Dict[str, Any]) -> Dict[str, ModelPrediction]:
     """Analyze API using all available ML models"""
     return await advanced_discovery_engine.comprehensive_analysis(api_data)
 
-async def detect_traffic_anomalies(traffic_data: List[Dict[str, Any]]) -> List[ModelPrediction]:
+
+async def detect_traffic_anomalies(
+    traffic_data: List[Dict[str, Any]]
+) -> List[ModelPrediction]:
     """Detect anomalies in API traffic"""
     return await advanced_discovery_engine.detect_api_anomalies(traffic_data)

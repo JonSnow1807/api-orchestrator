@@ -3,34 +3,43 @@ Comprehensive Static Analysis Suite
 Multiple static analysis tools integration for code quality
 """
 
-import os
 import subprocess
 import json
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from pathlib import Path
 from dataclasses import dataclass, field
 from datetime import datetime
 import ast
 import sys
 
+
 @dataclass
 class StaticAnalysisConfig:
     """Configuration for static analysis tools"""
+
     target_directory: str = "src"
-    include_patterns: List[str] = field(default_factory=lambda: ["*.py", "*.js", "*.ts", "*.jsx", "*.tsx"])
-    exclude_patterns: List[str] = field(default_factory=lambda: ["**/node_modules/**", "**/__pycache__/**", "**/dist/**"])
+    include_patterns: List[str] = field(
+        default_factory=lambda: ["*.py", "*.js", "*.ts", "*.jsx", "*.tsx"]
+    )
+    exclude_patterns: List[str] = field(
+        default_factory=lambda: [
+            "**/node_modules/**",
+            "**/__pycache__/**",
+            "**/dist/**",
+        ]
+    )
 
     # Tool configurations
     enable_pylint: bool = True
     enable_flake8: bool = True
     enable_mypy: bool = True
     enable_bandit: bool = True  # Security analysis
-    enable_black: bool = True   # Code formatting check
-    enable_isort: bool = True   # Import sorting check
+    enable_black: bool = True  # Code formatting check
+    enable_isort: bool = True  # Import sorting check
     enable_prospector: bool = True  # Meta tool
-    enable_semgrep: bool = True     # Pattern-based analysis
-    enable_vulture: bool = True     # Dead code detection
+    enable_semgrep: bool = True  # Pattern-based analysis
+    enable_vulture: bool = True  # Dead code detection
 
     # Severity thresholds
     min_pylint_score: float = 8.0
@@ -38,9 +47,11 @@ class StaticAnalysisConfig:
     max_security_issues: int = 0
     max_high_priority_issues: int = 5
 
+
 @dataclass
 class AnalysisResult:
     """Results from static analysis"""
+
     tool_name: str
     exit_code: int
     stdout: str
@@ -48,6 +59,7 @@ class AnalysisResult:
     issues: List[Dict[str, Any]] = field(default_factory=list)
     metrics: Dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.utcnow)
+
 
 class StaticAnalysisRunner:
     """Run comprehensive static analysis"""
@@ -60,7 +72,7 @@ class StaticAnalysisRunner:
         # Configure logging
         logging.basicConfig(
             level=logging.INFO,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
 
     async def run_all_analyses(self) -> Dict[str, Any]:
@@ -110,7 +122,7 @@ class StaticAnalysisRunner:
                 self.config.target_directory,
                 "--output-format=json",
                 "--reports=y",
-                "--score=y"
+                "--score=y",
             ]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
@@ -119,7 +131,7 @@ class StaticAnalysisRunner:
                 tool_name="pylint",
                 exit_code=result.returncode,
                 stdout=result.stdout,
-                stderr=result.stderr
+                stderr=result.stderr,
             )
 
             # Parse JSON output for issues
@@ -129,9 +141,13 @@ class StaticAnalysisRunner:
                     analysis_result.issues = issues
 
                     # Extract metrics
-                    score_line = [line for line in result.stderr.split('\n') if 'Your code has been rated at' in line]
+                    score_line = [
+                        line
+                        for line in result.stderr.split("\n")
+                        if "Your code has been rated at" in line
+                    ]
                     if score_line:
-                        score = float(score_line[0].split()[6].split('/')[0])
+                        score = float(score_line[0].split()[6].split("/")[0])
                         analysis_result.metrics["pylint_score"] = score
 
                 except json.JSONDecodeError:
@@ -141,7 +157,9 @@ class StaticAnalysisRunner:
             self.logger.info(f"✅ Pylint analysis completed")
 
         except FileNotFoundError:
-            self.logger.warning("⚠️ Pylint not found - install with: pip install pylint")
+            self.logger.warning(
+                "⚠️ Pylint not found - install with: pip install pylint"
+            )
         except Exception as e:
             self.logger.error(f"❌ Pylint analysis failed: {e}")
 
@@ -154,7 +172,7 @@ class StaticAnalysisRunner:
                 "--format=json",
                 "--max-complexity=10",
                 "--max-line-length=88",
-                "--extend-ignore=E203,W503"
+                "--extend-ignore=E203,W503",
             ]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
@@ -163,7 +181,7 @@ class StaticAnalysisRunner:
                 tool_name="flake8",
                 exit_code=result.returncode,
                 stdout=result.stdout,
-                stderr=result.stderr
+                stderr=result.stderr,
             )
 
             # Parse output for issues
@@ -174,23 +192,27 @@ class StaticAnalysisRunner:
                 except json.JSONDecodeError:
                     # Parse line-by-line format
                     issues = []
-                    for line in result.stdout.split('\n'):
+                    for line in result.stdout.split("\n"):
                         if line.strip():
-                            parts = line.split(':')
+                            parts = line.split(":")
                             if len(parts) >= 4:
-                                issues.append({
-                                    "file": parts[0],
-                                    "line": int(parts[1]),
-                                    "column": int(parts[2]),
-                                    "message": ':'.join(parts[3:]).strip()
-                                })
+                                issues.append(
+                                    {
+                                        "file": parts[0],
+                                        "line": int(parts[1]),
+                                        "column": int(parts[2]),
+                                        "message": ":".join(parts[3:]).strip(),
+                                    }
+                                )
                     analysis_result.issues = issues
 
             self.results.append(analysis_result)
             self.logger.info(f"✅ Flake8 analysis completed")
 
         except FileNotFoundError:
-            self.logger.warning("⚠️ Flake8 not found - install with: pip install flake8")
+            self.logger.warning(
+                "⚠️ Flake8 not found - install with: pip install flake8"
+            )
         except Exception as e:
             self.logger.error(f"❌ Flake8 analysis failed: {e}")
 
@@ -203,7 +225,8 @@ class StaticAnalysisRunner:
                 "--ignore-missing-imports",
                 "--show-error-codes",
                 "--show-column-numbers",
-                "--json-report", "mypy-report"
+                "--json-report",
+                "mypy-report",
             ]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
@@ -212,21 +235,23 @@ class StaticAnalysisRunner:
                 tool_name="mypy",
                 exit_code=result.returncode,
                 stdout=result.stdout,
-                stderr=result.stderr
+                stderr=result.stderr,
             )
 
             # Parse MyPy output
             issues = []
-            for line in result.stdout.split('\n'):
-                if ':' in line and ('error:' in line or 'warning:' in line):
-                    parts = line.split(':')
+            for line in result.stdout.split("\n"):
+                if ":" in line and ("error:" in line or "warning:" in line):
+                    parts = line.split(":")
                     if len(parts) >= 3:
-                        issues.append({
-                            "file": parts[0],
-                            "line": parts[1],
-                            "severity": "error" if "error:" in line else "warning",
-                            "message": ':'.join(parts[2:]).strip()
-                        })
+                        issues.append(
+                            {
+                                "file": parts[0],
+                                "line": parts[1],
+                                "severity": "error" if "error:" in line else "warning",
+                                "message": ":".join(parts[2:]).strip(),
+                            }
+                        )
 
             analysis_result.issues = issues
             self.results.append(analysis_result)
@@ -242,9 +267,11 @@ class StaticAnalysisRunner:
         try:
             cmd = [
                 "bandit",
-                "-r", self.config.target_directory,
-                "-f", "json",
-                "-ll"  # Only show medium and high severity
+                "-r",
+                self.config.target_directory,
+                "-f",
+                "json",
+                "-ll",  # Only show medium and high severity
             ]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
@@ -253,7 +280,7 @@ class StaticAnalysisRunner:
                 tool_name="bandit",
                 exit_code=result.returncode,
                 stdout=result.stdout,
-                stderr=result.stderr
+                stderr=result.stderr,
             )
 
             # Parse Bandit JSON output
@@ -263,8 +290,20 @@ class StaticAnalysisRunner:
                     analysis_result.issues = data.get("results", [])
                     analysis_result.metrics = {
                         "total_issues": len(data.get("results", [])),
-                        "high_severity": len([r for r in data.get("results", []) if r.get("issue_severity") == "HIGH"]),
-                        "medium_severity": len([r for r in data.get("results", []) if r.get("issue_severity") == "MEDIUM"])
+                        "high_severity": len(
+                            [
+                                r
+                                for r in data.get("results", [])
+                                if r.get("issue_severity") == "HIGH"
+                            ]
+                        ),
+                        "medium_severity": len(
+                            [
+                                r
+                                for r in data.get("results", [])
+                                if r.get("issue_severity") == "MEDIUM"
+                            ]
+                        ),
                     }
                 except json.JSONDecodeError:
                     self.logger.warning("Could not parse Bandit JSON output")
@@ -273,19 +312,16 @@ class StaticAnalysisRunner:
             self.logger.info(f"✅ Bandit security analysis completed")
 
         except FileNotFoundError:
-            self.logger.warning("⚠️ Bandit not found - install with: pip install bandit")
+            self.logger.warning(
+                "⚠️ Bandit not found - install with: pip install bandit"
+            )
         except Exception as e:
             self.logger.error(f"❌ Bandit analysis failed: {e}")
 
     async def _run_black_check(self) -> None:
         """Check code formatting with Black"""
         try:
-            cmd = [
-                "black",
-                "--check",
-                "--diff",
-                self.config.target_directory
-            ]
+            cmd = ["black", "--check", "--diff", self.config.target_directory]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
 
@@ -293,7 +329,7 @@ class StaticAnalysisRunner:
                 tool_name="black",
                 exit_code=result.returncode,
                 stdout=result.stdout,
-                stderr=result.stderr
+                stderr=result.stderr,
             )
 
             # Count files that need formatting
@@ -312,12 +348,7 @@ class StaticAnalysisRunner:
     async def _run_isort_check(self) -> None:
         """Check import sorting with isort"""
         try:
-            cmd = [
-                "isort",
-                "--check-only",
-                "--diff",
-                self.config.target_directory
-            ]
+            cmd = ["isort", "--check-only", "--diff", self.config.target_directory]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
 
@@ -325,7 +356,7 @@ class StaticAnalysisRunner:
                 tool_name="isort",
                 exit_code=result.returncode,
                 stdout=result.stdout,
-                stderr=result.stderr
+                stderr=result.stderr,
             )
 
             # Count files with import issues
@@ -344,11 +375,7 @@ class StaticAnalysisRunner:
     async def _run_prospector(self) -> None:
         """Run Prospector meta-analysis tool"""
         try:
-            cmd = [
-                "prospector",
-                self.config.target_directory,
-                "--output-format=json"
-            ]
+            cmd = ["prospector", self.config.target_directory, "--output-format=json"]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
 
@@ -356,7 +383,7 @@ class StaticAnalysisRunner:
                 tool_name="prospector",
                 exit_code=result.returncode,
                 stdout=result.stdout,
-                stderr=result.stderr
+                stderr=result.stderr,
             )
 
             # Parse Prospector JSON output
@@ -366,8 +393,20 @@ class StaticAnalysisRunner:
                     analysis_result.issues = data.get("messages", [])
                     analysis_result.metrics = {
                         "total_messages": len(data.get("messages", [])),
-                        "errors": len([m for m in data.get("messages", []) if m.get("severity") == "error"]),
-                        "warnings": len([m for m in data.get("messages", []) if m.get("severity") == "warning"])
+                        "errors": len(
+                            [
+                                m
+                                for m in data.get("messages", [])
+                                if m.get("severity") == "error"
+                            ]
+                        ),
+                        "warnings": len(
+                            [
+                                m
+                                for m in data.get("messages", [])
+                                if m.get("severity") == "warning"
+                            ]
+                        ),
                     }
                 except json.JSONDecodeError:
                     self.logger.warning("Could not parse Prospector JSON output")
@@ -376,19 +415,16 @@ class StaticAnalysisRunner:
             self.logger.info(f"✅ Prospector analysis completed")
 
         except FileNotFoundError:
-            self.logger.warning("⚠️ Prospector not found - install with: pip install prospector")
+            self.logger.warning(
+                "⚠️ Prospector not found - install with: pip install prospector"
+            )
         except Exception as e:
             self.logger.error(f"❌ Prospector analysis failed: {e}")
 
     async def _run_semgrep(self) -> None:
         """Run Semgrep pattern-based analysis"""
         try:
-            cmd = [
-                "semgrep",
-                "--config=auto",
-                "--json",
-                self.config.target_directory
-            ]
+            cmd = ["semgrep", "--config=auto", "--json", self.config.target_directory]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
 
@@ -396,7 +432,7 @@ class StaticAnalysisRunner:
                 tool_name="semgrep",
                 exit_code=result.returncode,
                 stdout=result.stdout,
-                stderr=result.stderr
+                stderr=result.stderr,
             )
 
             # Parse Semgrep JSON output
@@ -406,7 +442,17 @@ class StaticAnalysisRunner:
                     analysis_result.issues = data.get("results", [])
                     analysis_result.metrics = {
                         "total_findings": len(data.get("results", [])),
-                        "security_issues": len([r for r in data.get("results", []) if "security" in r.get("extra", {}).get("metadata", {}).get("category", "").lower()])
+                        "security_issues": len(
+                            [
+                                r
+                                for r in data.get("results", [])
+                                if "security"
+                                in r.get("extra", {})
+                                .get("metadata", {})
+                                .get("category", "")
+                                .lower()
+                            ]
+                        ),
                     }
                 except json.JSONDecodeError:
                     self.logger.warning("Could not parse Semgrep JSON output")
@@ -415,18 +461,16 @@ class StaticAnalysisRunner:
             self.logger.info(f"✅ Semgrep analysis completed")
 
         except FileNotFoundError:
-            self.logger.warning("⚠️ Semgrep not found - install with: pip install semgrep")
+            self.logger.warning(
+                "⚠️ Semgrep not found - install with: pip install semgrep"
+            )
         except Exception as e:
             self.logger.error(f"❌ Semgrep analysis failed: {e}")
 
     async def _run_vulture(self) -> None:
         """Run Vulture dead code detection"""
         try:
-            cmd = [
-                "vulture",
-                self.config.target_directory,
-                "--min-confidence=80"
-            ]
+            cmd = ["vulture", self.config.target_directory, "--min-confidence=80"]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
 
@@ -434,21 +478,23 @@ class StaticAnalysisRunner:
                 tool_name="vulture",
                 exit_code=result.returncode,
                 stdout=result.stdout,
-                stderr=result.stderr
+                stderr=result.stderr,
             )
 
             # Parse Vulture output
             issues = []
-            for line in result.stdout.split('\n'):
-                if line.strip() and ':' in line:
-                    parts = line.split(':')
+            for line in result.stdout.split("\n"):
+                if line.strip() and ":" in line:
+                    parts = line.split(":")
                     if len(parts) >= 3:
-                        issues.append({
-                            "file": parts[0],
-                            "line": parts[1],
-                            "message": ':'.join(parts[2:]).strip(),
-                            "type": "dead_code"
-                        })
+                        issues.append(
+                            {
+                                "file": parts[0],
+                                "line": parts[1],
+                                "message": ":".join(parts[2:]).strip(),
+                                "type": "dead_code",
+                            }
+                        )
 
             analysis_result.issues = issues
             analysis_result.metrics = {"dead_code_items": len(issues)}
@@ -457,7 +503,9 @@ class StaticAnalysisRunner:
             self.logger.info(f"✅ Vulture dead code analysis completed")
 
         except FileNotFoundError:
-            self.logger.warning("⚠️ Vulture not found - install with: pip install vulture")
+            self.logger.warning(
+                "⚠️ Vulture not found - install with: pip install vulture"
+            )
         except Exception as e:
             self.logger.error(f"❌ Vulture analysis failed: {e}")
 
@@ -469,14 +517,14 @@ class StaticAnalysisRunner:
                 "total_functions": 0,
                 "complex_functions": 0,
                 "total_classes": 0,
-                "total_lines": 0
+                "total_lines": 0,
             }
 
             for py_file in Path(self.config.target_directory).rglob("*.py"):
                 try:
-                    with open(py_file, 'r', encoding='utf-8') as f:
+                    with open(py_file, "r", encoding="utf-8") as f:
                         source = f.read()
-                        metrics["total_lines"] += len(source.split('\n'))
+                        metrics["total_lines"] += len(source.split("\n"))
 
                     tree = ast.parse(source)
 
@@ -488,13 +536,15 @@ class StaticAnalysisRunner:
                             complexity = self._calculate_complexity(node)
                             if complexity > self.config.max_complexity:
                                 metrics["complex_functions"] += 1
-                                issues.append({
-                                    "file": str(py_file),
-                                    "line": node.lineno,
-                                    "message": f"Function '{node.name}' has high complexity ({complexity})",
-                                    "type": "complexity",
-                                    "severity": "warning"
-                                })
+                                issues.append(
+                                    {
+                                        "file": str(py_file),
+                                        "line": node.lineno,
+                                        "message": f"Function '{node.name}' has high complexity ({complexity})",
+                                        "type": "complexity",
+                                        "severity": "warning",
+                                    }
+                                )
 
                         elif isinstance(node, ast.ClassDef):
                             metrics["total_classes"] += 1
@@ -508,7 +558,7 @@ class StaticAnalysisRunner:
                 stdout="",
                 stderr="",
                 issues=issues,
-                metrics=metrics
+                metrics=metrics,
             )
 
             self.results.append(analysis_result)
@@ -548,7 +598,7 @@ class StaticAnalysisRunner:
                     tool_name="safety",
                     exit_code=result.returncode,
                     stdout=result.stdout,
-                    stderr=result.stderr
+                    stderr=result.stderr,
                 )
 
                 if result.stdout:
@@ -563,7 +613,9 @@ class StaticAnalysisRunner:
                 self.logger.info(f"✅ Dependency security analysis completed")
 
             except FileNotFoundError:
-                self.logger.warning("⚠️ Safety not found - install with: pip install safety")
+                self.logger.warning(
+                    "⚠️ Safety not found - install with: pip install safety"
+                )
 
         except Exception as e:
             self.logger.error(f"❌ Dependency analysis failed: {e}")
@@ -604,13 +656,13 @@ class StaticAnalysisRunner:
                 "medium_issues": len(medium_issues),
                 "low_issues": len(low_issues),
                 "quality_score": quality_score,
-                "overall_grade": self._get_grade(quality_score)
+                "overall_grade": self._get_grade(quality_score),
             },
             "tool_results": {
                 result.tool_name: {
                     "exit_code": result.exit_code,
                     "issues_count": len(result.issues),
-                    "metrics": result.metrics
+                    "metrics": result.metrics,
                 }
                 for result in self.results
             },
@@ -618,9 +670,9 @@ class StaticAnalysisRunner:
                 "critical": critical_issues[:10],  # Top 10 of each
                 "high": high_issues[:10],
                 "medium": medium_issues[:10],
-                "low": low_issues[:10]
+                "low": low_issues[:10],
             },
-            "recommendations": self._generate_recommendations()
+            "recommendations": self._generate_recommendations(),
         }
 
         return report
@@ -639,7 +691,9 @@ class StaticAnalysisRunner:
             elif tool_name == "pylint":
                 if "pylint_score" in result.metrics:
                     pylint_score = result.metrics["pylint_score"]
-                    base_score = min(base_score, pylint_score * 10)  # Pylint score is 0-10
+                    base_score = min(
+                        base_score, pylint_score * 10
+                    )  # Pylint score is 0-10
             elif tool_name in ["flake8", "mypy"]:
                 base_score -= issue_count * 2
             else:
@@ -667,10 +721,18 @@ class StaticAnalysisRunner:
         # Check specific tool results
         for result in self.results:
             if result.tool_name == "bandit" and len(result.issues) > 0:
-                recommendations.append("🔐 Address security vulnerabilities identified by Bandit")
+                recommendations.append(
+                    "🔐 Address security vulnerabilities identified by Bandit"
+                )
 
-            elif result.tool_name == "pylint" and result.metrics.get("pylint_score", 10) < self.config.min_pylint_score:
-                recommendations.append(f"📊 Improve Pylint score (target: {self.config.min_pylint_score})")
+            elif (
+                result.tool_name == "pylint"
+                and result.metrics.get("pylint_score", 10)
+                < self.config.min_pylint_score
+            ):
+                recommendations.append(
+                    f"📊 Improve Pylint score (target: {self.config.min_pylint_score})"
+                )
 
             elif result.tool_name == "black" and result.exit_code != 0:
                 recommendations.append("🎨 Format code with Black for consistency")
@@ -682,14 +744,17 @@ class StaticAnalysisRunner:
                 recommendations.append("🧹 Remove dead code identified by Vulture")
 
         # General recommendations
-        recommendations.extend([
-            "📝 Set up pre-commit hooks for automated code quality checks",
-            "🔄 Integrate static analysis into CI/CD pipeline",
-            "📚 Establish coding standards and documentation",
-            "🧪 Increase test coverage for better reliability"
-        ])
+        recommendations.extend(
+            [
+                "📝 Set up pre-commit hooks for automated code quality checks",
+                "🔄 Integrate static analysis into CI/CD pipeline",
+                "📚 Establish coding standards and documentation",
+                "🧪 Increase test coverage for better reliability",
+            ]
+        )
 
         return recommendations
+
 
 async def main():
     """Run comprehensive static analysis"""
@@ -697,7 +762,7 @@ async def main():
         target_directory="src",
         min_pylint_score=8.0,
         max_complexity=10,
-        max_security_issues=0
+        max_security_issues=0,
     )
 
     runner = StaticAnalysisRunner(config)
@@ -710,9 +775,9 @@ async def main():
             json.dump(report, f, indent=2, default=str)
 
         # Print summary
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("COMPREHENSIVE STATIC ANALYSIS REPORT")
-        print("="*60)
+        print("=" * 60)
         print(f"Overall Grade: {report['summary']['overall_grade']}")
         print(f"Quality Score: {report['summary']['quality_score']:.1f}/100")
         print(f"Total Issues: {report['summary']['total_issues']}")
@@ -721,15 +786,15 @@ async def main():
         print(f"  Medium: {report['summary']['medium_issues']}")
 
         print(f"\nTop Recommendations:")
-        for i, rec in enumerate(report['recommendations'][:5], 1):
+        for i, rec in enumerate(report["recommendations"][:5], 1):
             print(f"  {i}. {rec}")
 
         print(f"\nDetailed report saved to: static_analysis_report.json")
 
         # Exit code based on quality
-        if report['summary']['quality_score'] >= 80:
+        if report["summary"]["quality_score"] >= 80:
             return 0
-        elif report['summary']['quality_score'] >= 60:
+        elif report["summary"]["quality_score"] >= 60:
             return 1
         else:
             return 2
@@ -738,7 +803,9 @@ async def main():
         print(f"Static analysis failed: {e}")
         return 3
 
+
 if __name__ == "__main__":
     import asyncio
+
     exit_code = asyncio.run(main())
     sys.exit(exit_code)

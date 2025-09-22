@@ -2,15 +2,18 @@
 Basic code generation templates (fallback when AI service is unavailable)
 """
 
-def generate_basic_code(language: str, library: str, api_spec: dict, options: dict) -> str:
+
+def generate_basic_code(
+    language: str, library: str, api_spec: dict, options: dict
+) -> str:
     """Generate basic code template"""
-    
-    base_url = api_spec.get('url', 'https://api.example.com')
-    method = api_spec.get('method', 'GET')
-    path = api_spec.get('path', '/endpoint')
-    
+
+    base_url = api_spec.get("url", "https://api.example.com")
+    method = api_spec.get("method", "GET")
+    path = api_spec.get("path", "/endpoint")
+
     templates = {
-        'javascript': f"""// API Client - {library}
+        "javascript": f"""// API Client - {library}
 const axios = require('{library}');
 
 const client = axios.create({{
@@ -36,8 +39,7 @@ async function makeRequest() {{
 
 makeRequest();
 """,
-        
-        'python': f"""# API Client - {library}
+        "python": f"""# API Client - {library}
 import {library}
 import os
 from dotenv import load_dotenv
@@ -69,8 +71,7 @@ if __name__ == '__main__':
     data = make_request()
     print(data)
 """,
-        
-        'typescript': f"""// API Client - TypeScript
+        "typescript": f"""// API Client - TypeScript
 import axios from '{library}';
 
 interface APIResponse {{
@@ -104,8 +105,7 @@ class APIClient {{
 
 export default APIClient;
 """,
-        
-        'java': f"""// API Client - Java
+        "java": f"""// API Client - Java
 import okhttp3.*;
 import java.io.IOException;
 
@@ -134,8 +134,7 @@ public class APIClient {{
     }}
 }}
 """,
-        
-        'go': f"""// API Client - Go
+        "go": f"""// API Client - Go
 package main
 
 import (
@@ -176,8 +175,7 @@ func main() {{
     fmt.Println(string(data))
 }}
 """,
-        
-        'csharp': f"""// API Client - C#
+        "csharp": f"""// API Client - C#
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -204,8 +202,7 @@ public class APIClient
     }}
 }}
 """,
-        
-        'ruby': f"""# API Client - Ruby
+        "ruby": f"""# API Client - Ruby
 require 'net/http'
 require 'json'
 require 'uri'
@@ -233,8 +230,7 @@ end
 client = APIClient.new
 puts client.make_request
 """,
-        
-        'php': f"""<?php
+        "php": f"""<?php
 // API Client - PHP
 
 class APIClient {{
@@ -267,8 +263,7 @@ $client = new APIClient();
 $data = $client->makeRequest();
 print_r($data);
 """,
-        
-        'rust': f"""// API Client - Rust
+        "rust": f"""// API Client - Rust
 use reqwest;
 use std::time::Duration;
 
@@ -290,8 +285,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {{
     Ok(())
 }}
 """,
-        
-        'kotlin': f"""// API Client - Kotlin
+        "kotlin": f"""// API Client - Kotlin
 import okhttp3.*
 import java.io.IOException
 
@@ -320,11 +314,13 @@ fun main() {{
     val client = APIClient()
     println(client.makeRequest())
 }}
-"""
+""",
     }
-    
+
     # Return template for requested language or generic
-    return templates.get(language, f"""// Generic API Client Template
+    return templates.get(
+        language,
+        f"""// Generic API Client Template
 // Language: {language}
 // Library: {library}
 // Base URL: {base_url}
@@ -336,4 +332,5 @@ fun main() {{
 // Make {method} request to {base_url}{path}
 // Handle response
 // Handle errors
-""")
+""",
+    )
