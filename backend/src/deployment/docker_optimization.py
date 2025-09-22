@@ -3,14 +3,14 @@ Docker Optimization and Multi-stage Build Configuration
 Advanced Docker optimization for production deployments
 """
 
-import os
-from typing import Dict, Any, List
 from pathlib import Path
 from dataclasses import dataclass
+
 
 @dataclass
 class DockerConfig:
     """Docker build configuration"""
+
     app_name: str = "api-orchestrator"
     python_version: str = "3.11"
     node_version: str = "18"
@@ -26,6 +26,7 @@ class DockerConfig:
     run_as_non_root: bool = True
     user_id: int = 1000
     group_id: int = 1000
+
 
 class DockerfileGenerator:
     """Generate optimized Dockerfiles for different environments"""
@@ -44,7 +45,7 @@ class DockerfileGenerator:
 
     def _generate_distroless_multistage(self) -> str:
         """Generate multi-stage Dockerfile with distroless final image"""
-        return f'''# syntax=docker/dockerfile:1.4
+        return f"""# syntax=docker/dockerfile:1.4
 # Build stage
 FROM {self.config.base_image} AS builder
 
@@ -114,11 +115,11 @@ EXPOSE $PORT
 # Run application
 ENTRYPOINT ["python", "-m", "uvicorn"]
 CMD ["src.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
-'''
+"""
 
     def _generate_multistage(self) -> str:
         """Generate multi-stage Dockerfile with slim final image"""
-        return f'''# syntax=docker/dockerfile:1.4
+        return f"""# syntax=docker/dockerfile:1.4
 # Build stage
 FROM {self.config.base_image} AS builder
 
@@ -182,11 +183,11 @@ EXPOSE $PORT
 
 # Run application
 CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
-'''
+"""
 
     def _generate_simple(self) -> str:
         """Generate simple optimized Dockerfile"""
-        return f'''# syntax=docker/dockerfile:1.4
+        return f"""# syntax=docker/dockerfile:1.4
 FROM {self.config.base_image}
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -229,11 +230,11 @@ EXPOSE $PORT
 
 # Run application
 CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
-'''
+"""
 
     def generate_frontend_dockerfile(self) -> str:
         """Generate optimized Dockerfile for frontend"""
-        return f'''# syntax=docker/dockerfile:1.4
+        return f"""# syntax=docker/dockerfile:1.4
 # Build stage
 FROM node:{self.config.node_version}-alpine AS builder
 
@@ -280,11 +281,11 @@ EXPOSE 80
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
-'''
+"""
 
     def generate_dockerignore(self) -> str:
         """Generate .dockerignore file"""
-        return '''# Git
+        return """# Git
 .git
 .gitignore
 .gitattributes
@@ -395,7 +396,8 @@ k8s-manifests*/
 # Misc
 .cache/
 .sass-cache/
-'''
+"""
+
 
 class DockerComposeGenerator:
     """Generate Docker Compose configurations"""
@@ -405,7 +407,7 @@ class DockerComposeGenerator:
 
     def generate_production_compose(self) -> str:
         """Generate production Docker Compose configuration"""
-        return f'''version: '3.8'
+        return f"""version: '3.8'
 
 services:
   {self.config.app_name}:
@@ -584,11 +586,11 @@ volumes:
     driver: local
   grafana-data:
     driver: local
-'''
+"""
 
     def generate_development_compose(self) -> str:
         """Generate development Docker Compose configuration"""
-        return f'''version: '3.8'
+        return f"""version: '3.8'
 
 services:
   {self.config.app_name}:
@@ -657,11 +659,12 @@ networks:
 volumes:
   postgres-dev-data:
     driver: local
-'''
+"""
+
 
 def generate_nginx_config() -> str:
     """Generate optimized Nginx configuration"""
-    return '''worker_processes auto;
+    return """worker_processes auto;
 worker_rlimit_nofile 65535;
 
 events {
@@ -818,7 +821,8 @@ http {
             }
         }
     }
-}'''
+}"""
+
 
 def main():
     """Generate all deployment configurations"""
@@ -826,7 +830,7 @@ def main():
         app_name="api-orchestrator",
         use_multi_stage=True,
         use_distroless=True,
-        run_as_non_root=True
+        run_as_non_root=True,
     )
 
     # Create output directory
@@ -872,6 +876,7 @@ def main():
     print("  - docker-compose.dev.yml (Development stack)")
     print("  - nginx.conf (Optimized Nginx configuration)")
     print("  - .dockerignore (Build optimization)")
+
 
 if __name__ == "__main__":
     main()

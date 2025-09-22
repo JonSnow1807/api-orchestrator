@@ -3,29 +3,33 @@ Cloud Auto-scaling and Deployment Strategies
 Enterprise-grade cloud deployment with advanced auto-scaling
 """
 
-import json
-import yaml
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 
+
 class CloudProvider(Enum):
     """Supported cloud providers"""
+
     AWS = "aws"
     GCP = "gcp"
     AZURE = "azure"
     DIGITAL_OCEAN = "digitalocean"
 
+
 class ScalingStrategy(Enum):
     """Auto-scaling strategies"""
+
     REACTIVE = "reactive"
     PREDICTIVE = "predictive"
     SCHEDULED = "scheduled"
     HYBRID = "hybrid"
 
+
 @dataclass
 class ScalingConfig:
     """Auto-scaling configuration"""
+
     min_instances: int = 2
     max_instances: int = 100
     target_cpu_utilization: float = 70.0
@@ -45,9 +49,11 @@ class ScalingConfig:
     # Scheduled scaling
     scheduled_rules: List[Dict[str, Any]] = field(default_factory=list)
 
+
 @dataclass
 class DeploymentStrategy:
     """Deployment strategy configuration"""
+
     strategy_type: str = "blue_green"  # blue_green, canary, rolling
     health_check_grace_period: int = 300
     readiness_timeout: int = 600
@@ -55,10 +61,13 @@ class DeploymentStrategy:
     rollback_enabled: bool = True
     automatic_rollback_threshold: float = 0.95  # Success rate threshold
 
+
 class AWSDeploymentGenerator:
     """Generate AWS deployment configurations"""
 
-    def __init__(self, scaling_config: ScalingConfig, deployment_strategy: DeploymentStrategy):
+    def __init__(
+        self, scaling_config: ScalingConfig, deployment_strategy: DeploymentStrategy
+    ):
         self.scaling_config = scaling_config
         self.deployment_strategy = deployment_strategy
 
@@ -76,51 +85,46 @@ class AWSDeploymentGenerator:
                 {
                     "name": "api-orchestrator",
                     "image": "api-orchestrator:latest",
-                    "portMappings": [
-                        {
-                            "containerPort": 8000,
-                            "protocol": "tcp"
-                        }
-                    ],
+                    "portMappings": [{"containerPort": 8000, "protocol": "tcp"}],
                     "environment": [
                         {"name": "ENVIRONMENT", "value": "production"},
                         {"name": "PORT", "value": "8000"},
-                        {"name": "LOG_LEVEL", "value": "INFO"}
+                        {"name": "LOG_LEVEL", "value": "INFO"},
                     ],
                     "secrets": [
                         {
                             "name": "DATABASE_URL",
-                            "valueFrom": "arn:aws:secretsmanager:region:account:secret:api-orchestrator/database-url"
+                            "valueFrom": "arn:aws:secretsmanager:region:account:secret:api-orchestrator/database-url",
                         },
                         {
                             "name": "SECRET_KEY",
-                            "valueFrom": "arn:aws:secretsmanager:region:account:secret:api-orchestrator/secret-key"
-                        }
+                            "valueFrom": "arn:aws:secretsmanager:region:account:secret:api-orchestrator/secret-key",
+                        },
                     ],
                     "logConfiguration": {
                         "logDriver": "awslogs",
                         "options": {
                             "awslogs-group": "/ecs/api-orchestrator",
                             "awslogs-region": "us-west-2",
-                            "awslogs-stream-prefix": "ecs"
-                        }
+                            "awslogs-stream-prefix": "ecs",
+                        },
                     },
                     "healthCheck": {
                         "command": [
                             "CMD-SHELL",
-                            "curl -f http://localhost:8000/health || exit 1"
+                            "curl -f http://localhost:8000/health || exit 1",
                         ],
                         "interval": 30,
                         "timeout": 10,
                         "retries": 3,
-                        "startPeriod": 60
+                        "startPeriod": 60,
                     },
                     "essential": True,
                     "cpu": 2048,
                     "memory": 4096,
-                    "memoryReservation": 2048
+                    "memoryReservation": 2048,
                 }
-            ]
+            ],
         }
 
     def generate_ecs_service(self) -> Dict[str, Any]:
@@ -134,21 +138,16 @@ class AWSDeploymentGenerator:
             "platformVersion": "LATEST",
             "networkConfiguration": {
                 "awsvpcConfiguration": {
-                    "subnets": [
-                        "subnet-12345",
-                        "subnet-67890"
-                    ],
-                    "securityGroups": [
-                        "sg-api-orchestrator"
-                    ],
-                    "assignPublicIp": "ENABLED"
+                    "subnets": ["subnet-12345", "subnet-67890"],
+                    "securityGroups": ["sg-api-orchestrator"],
+                    "assignPublicIp": "ENABLED",
                 }
             },
             "loadBalancers": [
                 {
                     "targetGroupArn": "arn:aws:elasticloadbalancing:region:account:targetgroup/api-orchestrator",
                     "containerName": "api-orchestrator",
-                    "containerPort": 8000
+                    "containerPort": 8000,
                 }
             ],
             "serviceRegistries": [
@@ -161,15 +160,15 @@ class AWSDeploymentGenerator:
                 "minimumHealthyPercent": 50,
                 "deploymentCircuitBreaker": {
                     "enable": True,
-                    "rollback": self.deployment_strategy.rollback_enabled
-                }
+                    "rollback": self.deployment_strategy.rollback_enabled,
+                },
             },
             "enableExecuteCommand": True,
             "propagateTags": "SERVICE",
             "tags": [
                 {"key": "Environment", "value": "production"},
-                {"key": "Application", "value": "api-orchestrator"}
-            ]
+                {"key": "Application", "value": "api-orchestrator"},
+            ],
         }
 
     def generate_auto_scaling_policy(self) -> Dict[str, Any]:
@@ -179,17 +178,15 @@ class AWSDeploymentGenerator:
             "Statement": [
                 {
                     "Effect": "Allow",
-                    "Principal": {
-                        "Service": "application-autoscaling.amazonaws.com"
-                    },
+                    "Principal": {"Service": "application-autoscaling.amazonaws.com"},
                     "Action": [
                         "ecs:DescribeServices",
                         "ecs:UpdateService",
                         "cloudwatch:GetMetricStatistics",
-                        "cloudwatch:PutMetricData"
-                    ]
+                        "cloudwatch:PutMetricData",
+                    ],
                 }
-            ]
+            ],
         }
 
     def generate_cloudformation_template(self) -> Dict[str, Any]:
@@ -201,25 +198,25 @@ class AWSDeploymentGenerator:
                 "Environment": {
                     "Type": "String",
                     "Default": "production",
-                    "AllowedValues": ["development", "staging", "production"]
+                    "AllowedValues": ["development", "staging", "production"],
                 },
                 "InstanceType": {
                     "Type": "String",
                     "Default": "t3.medium",
-                    "Description": "EC2 instance type for ECS cluster"
+                    "Description": "EC2 instance type for ECS cluster",
                 },
                 "MinInstances": {
                     "Type": "Number",
                     "Default": self.scaling_config.min_instances,
                     "MinValue": 1,
-                    "MaxValue": 10
+                    "MaxValue": 10,
                 },
                 "MaxInstances": {
                     "Type": "Number",
                     "Default": self.scaling_config.max_instances,
                     "MinValue": 1,
-                    "MaxValue": 1000
-                }
+                    "MaxValue": 1000,
+                },
             },
             "Resources": {
                 "ECSCluster": {
@@ -231,20 +228,14 @@ class AWSDeploymentGenerator:
                             {
                                 "CapacityProvider": "FARGATE",
                                 "Weight": 1,
-                                "Base": self.scaling_config.min_instances
+                                "Base": self.scaling_config.min_instances,
                             },
-                            {
-                                "CapacityProvider": "FARGATE_SPOT",
-                                "Weight": 4
-                            }
+                            {"CapacityProvider": "FARGATE_SPOT", "Weight": 4},
                         ],
                         "ClusterSettings": [
-                            {
-                                "Name": "containerInsights",
-                                "Value": "enabled"
-                            }
-                        ]
-                    }
+                            {"Name": "containerInsights", "Value": "enabled"}
+                        ],
+                    },
                 },
                 "ApplicationLoadBalancer": {
                     "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
@@ -253,32 +244,18 @@ class AWSDeploymentGenerator:
                         "Scheme": "internet-facing",
                         "Type": "application",
                         "IpAddressType": "ipv4",
-                        "Subnets": [
-                            {"Ref": "PublicSubnet1"},
-                            {"Ref": "PublicSubnet2"}
-                        ],
-                        "SecurityGroups": [
-                            {"Ref": "ALBSecurityGroup"}
-                        ],
+                        "Subnets": [{"Ref": "PublicSubnet1"}, {"Ref": "PublicSubnet2"}],
+                        "SecurityGroups": [{"Ref": "ALBSecurityGroup"}],
                         "LoadBalancerAttributes": [
-                            {
-                                "Key": "idle_timeout.timeout_seconds",
-                                "Value": "60"
-                            },
-                            {
-                                "Key": "routing.http2.enabled",
-                                "Value": "true"
-                            },
-                            {
-                                "Key": "access_logs.s3.enabled",
-                                "Value": "true"
-                            },
+                            {"Key": "idle_timeout.timeout_seconds", "Value": "60"},
+                            {"Key": "routing.http2.enabled", "Value": "true"},
+                            {"Key": "access_logs.s3.enabled", "Value": "true"},
                             {
                                 "Key": "access_logs.s3.bucket",
-                                "Value": {"Ref": "LoggingBucket"}
-                            }
-                        ]
-                    }
+                                "Value": {"Ref": "LoggingBucket"},
+                            },
+                        ],
+                    },
                 },
                 "TargetGroup": {
                     "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
@@ -295,10 +272,8 @@ class AWSDeploymentGenerator:
                         "HealthCheckTimeoutSeconds": 10,
                         "HealthyThresholdCount": 2,
                         "UnhealthyThresholdCount": 3,
-                        "Matcher": {
-                            "HttpCode": "200"
-                        }
-                    }
+                        "Matcher": {"HttpCode": "200"},
+                    },
                 },
                 "ScalableTarget": {
                     "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
@@ -308,8 +283,8 @@ class AWSDeploymentGenerator:
                         "ResourceId": "service/api-orchestrator-cluster/api-orchestrator-service",
                         "RoleARN": {"Fn::GetAtt": ["AutoScalingRole", "Arn"]},
                         "ScalableDimension": "ecs:service:DesiredCount",
-                        "ServiceNamespace": "ecs"
-                    }
+                        "ServiceNamespace": "ecs",
+                    },
                 },
                 "ScalingPolicyCPU": {
                     "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
@@ -323,9 +298,9 @@ class AWSDeploymentGenerator:
                                 "PredefinedMetricType": "ECSServiceAverageCPUUtilization"
                             },
                             "ScaleOutCooldown": self.scaling_config.scale_up_cooldown,
-                            "ScaleInCooldown": self.scaling_config.scale_down_cooldown
-                        }
-                    }
+                            "ScaleInCooldown": self.scaling_config.scale_down_cooldown,
+                        },
+                    },
                 },
                 "ScalingPolicyMemory": {
                     "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
@@ -339,9 +314,9 @@ class AWSDeploymentGenerator:
                                 "PredefinedMetricType": "ECSServiceAverageMemoryUtilization"
                             },
                             "ScaleOutCooldown": self.scaling_config.scale_up_cooldown,
-                            "ScaleInCooldown": self.scaling_config.scale_down_cooldown
-                        }
-                    }
+                            "ScaleInCooldown": self.scaling_config.scale_down_cooldown,
+                        },
+                    },
                 },
                 "DatabaseCluster": {
                     "Type": "AWS::RDS::DBCluster",
@@ -351,17 +326,15 @@ class AWSDeploymentGenerator:
                         "DatabaseName": "api_orchestrator",
                         "MasterUsername": "postgres",
                         "ManageMasterUserPassword": True,
-                        "VpcSecurityGroupIds": [
-                            {"Ref": "DatabaseSecurityGroup"}
-                        ],
+                        "VpcSecurityGroupIds": [{"Ref": "DatabaseSecurityGroup"}],
                         "DBSubnetGroupName": {"Ref": "DatabaseSubnetGroup"},
                         "BackupRetentionPeriod": 7,
                         "PreferredBackupWindow": "03:00-04:00",
                         "PreferredMaintenanceWindow": "sun:04:00-sun:05:00",
                         "EnableCloudwatchLogsExports": ["postgresql"],
                         "DeletionProtection": True,
-                        "StorageEncrypted": True
-                    }
+                        "StorageEncrypted": True,
+                    },
                 },
                 "ElastiCacheCluster": {
                     "Type": "AWS::ElastiCache::ReplicationGroup",
@@ -372,16 +345,14 @@ class AWSDeploymentGenerator:
                         "EngineVersion": "7.0",
                         "CacheNodeType": "cache.t3.micro",
                         "Port": 6379,
-                        "SecurityGroupIds": [
-                            {"Ref": "CacheSecurityGroup"}
-                        ],
+                        "SecurityGroupIds": [{"Ref": "CacheSecurityGroup"}],
                         "SubnetGroupName": {"Ref": "CacheSubnetGroup"},
                         "AtRestEncryptionEnabled": True,
                         "TransitEncryptionEnabled": True,
                         "AutomaticFailoverEnabled": True,
-                        "MultiAZEnabled": True
-                    }
-                }
+                        "MultiAZEnabled": True,
+                    },
+                },
             },
             "Outputs": {
                 "LoadBalancerDNS": {
@@ -389,22 +360,23 @@ class AWSDeploymentGenerator:
                     "Value": {"Fn::GetAtt": ["ApplicationLoadBalancer", "DNSName"]},
                     "Export": {
                         "Name": {"Fn::Sub": "${AWS::StackName}-LoadBalancerDNS"}
-                    }
+                    },
                 },
                 "ECSClusterName": {
                     "Description": "Name of the ECS cluster",
                     "Value": {"Ref": "ECSCluster"},
-                    "Export": {
-                        "Name": {"Fn::Sub": "${AWS::StackName}-ECSCluster"}
-                    }
-                }
-            }
+                    "Export": {"Name": {"Fn::Sub": "${AWS::StackName}-ECSCluster"}},
+                },
+            },
         }
+
 
 class GCPDeploymentGenerator:
     """Generate GCP deployment configurations"""
 
-    def __init__(self, scaling_config: ScalingConfig, deployment_strategy: DeploymentStrategy):
+    def __init__(
+        self, scaling_config: ScalingConfig, deployment_strategy: DeploymentStrategy
+    ):
         self.scaling_config = scaling_config
         self.deployment_strategy = deployment_strategy
 
@@ -418,17 +390,21 @@ class GCPDeploymentGenerator:
                 "namespace": "default",
                 "annotations": {
                     "run.googleapis.com/ingress": "all",
-                    "run.googleapis.com/execution-environment": "gen2"
-                }
+                    "run.googleapis.com/execution-environment": "gen2",
+                },
             },
             "spec": {
                 "template": {
                     "metadata": {
                         "annotations": {
-                            "autoscaling.knative.dev/minScale": str(self.scaling_config.min_instances),
-                            "autoscaling.knative.dev/maxScale": str(self.scaling_config.max_instances),
+                            "autoscaling.knative.dev/minScale": str(
+                                self.scaling_config.min_instances
+                            ),
+                            "autoscaling.knative.dev/maxScale": str(
+                                self.scaling_config.max_instances
+                            ),
                             "run.googleapis.com/cpu-throttling": "false",
-                            "run.googleapis.com/execution-environment": "gen2"
+                            "run.googleapis.com/execution-environment": "gen2",
                         }
                     },
                     "spec": {
@@ -437,62 +413,39 @@ class GCPDeploymentGenerator:
                         "containers": [
                             {
                                 "image": "gcr.io/PROJECT_ID/api-orchestrator:latest",
-                                "ports": [
-                                    {
-                                        "name": "http1",
-                                        "containerPort": 8000
-                                    }
-                                ],
+                                "ports": [{"name": "http1", "containerPort": 8000}],
                                 "env": [
-                                    {
-                                        "name": "ENVIRONMENT",
-                                        "value": "production"
-                                    },
-                                    {
-                                        "name": "PORT",
-                                        "value": "8000"
-                                    }
+                                    {"name": "ENVIRONMENT", "value": "production"},
+                                    {"name": "PORT", "value": "8000"},
                                 ],
                                 "resources": {
-                                    "limits": {
-                                        "cpu": "2000m",
-                                        "memory": "4Gi"
-                                    },
-                                    "requests": {
-                                        "cpu": "1000m",
-                                        "memory": "2Gi"
-                                    }
+                                    "limits": {"cpu": "2000m", "memory": "4Gi"},
+                                    "requests": {"cpu": "1000m", "memory": "2Gi"},
                                 },
                                 "livenessProbe": {
-                                    "httpGet": {
-                                        "path": "/health",
-                                        "port": 8000
-                                    },
+                                    "httpGet": {"path": "/health", "port": 8000},
                                     "initialDelaySeconds": 30,
                                     "periodSeconds": 10,
                                     "timeoutSeconds": 5,
-                                    "failureThreshold": 3
+                                    "failureThreshold": 3,
                                 },
                                 "startupProbe": {
-                                    "httpGet": {
-                                        "path": "/health",
-                                        "port": 8000
-                                    },
+                                    "httpGet": {"path": "/health", "port": 8000},
                                     "initialDelaySeconds": 10,
                                     "periodSeconds": 5,
                                     "timeoutSeconds": 3,
-                                    "failureThreshold": 30
-                                }
+                                    "failureThreshold": 30,
+                                },
                             }
-                        ]
-                    }
+                        ],
+                    },
                 }
-            }
+            },
         }
 
     def generate_terraform_config(self) -> str:
         """Generate Terraform configuration for GCP"""
-        return f'''
+        return f"""
 # Provider configuration
 terraform {{
   required_providers {{
@@ -747,58 +700,36 @@ output "database_ip" {{
 output "redis_host" {{
   value = google_redis_instance.cache.host
 }}
-'''
+"""
+
 
 def generate_monitoring_configs() -> Dict[str, Any]:
     """Generate comprehensive monitoring configurations"""
     return {
         "prometheus_config": {
-            "global": {
-                "scrape_interval": "15s",
-                "evaluation_interval": "15s"
-            },
-            "rule_files": [
-                "api_orchestrator_rules.yml"
-            ],
+            "global": {"scrape_interval": "15s", "evaluation_interval": "15s"},
+            "rule_files": ["api_orchestrator_rules.yml"],
             "alerting": {
                 "alertmanagers": [
-                    {
-                        "static_configs": [
-                            {
-                                "targets": ["alertmanager:9093"]
-                            }
-                        ]
-                    }
+                    {"static_configs": [{"targets": ["alertmanager:9093"]}]}
                 ]
             },
             "scrape_configs": [
                 {
                     "job_name": "api-orchestrator",
-                    "static_configs": [
-                        {
-                            "targets": ["api-orchestrator:8000"]
-                        }
-                    ],
+                    "static_configs": [{"targets": ["api-orchestrator:8000"]}],
                     "metrics_path": "/metrics",
-                    "scrape_interval": "30s"
+                    "scrape_interval": "30s",
                 },
                 {
                     "job_name": "postgres-exporter",
-                    "static_configs": [
-                        {
-                            "targets": ["postgres-exporter:9187"]
-                        }
-                    ]
+                    "static_configs": [{"targets": ["postgres-exporter:9187"]}],
                 },
                 {
                     "job_name": "redis-exporter",
-                    "static_configs": [
-                        {
-                            "targets": ["redis-exporter:9121"]
-                        }
-                    ]
-                }
-            ]
+                    "static_configs": [{"targets": ["redis-exporter:9121"]}],
+                },
+            ],
         },
         "alerting_rules": {
             "groups": [
@@ -809,43 +740,38 @@ def generate_monitoring_configs() -> Dict[str, Any]:
                             "alert": "HighResponseTime",
                             "expr": "histogram_quantile(0.95, http_request_duration_seconds_bucket) > 0.5",
                             "for": "5m",
-                            "labels": {
-                                "severity": "warning"
-                            },
+                            "labels": {"severity": "warning"},
                             "annotations": {
                                 "summary": "High response time detected",
-                                "description": "95th percentile response time is above 500ms"
-                            }
+                                "description": "95th percentile response time is above 500ms",
+                            },
                         },
                         {
                             "alert": "HighErrorRate",
                             "expr": "rate(http_requests_total{status=~'5..'}[5m]) > 0.1",
                             "for": "5m",
-                            "labels": {
-                                "severity": "critical"
-                            },
+                            "labels": {"severity": "critical"},
                             "annotations": {
                                 "summary": "High error rate detected",
-                                "description": "Error rate is above 10%"
-                            }
+                                "description": "Error rate is above 10%",
+                            },
                         },
                         {
                             "alert": "HighCPUUsage",
                             "expr": "cpu_usage_percent > 80",
                             "for": "10m",
-                            "labels": {
-                                "severity": "warning"
-                            },
+                            "labels": {"severity": "warning"},
                             "annotations": {
                                 "summary": "High CPU usage",
-                                "description": "CPU usage is above 80% for 10 minutes"
-                            }
-                        }
-                    ]
+                                "description": "CPU usage is above 80% for 10 minutes",
+                            },
+                        },
+                    ],
                 }
             ]
-        }
+        },
     }
+
 
 def main():
     """Generate cloud deployment configurations"""
@@ -856,29 +782,30 @@ def main():
         target_cpu_utilization=70.0,
         target_memory_utilization=80.0,
         enable_predictive_scaling=True,
-        enable_custom_metrics=True
+        enable_custom_metrics=True,
     )
 
     deployment_strategy = DeploymentStrategy(
         strategy_type="blue_green",
         canary_percentage=10,
         rollback_enabled=True,
-        automatic_rollback_threshold=0.95
+        automatic_rollback_threshold=0.95,
     )
 
     # Generate AWS configurations
     print("Generating AWS deployment configurations...")
-    aws_generator = AWSDeploymentGenerator(scaling_config, deployment_strategy)
+    AWSDeploymentGenerator(scaling_config, deployment_strategy)
 
     # Generate GCP configurations
     print("Generating GCP deployment configurations...")
-    gcp_generator = GCPDeploymentGenerator(scaling_config, deployment_strategy)
+    GCPDeploymentGenerator(scaling_config, deployment_strategy)
 
     # Generate monitoring configs
     print("Generating monitoring configurations...")
-    monitoring_configs = generate_monitoring_configs()
+    generate_monitoring_configs()
 
     print("✅ Cloud deployment and scaling configurations generated successfully!")
+
 
 if __name__ == "__main__":
     main()

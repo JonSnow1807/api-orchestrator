@@ -9,17 +9,17 @@ import time
 import aiohttp
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict
 from enum import Enum
-import json
 import psutil
 import statistics
 from collections import defaultdict, deque
 
 # Import our AI agents and Kill Shot features
-from kill_shots.predictive_failure_analysis import PredictiveFailureAnalysis, FailurePrediction
+from kill_shots.predictive_failure_analysis import PredictiveFailureAnalysis
 from autonomous_code_generation import AutonomousCodeGenerator, CodeLanguage, CodeType
+
 
 class HealthStatus(Enum):
     HEALTHY = "healthy"
@@ -27,6 +27,7 @@ class HealthStatus(Enum):
     CRITICAL = "critical"
     FAILED = "failed"
     RECOVERING = "recovering"
+
 
 class HealingAction(Enum):
     RESTART_SERVICE = "restart_service"
@@ -37,6 +38,7 @@ class HealingAction(Enum):
     ROLLBACK = "rollback"
     CIRCUIT_BREAKER = "circuit_breaker"
 
+
 @dataclass
 class HealthCheck:
     endpoint: str
@@ -45,6 +47,7 @@ class HealthCheck:
     error_message: Optional[str]
     timestamp: datetime
     metadata: Dict[str, Any]
+
 
 @dataclass
 class HealingEvent:
@@ -56,6 +59,7 @@ class HealingEvent:
     status: str
     timestamp: datetime
     resolution_time: Optional[float]
+
 
 class SelfHealingInfrastructure:
     """
@@ -92,7 +96,7 @@ class SelfHealingInfrastructure:
             "auth_service": "http://localhost:8001",
             "database": "postgresql://localhost:5432",
             "cache": "redis://localhost:6379",
-            "monitoring": "http://localhost:9090"
+            "monitoring": "http://localhost:9090",
         }
 
     async def initialize(self):
@@ -105,7 +109,7 @@ class SelfHealingInfrastructure:
                 "state": "closed",  # closed, open, half-open
                 "failure_count": 0,
                 "last_failure": None,
-                "reset_timeout": 60
+                "reset_timeout": 60,
             }
 
         # Start background monitoring and healing
@@ -119,7 +123,7 @@ class SelfHealingInfrastructure:
         while True:
             try:
                 # Check all critical endpoints
-                health_results = await self._perform_health_checks()
+                await self._perform_health_checks()
 
                 # Analyze trends and predict issues
                 await self._analyze_health_trends()
@@ -143,7 +147,7 @@ class SelfHealingInfrastructure:
             "/api/v1/auth/status",
             "/api/v1/projects",
             "/api/v1/tests",
-            "/metrics"
+            "/metrics",
         ]
 
         for endpoint in api_endpoints:
@@ -168,7 +172,9 @@ class SelfHealingInfrastructure:
         start_time = time.time()
 
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=10)
+            ) as session:
                 url = f"{self.services.get('api_gateway', 'http://localhost:8000')}{endpoint}"
 
                 async with session.get(url) as response:
@@ -190,7 +196,7 @@ class SelfHealingInfrastructure:
                         response_time=response_time,
                         error_message=error_message,
                         timestamp=datetime.now(),
-                        metadata={"status_code": response.status}
+                        metadata={"status_code": response.status},
                     )
 
         except asyncio.TimeoutError:
@@ -200,7 +206,7 @@ class SelfHealingInfrastructure:
                 response_time=10000,  # Timeout
                 error_message="Request timeout",
                 timestamp=datetime.now(),
-                metadata={"timeout": True}
+                metadata={"timeout": True},
             )
         except Exception as e:
             return HealthCheck(
@@ -209,7 +215,7 @@ class SelfHealingInfrastructure:
                 response_time=time.time() - start_time,
                 error_message=str(e),
                 timestamp=datetime.now(),
-                metadata={"exception": type(e).__name__}
+                metadata={"exception": type(e).__name__},
             )
 
     async def _check_system_health(self) -> HealthCheck:
@@ -223,7 +229,7 @@ class SelfHealingInfrastructure:
             memory_percent = memory.percent
 
             # Disk usage
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             disk_percent = (disk.used / disk.total) * 100
 
             # Determine status based on thresholds
@@ -246,8 +252,8 @@ class SelfHealingInfrastructure:
                 metadata={
                     "cpu_percent": cpu_percent,
                     "memory_percent": memory_percent,
-                    "disk_percent": disk_percent
-                }
+                    "disk_percent": disk_percent,
+                },
             )
 
         except Exception as e:
@@ -257,7 +263,7 @@ class SelfHealingInfrastructure:
                 response_time=0,
                 error_message=str(e),
                 timestamp=datetime.now(),
-                metadata={"exception": type(e).__name__}
+                metadata={"exception": type(e).__name__},
             )
 
     async def _analyze_health_trends(self):
@@ -269,14 +275,24 @@ class SelfHealingInfrastructure:
             # Calculate trend metrics
             recent_checks = list(checks)[-10:]
             response_times = [check.response_time for check in recent_checks]
-            error_rate = len([c for c in recent_checks if c.status in [HealthStatus.CRITICAL, HealthStatus.FAILED]]) / len(recent_checks)
+            error_rate = len(
+                [
+                    c
+                    for c in recent_checks
+                    if c.status in [HealthStatus.CRITICAL, HealthStatus.FAILED]
+                ]
+            ) / len(recent_checks)
 
             # Predict potential issues
             if statistics.mean(response_times) > 5000:  # 5 seconds
-                await self._trigger_healing_action(endpoint, "slow_response", [HealingAction.SCALE_UP])
+                await self._trigger_healing_action(
+                    endpoint, "slow_response", [HealingAction.SCALE_UP]
+                )
 
             if error_rate > 0.3:  # 30% error rate
-                await self._trigger_healing_action(endpoint, "high_error_rate", [HealingAction.RESTART_SERVICE])
+                await self._trigger_healing_action(
+                    endpoint, "high_error_rate", [HealingAction.RESTART_SERVICE]
+                )
 
     async def _continuous_healing(self):
         """Continuously apply healing actions"""
@@ -301,7 +317,9 @@ class SelfHealingInfrastructure:
                 self.logger.error(f"Error in healing process: {e}")
                 await asyncio.sleep(60)
 
-    async def _trigger_healing_action(self, service: str, issue_type: str, actions: List[HealingAction]):
+    async def _trigger_healing_action(
+        self, service: str, issue_type: str, actions: List[HealingAction]
+    ):
         """Trigger specific healing actions"""
         event_id = f"heal_{int(time.time())}_{service}"
 
@@ -313,7 +331,7 @@ class SelfHealingInfrastructure:
             healing_actions=actions,
             status="in_progress",
             timestamp=datetime.now(),
-            resolution_time=None
+            resolution_time=None,
         )
 
         self.healing_history.append(healing_event)
@@ -325,9 +343,13 @@ class SelfHealingInfrastructure:
         for action in actions:
             try:
                 await self._execute_healing_action(service, action)
-                self.logger.info(f"✅ Healing action {action.value} completed for {service}")
+                self.logger.info(
+                    f"✅ Healing action {action.value} completed for {service}"
+                )
             except Exception as e:
-                self.logger.error(f"❌ Healing action {action.value} failed for {service}: {e}")
+                self.logger.error(
+                    f"❌ Healing action {action.value} failed for {service}: {e}"
+                )
 
         # Update healing event
         healing_event.status = "completed"
@@ -383,10 +405,12 @@ class SelfHealingInfrastructure:
             generated_patch = await self.code_generator.generate_code_from_description(
                 description=patch_description,
                 language=CodeLanguage.PYTHON,
-                code_type=CodeType.BUG_FIX
+                code_type=CodeType.BUG_FIX,
             )
 
-            self.logger.info(f"✅ Generated patch for {service}: {generated_patch.filename}")
+            self.logger.info(
+                f"✅ Generated patch for {service}: {generated_patch.filename}"
+            )
 
         except Exception as e:
             self.logger.error(f"❌ Failed to generate patch for {service}: {e}")
@@ -405,7 +429,9 @@ class SelfHealingInfrastructure:
             if breaker["state"] == "open":
                 # Check if we should try half-open
                 if breaker["last_failure"]:
-                    time_since_failure = (datetime.now() - breaker["last_failure"]).seconds
+                    time_since_failure = (
+                        datetime.now() - breaker["last_failure"]
+                    ).seconds
                     if time_since_failure > breaker["reset_timeout"]:
                         breaker["state"] = "half-open"
                         self.logger.info(f"🔄 Circuit breaker half-open for {service}")
@@ -415,9 +441,13 @@ class SelfHealingInfrastructure:
         # Check current load metrics
         for service, metrics in self.service_metrics.items():
             if "cpu_usage" in metrics and metrics["cpu_usage"] > 80:
-                await self._trigger_healing_action(service, "high_cpu", [HealingAction.SCALE_UP])
+                await self._trigger_healing_action(
+                    service, "high_cpu", [HealingAction.SCALE_UP]
+                )
             elif "cpu_usage" in metrics and metrics["cpu_usage"] < 20:
-                await self._trigger_healing_action(service, "low_cpu", [HealingAction.SCALE_DOWN])
+                await self._trigger_healing_action(
+                    service, "low_cpu", [HealingAction.SCALE_DOWN]
+                )
 
     async def _cleanup_resources(self):
         """Clean up unused resources"""
@@ -443,14 +473,22 @@ class SelfHealingInfrastructure:
                         recent_checks.extend(list(checks)[-5:])
 
                 if recent_checks:
-                    avg_response_time = statistics.mean([c.response_time for c in recent_checks])
-                    error_rate = len([c for c in recent_checks if c.status in [HealthStatus.CRITICAL, HealthStatus.FAILED]]) / len(recent_checks)
+                    avg_response_time = statistics.mean(
+                        [c.response_time for c in recent_checks]
+                    )
+                    error_rate = len(
+                        [
+                            c
+                            for c in recent_checks
+                            if c.status in [HealthStatus.CRITICAL, HealthStatus.FAILED]
+                        ]
+                    ) / len(recent_checks)
 
                     self.service_metrics[service] = {
                         "avg_response_time": avg_response_time,
                         "error_rate": error_rate,
                         "health_score": 100 - (error_rate * 100),
-                        "last_updated": datetime.now()
+                        "last_updated": datetime.now(),
                     }
 
             except Exception as e:
@@ -463,9 +501,11 @@ class SelfHealingInfrastructure:
             "overall_health": self._calculate_overall_health(),
             "services": self.service_metrics,
             "circuit_breakers": self.circuit_breakers,
-            "recent_healing_events": [asdict(event) for event in self.healing_history[-10:]],
+            "recent_healing_events": [
+                asdict(event) for event in self.healing_history[-10:]
+            ],
             "active_endpoints": len(self.health_checks),
-            "healing_enabled": self.healing_enabled
+            "healing_enabled": self.healing_enabled,
         }
 
     def _calculate_overall_health(self) -> str:
@@ -473,7 +513,9 @@ class SelfHealingInfrastructure:
         if not self.service_metrics:
             return "unknown"
 
-        health_scores = [metrics.get("health_score", 0) for metrics in self.service_metrics.values()]
+        health_scores = [
+            metrics.get("health_score", 0) for metrics in self.service_metrics.values()
+        ]
         avg_health = statistics.mean(health_scores) if health_scores else 0
 
         if avg_health >= 95:
@@ -499,20 +541,23 @@ class SelfHealingInfrastructure:
         # Wait for tasks to complete
         if self.monitoring_task or self.healing_task:
             await asyncio.gather(
-                self.monitoring_task, self.healing_task,
-                return_exceptions=True
+                self.monitoring_task, self.healing_task, return_exceptions=True
             )
+
 
 # Global self-healing infrastructure instance
 self_healing_infrastructure = SelfHealingInfrastructure()
+
 
 async def initialize_self_healing():
     """Initialize the self-healing infrastructure"""
     await self_healing_infrastructure.initialize()
 
+
 def get_infrastructure_status():
     """Get current infrastructure status"""
     return self_healing_infrastructure.get_infrastructure_status()
+
 
 async def trigger_manual_healing(service: str, issue_type: str):
     """Manually trigger healing for a service"""

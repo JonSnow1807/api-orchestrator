@@ -4,14 +4,15 @@ Enterprise-grade Kubernetes configurations for API Orchestrator
 """
 
 import yaml
-import json
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, field
+from typing import Dict, Any
+from dataclasses import dataclass
 from pathlib import Path
+
 
 @dataclass
 class DeploymentConfig:
     """Deployment configuration settings"""
+
     app_name: str = "api-orchestrator"
     namespace: str = "api-orchestrator"
     image: str = "api-orchestrator:latest"
@@ -42,6 +43,7 @@ class DeploymentConfig:
     enable_prometheus_monitoring: bool = True
     enable_jaeger_tracing: bool = True
 
+
 class KubernetesManifestGenerator:
     """Generate Kubernetes manifests for API Orchestrator deployment"""
 
@@ -65,7 +67,7 @@ class KubernetesManifestGenerator:
             "redis_service": self.generate_redis_service(),
             "postgres_deployment": self.generate_postgres_deployment(),
             "postgres_service": self.generate_postgres_service(),
-            "postgres_pvc": self.generate_postgres_pvc()
+            "postgres_pvc": self.generate_postgres_pvc(),
         }
 
         if self.config.enable_pod_security_policy:
@@ -83,9 +85,9 @@ class KubernetesManifestGenerator:
                 "labels": {
                     "name": self.config.namespace,
                     "app": self.config.app_name,
-                    "environment": self.config.environment
-                }
-            }
+                    "environment": self.config.environment,
+                },
+            },
         }
 
     def generate_configmap(self) -> Dict[str, Any]:
@@ -96,10 +98,7 @@ class KubernetesManifestGenerator:
             "metadata": {
                 "name": f"{self.config.app_name}-config",
                 "namespace": self.config.namespace,
-                "labels": {
-                    "app": self.config.app_name,
-                    "component": "config"
-                }
+                "labels": {"app": self.config.app_name, "component": "config"},
             },
             "data": {
                 "ENVIRONMENT": self.config.environment,
@@ -110,8 +109,8 @@ class KubernetesManifestGenerator:
                 "API_VERSION": "v1",
                 "CORS_ORIGINS": "*",
                 "MAX_WORKERS": "4",
-                "WORKER_CLASS": "uvicorn.workers.UvicornWorker"
-            }
+                "WORKER_CLASS": "uvicorn.workers.UvicornWorker",
+            },
         }
 
     def generate_secret(self) -> Dict[str, Any]:
@@ -122,10 +121,7 @@ class KubernetesManifestGenerator:
             "metadata": {
                 "name": f"{self.config.app_name}-secrets",
                 "namespace": self.config.namespace,
-                "labels": {
-                    "app": self.config.app_name,
-                    "component": "secrets"
-                }
+                "labels": {"app": self.config.app_name, "component": "secrets"},
             },
             "type": "Opaque",
             "data": {
@@ -133,8 +129,8 @@ class KubernetesManifestGenerator:
                 "DATABASE_URL": "cG9zdGdyZXNxbDovL3VzZXI6cGFzc0Bwb3N0Z3Jlczo1NDMyL2FwaV9vcmNoZXN0cmF0b3I=",
                 "SECRET_KEY": "Y2hhbmdlLW1lLWluLXByb2R1Y3Rpb24=",
                 "JWT_SECRET_KEY": "Y2hhbmdlLW1lLWluLXByb2R1Y3Rpb24=",
-                "ENCRYPTION_KEY": "Y2hhbmdlLW1lLWluLXByb2R1Y3Rpb24="
-            }
+                "ENCRYPTION_KEY": "Y2hhbmdlLW1lLWluLXByb2R1Y3Rpb24=",
+            },
         }
 
     def generate_deployment(self) -> Dict[str, Any]:
@@ -148,43 +144,37 @@ class KubernetesManifestGenerator:
                 "labels": {
                     "app": self.config.app_name,
                     "version": "v1",
-                    "component": "api"
-                }
+                    "component": "api",
+                },
             },
             "spec": {
                 "replicas": self.config.replicas,
                 "strategy": {
                     "type": "RollingUpdate",
-                    "rollingUpdate": {
-                        "maxSurge": 1,
-                        "maxUnavailable": 0
-                    }
+                    "rollingUpdate": {"maxSurge": 1, "maxUnavailable": 0},
                 },
                 "selector": {
-                    "matchLabels": {
-                        "app": self.config.app_name,
-                        "component": "api"
-                    }
+                    "matchLabels": {"app": self.config.app_name, "component": "api"}
                 },
                 "template": {
                     "metadata": {
                         "labels": {
                             "app": self.config.app_name,
                             "version": "v1",
-                            "component": "api"
+                            "component": "api",
                         },
                         "annotations": {
                             "prometheus.io/scrape": "true",
                             "prometheus.io/port": "8000",
-                            "prometheus.io/path": "/metrics"
-                        }
+                            "prometheus.io/path": "/metrics",
+                        },
                     },
                     "spec": {
                         "serviceAccountName": f"{self.config.app_name}-service-account",
                         "securityContext": {
                             "runAsNonRoot": True,
                             "runAsUser": 1000,
-                            "fsGroup": 1000
+                            "fsGroup": 1000,
                         },
                         "containers": [
                             {
@@ -195,15 +185,10 @@ class KubernetesManifestGenerator:
                                     {
                                         "name": "http",
                                         "containerPort": 8000,
-                                        "protocol": "TCP"
+                                        "protocol": "TCP",
                                     }
                                 ],
-                                "env": [
-                                    {
-                                        "name": "PORT",
-                                        "value": "8000"
-                                    }
-                                ],
+                                "env": [{"name": "PORT", "value": "8000"}],
                                 "envFrom": [
                                     {
                                         "configMapRef": {
@@ -214,65 +199,47 @@ class KubernetesManifestGenerator:
                                         "secretRef": {
                                             "name": f"{self.config.app_name}-secrets"
                                         }
-                                    }
+                                    },
                                 ],
                                 "resources": {
                                     "requests": {
                                         "cpu": self.config.cpu_request,
-                                        "memory": self.config.memory_request
+                                        "memory": self.config.memory_request,
                                     },
                                     "limits": {
                                         "cpu": self.config.cpu_limit,
-                                        "memory": self.config.memory_limit
-                                    }
+                                        "memory": self.config.memory_limit,
+                                    },
                                 },
                                 "livenessProbe": {
-                                    "httpGet": {
-                                        "path": "/health",
-                                        "port": "http"
-                                    },
+                                    "httpGet": {"path": "/health", "port": "http"},
                                     "initialDelaySeconds": 30,
                                     "periodSeconds": 10,
                                     "timeoutSeconds": 5,
-                                    "failureThreshold": 3
+                                    "failureThreshold": 3,
                                 },
                                 "readinessProbe": {
-                                    "httpGet": {
-                                        "path": "/health",
-                                        "port": "http"
-                                    },
+                                    "httpGet": {"path": "/health", "port": "http"},
                                     "initialDelaySeconds": 5,
                                     "periodSeconds": 5,
                                     "timeoutSeconds": 3,
-                                    "failureThreshold": 3
+                                    "failureThreshold": 3,
                                 },
                                 "securityContext": {
                                     "allowPrivilegeEscalation": False,
                                     "readOnlyRootFilesystem": True,
-                                    "capabilities": {
-                                        "drop": ["ALL"]
-                                    }
+                                    "capabilities": {"drop": ["ALL"]},
                                 },
-                                "volumeMounts": [
-                                    {
-                                        "name": "tmp",
-                                        "mountPath": "/tmp"
-                                    }
-                                ]
+                                "volumeMounts": [{"name": "tmp", "mountPath": "/tmp"}],
                             }
                         ],
-                        "volumes": [
-                            {
-                                "name": "tmp",
-                                "emptyDir": {}
-                            }
-                        ],
+                        "volumes": [{"name": "tmp", "emptyDir": {}}],
                         "terminationGracePeriodSeconds": 30,
                         "dnsPolicy": "ClusterFirst",
-                        "restartPolicy": "Always"
-                    }
-                }
-            }
+                        "restartPolicy": "Always",
+                    },
+                },
+            },
         }
 
     def generate_service(self) -> Dict[str, Any]:
@@ -283,10 +250,7 @@ class KubernetesManifestGenerator:
             "metadata": {
                 "name": f"{self.config.app_name}-service",
                 "namespace": self.config.namespace,
-                "labels": {
-                    "app": self.config.app_name,
-                    "component": "api"
-                }
+                "labels": {"app": self.config.app_name, "component": "api"},
             },
             "spec": {
                 "type": "ClusterIP",
@@ -295,14 +259,11 @@ class KubernetesManifestGenerator:
                         "name": "http",
                         "port": 80,
                         "targetPort": "http",
-                        "protocol": "TCP"
+                        "protocol": "TCP",
                     }
                 ],
-                "selector": {
-                    "app": self.config.app_name,
-                    "component": "api"
-                }
-            }
+                "selector": {"app": self.config.app_name, "component": "api"},
+            },
         }
 
     def generate_ingress(self) -> Dict[str, Any]:
@@ -313,10 +274,7 @@ class KubernetesManifestGenerator:
             "metadata": {
                 "name": f"{self.config.app_name}-ingress",
                 "namespace": self.config.namespace,
-                "labels": {
-                    "app": self.config.app_name,
-                    "component": "ingress"
-                },
+                "labels": {"app": self.config.app_name, "component": "ingress"},
                 "annotations": {
                     "kubernetes.io/ingress.class": "nginx",
                     "nginx.ingress.kubernetes.io/use-regex": "true",
@@ -325,14 +283,14 @@ class KubernetesManifestGenerator:
                     "nginx.ingress.kubernetes.io/force-ssl-redirect": "true",
                     "cert-manager.io/cluster-issuer": "letsencrypt-prod",
                     "nginx.ingress.kubernetes.io/rate-limit": "100",
-                    "nginx.ingress.kubernetes.io/rate-limit-window": "1m"
-                }
+                    "nginx.ingress.kubernetes.io/rate-limit-window": "1m",
+                },
             },
             "spec": {
                 "tls": [
                     {
                         "hosts": ["api.yourdomain.com"],
-                        "secretName": f"{self.config.app_name}-tls"
+                        "secretName": f"{self.config.app_name}-tls",
                     }
                 ],
                 "rules": [
@@ -346,17 +304,15 @@ class KubernetesManifestGenerator:
                                     "backend": {
                                         "service": {
                                             "name": f"{self.config.app_name}-service",
-                                            "port": {
-                                                "number": 80
-                                            }
+                                            "port": {"number": 80},
                                         }
-                                    }
+                                    },
                                 }
                             ]
-                        }
+                        },
                     }
-                ]
-            }
+                ],
+            },
         }
 
     def generate_hpa(self) -> Dict[str, Any]:
@@ -367,16 +323,13 @@ class KubernetesManifestGenerator:
             "metadata": {
                 "name": f"{self.config.app_name}-hpa",
                 "namespace": self.config.namespace,
-                "labels": {
-                    "app": self.config.app_name,
-                    "component": "autoscaler"
-                }
+                "labels": {"app": self.config.app_name, "component": "autoscaler"},
             },
             "spec": {
                 "scaleTargetRef": {
                     "apiVersion": "apps/v1",
                     "kind": "Deployment",
-                    "name": self.config.app_name
+                    "name": self.config.app_name,
                 },
                 "minReplicas": self.config.min_replicas,
                 "maxReplicas": self.config.max_replicas,
@@ -387,9 +340,9 @@ class KubernetesManifestGenerator:
                             "name": "cpu",
                             "target": {
                                 "type": "Utilization",
-                                "averageUtilization": self.config.target_cpu_utilization
-                            }
-                        }
+                                "averageUtilization": self.config.target_cpu_utilization,
+                            },
+                        },
                     },
                     {
                         "type": "Resource",
@@ -397,40 +350,28 @@ class KubernetesManifestGenerator:
                             "name": "memory",
                             "target": {
                                 "type": "Utilization",
-                                "averageUtilization": self.config.target_memory_utilization
-                            }
-                        }
-                    }
+                                "averageUtilization": self.config.target_memory_utilization,
+                            },
+                        },
+                    },
                 ],
                 "behavior": {
                     "scaleUp": {
                         "stabilizationWindowSeconds": 300,
                         "policies": [
-                            {
-                                "type": "Percent",
-                                "value": 100,
-                                "periodSeconds": 15
-                            },
-                            {
-                                "type": "Pods",
-                                "value": 2,
-                                "periodSeconds": 60
-                            }
+                            {"type": "Percent", "value": 100, "periodSeconds": 15},
+                            {"type": "Pods", "value": 2, "periodSeconds": 60},
                         ],
-                        "selectPolicy": "Max"
+                        "selectPolicy": "Max",
                     },
                     "scaleDown": {
                         "stabilizationWindowSeconds": 300,
                         "policies": [
-                            {
-                                "type": "Percent",
-                                "value": 10,
-                                "periodSeconds": 60
-                            }
-                        ]
-                    }
-                }
-            }
+                            {"type": "Percent", "value": 10, "periodSeconds": 60}
+                        ],
+                    },
+                },
+            },
         }
 
     def generate_pod_disruption_budget(self) -> Dict[str, Any]:
@@ -443,18 +384,15 @@ class KubernetesManifestGenerator:
                 "namespace": self.config.namespace,
                 "labels": {
                     "app": self.config.app_name,
-                    "component": "disruption-budget"
-                }
+                    "component": "disruption-budget",
+                },
             },
             "spec": {
                 "minAvailable": 1,
                 "selector": {
-                    "matchLabels": {
-                        "app": self.config.app_name,
-                        "component": "api"
-                    }
-                }
-            }
+                    "matchLabels": {"app": self.config.app_name, "component": "api"}
+                },
+            },
         }
 
     def generate_network_policy(self) -> Dict[str, Any]:
@@ -468,87 +406,41 @@ class KubernetesManifestGenerator:
             "metadata": {
                 "name": f"{self.config.app_name}-network-policy",
                 "namespace": self.config.namespace,
-                "labels": {
-                    "app": self.config.app_name,
-                    "component": "network-policy"
-                }
+                "labels": {"app": self.config.app_name, "component": "network-policy"},
             },
             "spec": {
-                "podSelector": {
-                    "matchLabels": {
-                        "app": self.config.app_name
-                    }
-                },
+                "podSelector": {"matchLabels": {"app": self.config.app_name}},
                 "policyTypes": ["Ingress", "Egress"],
                 "ingress": [
                     {
                         "from": [
                             {
                                 "namespaceSelector": {
-                                    "matchLabels": {
-                                        "name": "nginx-ingress"
-                                    }
+                                    "matchLabels": {"name": "nginx-ingress"}
                                 }
                             }
                         ],
-                        "ports": [
-                            {
-                                "protocol": "TCP",
-                                "port": 8000
-                            }
-                        ]
+                        "ports": [{"protocol": "TCP", "port": 8000}],
                     }
                 ],
                 "egress": [
                     {
-                        "to": [
-                            {
-                                "podSelector": {
-                                    "matchLabels": {
-                                        "app": "postgres"
-                                    }
-                                }
-                            }
-                        ],
-                        "ports": [
-                            {
-                                "protocol": "TCP",
-                                "port": 5432
-                            }
-                        ]
+                        "to": [{"podSelector": {"matchLabels": {"app": "postgres"}}}],
+                        "ports": [{"protocol": "TCP", "port": 5432}],
                     },
                     {
-                        "to": [
-                            {
-                                "podSelector": {
-                                    "matchLabels": {
-                                        "app": "redis"
-                                    }
-                                }
-                            }
-                        ],
-                        "ports": [
-                            {
-                                "protocol": "TCP",
-                                "port": 6379
-                            }
-                        ]
+                        "to": [{"podSelector": {"matchLabels": {"app": "redis"}}}],
+                        "ports": [{"protocol": "TCP", "port": 6379}],
                     },
                     {
                         "to": [],
                         "ports": [
-                            {
-                                "protocol": "TCP",
-                                "port": 53
-                            },
-                            {
-                                "protocol": "UDP",
-                                "port": 53
-                            }
-                        ]
-                    }
-                ]
-            }
+                            {"protocol": "TCP", "port": 53},
+                            {"protocol": "UDP", "port": 53},
+                        ],
+                    },
+                ],
+            },
         }
 
     def generate_service_monitor(self) -> Dict[str, Any]:
@@ -562,27 +454,21 @@ class KubernetesManifestGenerator:
             "metadata": {
                 "name": f"{self.config.app_name}-metrics",
                 "namespace": self.config.namespace,
-                "labels": {
-                    "app": self.config.app_name,
-                    "component": "monitoring"
-                }
+                "labels": {"app": self.config.app_name, "component": "monitoring"},
             },
             "spec": {
                 "selector": {
-                    "matchLabels": {
-                        "app": self.config.app_name,
-                        "component": "api"
-                    }
+                    "matchLabels": {"app": self.config.app_name, "component": "api"}
                 },
                 "endpoints": [
                     {
                         "port": "http",
                         "path": "/metrics",
                         "interval": "30s",
-                        "scrapeTimeout": "10s"
+                        "scrapeTimeout": "10s",
                     }
-                ]
-            }
+                ],
+            },
         }
 
     def generate_redis_deployment(self) -> Dict[str, Any]:
@@ -593,56 +479,33 @@ class KubernetesManifestGenerator:
             "metadata": {
                 "name": "redis",
                 "namespace": self.config.namespace,
-                "labels": {
-                    "app": "redis",
-                    "component": "cache"
-                }
+                "labels": {"app": "redis", "component": "cache"},
             },
             "spec": {
                 "replicas": 1,
-                "selector": {
-                    "matchLabels": {
-                        "app": "redis"
-                    }
-                },
+                "selector": {"matchLabels": {"app": "redis"}},
                 "template": {
-                    "metadata": {
-                        "labels": {
-                            "app": "redis"
-                        }
-                    },
+                    "metadata": {"labels": {"app": "redis"}},
                     "spec": {
                         "containers": [
                             {
                                 "name": "redis",
                                 "image": "redis:7-alpine",
-                                "ports": [
-                                    {
-                                        "containerPort": 6379
-                                    }
-                                ],
+                                "ports": [{"containerPort": 6379}],
                                 "resources": {
-                                    "requests": {
-                                        "cpu": "100m",
-                                        "memory": "128Mi"
-                                    },
-                                    "limits": {
-                                        "cpu": "500m",
-                                        "memory": "512Mi"
-                                    }
+                                    "requests": {"cpu": "100m", "memory": "128Mi"},
+                                    "limits": {"cpu": "500m", "memory": "512Mi"},
                                 },
                                 "livenessProbe": {
-                                    "tcpSocket": {
-                                        "port": 6379
-                                    },
+                                    "tcpSocket": {"port": 6379},
                                     "initialDelaySeconds": 30,
-                                    "periodSeconds": 10
-                                }
+                                    "periodSeconds": 10,
+                                },
                             }
                         ]
-                    }
-                }
-            }
+                    },
+                },
+            },
         }
 
     def generate_redis_service(self) -> Dict[str, Any]:
@@ -653,21 +516,12 @@ class KubernetesManifestGenerator:
             "metadata": {
                 "name": "redis",
                 "namespace": self.config.namespace,
-                "labels": {
-                    "app": "redis"
-                }
+                "labels": {"app": "redis"},
             },
             "spec": {
-                "ports": [
-                    {
-                        "port": 6379,
-                        "targetPort": 6379
-                    }
-                ],
-                "selector": {
-                    "app": "redis"
-                }
-            }
+                "ports": [{"port": 6379, "targetPort": 6379}],
+                "selector": {"app": "redis"},
+            },
         }
 
     def generate_postgres_deployment(self) -> Dict[str, Any]:
@@ -678,24 +532,13 @@ class KubernetesManifestGenerator:
             "metadata": {
                 "name": "postgres",
                 "namespace": self.config.namespace,
-                "labels": {
-                    "app": "postgres",
-                    "component": "database"
-                }
+                "labels": {"app": "postgres", "component": "database"},
             },
             "spec": {
                 "replicas": 1,
-                "selector": {
-                    "matchLabels": {
-                        "app": "postgres"
-                    }
-                },
+                "selector": {"matchLabels": {"app": "postgres"}},
                 "template": {
-                    "metadata": {
-                        "labels": {
-                            "app": "postgres"
-                        }
-                    },
+                    "metadata": {"labels": {"app": "postgres"}},
                     "spec": {
                         "containers": [
                             {
@@ -704,36 +547,20 @@ class KubernetesManifestGenerator:
                                 "env": [
                                     {
                                         "name": "POSTGRES_DB",
-                                        "value": "api_orchestrator"
+                                        "value": "api_orchestrator",
                                     },
-                                    {
-                                        "name": "POSTGRES_USER",
-                                        "value": "user"
-                                    },
-                                    {
-                                        "name": "POSTGRES_PASSWORD",
-                                        "value": "pass"
-                                    }
+                                    {"name": "POSTGRES_USER", "value": "user"},
+                                    {"name": "POSTGRES_PASSWORD", "value": "pass"},
                                 ],
-                                "ports": [
-                                    {
-                                        "containerPort": 5432
-                                    }
-                                ],
+                                "ports": [{"containerPort": 5432}],
                                 "resources": {
-                                    "requests": {
-                                        "cpu": "250m",
-                                        "memory": "512Mi"
-                                    },
-                                    "limits": {
-                                        "cpu": "1000m",
-                                        "memory": "2Gi"
-                                    }
+                                    "requests": {"cpu": "250m", "memory": "512Mi"},
+                                    "limits": {"cpu": "1000m", "memory": "2Gi"},
                                 },
                                 "volumeMounts": [
                                     {
                                         "name": "postgres-storage",
-                                        "mountPath": "/var/lib/postgresql/data"
+                                        "mountPath": "/var/lib/postgresql/data",
                                     }
                                 ],
                                 "livenessProbe": {
@@ -743,25 +570,23 @@ class KubernetesManifestGenerator:
                                             "-U",
                                             "user",
                                             "-d",
-                                            "api_orchestrator"
+                                            "api_orchestrator",
                                         ]
                                     },
                                     "initialDelaySeconds": 30,
-                                    "periodSeconds": 10
-                                }
+                                    "periodSeconds": 10,
+                                },
                             }
                         ],
                         "volumes": [
                             {
                                 "name": "postgres-storage",
-                                "persistentVolumeClaim": {
-                                    "claimName": "postgres-pvc"
-                                }
+                                "persistentVolumeClaim": {"claimName": "postgres-pvc"},
                             }
-                        ]
-                    }
-                }
-            }
+                        ],
+                    },
+                },
+            },
         }
 
     def generate_postgres_service(self) -> Dict[str, Any]:
@@ -772,21 +597,12 @@ class KubernetesManifestGenerator:
             "metadata": {
                 "name": "postgres",
                 "namespace": self.config.namespace,
-                "labels": {
-                    "app": "postgres"
-                }
+                "labels": {"app": "postgres"},
             },
             "spec": {
-                "ports": [
-                    {
-                        "port": 5432,
-                        "targetPort": 5432
-                    }
-                ],
-                "selector": {
-                    "app": "postgres"
-                }
-            }
+                "ports": [{"port": 5432, "targetPort": 5432}],
+                "selector": {"app": "postgres"},
+            },
         }
 
     def generate_postgres_pvc(self) -> Dict[str, Any]:
@@ -797,20 +613,13 @@ class KubernetesManifestGenerator:
             "metadata": {
                 "name": "postgres-pvc",
                 "namespace": self.config.namespace,
-                "labels": {
-                    "app": "postgres",
-                    "component": "storage"
-                }
+                "labels": {"app": "postgres", "component": "storage"},
             },
             "spec": {
                 "accessModes": ["ReadWriteOnce"],
-                "resources": {
-                    "requests": {
-                        "storage": "10Gi"
-                    }
-                },
-                "storageClassName": "fast-ssd"
-            }
+                "resources": {"requests": {"storage": "10Gi"}},
+                "storageClassName": "fast-ssd",
+            },
         }
 
     def generate_pod_security_policy(self) -> Dict[str, Any]:
@@ -820,10 +629,7 @@ class KubernetesManifestGenerator:
             "kind": "PodSecurityPolicy",
             "metadata": {
                 "name": f"{self.config.app_name}-psp",
-                "labels": {
-                    "app": self.config.app_name,
-                    "component": "security"
-                }
+                "labels": {"app": self.config.app_name, "component": "security"},
             },
             "spec": {
                 "privileged": False,
@@ -835,18 +641,12 @@ class KubernetesManifestGenerator:
                     "projected",
                     "secret",
                     "downwardAPI",
-                    "persistentVolumeClaim"
+                    "persistentVolumeClaim",
                 ],
-                "runAsUser": {
-                    "rule": "MustRunAsNonRoot"
-                },
-                "seLinux": {
-                    "rule": "RunAsAny"
-                },
-                "fsGroup": {
-                    "rule": "RunAsAny"
-                }
-            }
+                "runAsUser": {"rule": "MustRunAsNonRoot"},
+                "seLinux": {"rule": "RunAsAny"},
+                "fsGroup": {"rule": "RunAsAny"},
+            },
         }
 
     def save_manifests_to_files(self, output_dir: str = "k8s-manifests") -> None:
@@ -862,6 +662,7 @@ class KubernetesManifestGenerator:
                 with open(file_path, "w") as f:
                     yaml.dump(manifest_content, f, default_flow_style=False)
                 print(f"Generated: {file_path}")
+
 
 def main():
     """Generate Kubernetes manifests for different environments"""
@@ -879,7 +680,7 @@ def main():
         enable_pod_security_policy=True,
         enable_network_policy=True,
         enable_prometheus_monitoring=True,
-        enable_jaeger_tracing=True
+        enable_jaeger_tracing=True,
     )
 
     # Staging configuration
@@ -892,7 +693,7 @@ def main():
         cpu_request="500m",
         cpu_limit="2000m",
         memory_request="1Gi",
-        memory_limit="4Gi"
+        memory_limit="4Gi",
     )
 
     # Development configuration
@@ -907,14 +708,14 @@ def main():
         memory_request="512Mi",
         memory_limit="2Gi",
         enable_pod_security_policy=False,
-        enable_network_policy=False
+        enable_network_policy=False,
     )
 
     # Generate manifests for all environments
     environments = [
         ("production", prod_config),
         ("staging", staging_config),
-        ("development", dev_config)
+        ("development", dev_config),
     ]
 
     for env_name, config in environments:
@@ -922,6 +723,7 @@ def main():
         generator = KubernetesManifestGenerator(config)
         generator.save_manifests_to_files(f"k8s-manifests-{env_name}")
         print(f"✅ {env_name.title()} manifests generated successfully!")
+
 
 if __name__ == "__main__":
     main()
