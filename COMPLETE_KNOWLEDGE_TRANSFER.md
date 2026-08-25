@@ -129,7 +129,7 @@ coderabbit auth login
 
 ### API Key (if needed)
 ```
-API Key: cr-bd4f404fa2957c3ac584c54da743abbfe446e6dda886d3889618acd327
+API Key: <REDACTED - key revoked; set CODERABBIT_API_KEY in your environment>
 ```
 
 ### Usage Commands
@@ -146,7 +146,7 @@ coderabbit review --type uncommitted  # Review uncommitted changes
 coderabbit review --type all         # Review everything
 
 # With API key (if rate limited)
-CODERABBIT_API_KEY="cr-bd4f404fa2957c3ac584c54da743abbfe446e6dda886d3889618acd327" coderabbit review --plain
+CODERABBIT_API_KEY="<REDACTED - key revoked; set CODERABBIT_API_KEY in your environment>" coderabbit review --plain
 ```
 
 ### Known Issues
@@ -372,7 +372,7 @@ python backend/src/security/security_config.py
 python backend/src/analysis/static_analysis_suite.py
 
 # CodeRabbit integration
-CODERABBIT_API_KEY="cr-bd4f404fa2957c3ac584c54da743abbfe446e6dda886d3889618acd327" coderabbit review --plain
+CODERABBIT_API_KEY="<REDACTED - key revoked; set CODERABBIT_API_KEY in your environment>" coderabbit review --plain
 ```
 
 ### **Deployment:**
@@ -457,7 +457,7 @@ kubectl apply -f backend/k8s-manifests-production/
 5. Run comprehensive tests and validate performance
 
 ### **Key Context for Continuation:**
-- **CodeRabbit API Key:** `cr-bd4f404fa2957c3ac584c54da743abbfe446e6dda886d3889618acd327`
+- **CodeRabbit API Key:** `<REDACTED - key revoked; set CODERABBIT_API_KEY in your environment>`
 - **Git User:** JonSnow1807 (Chinmay Shrivastava)
 - **Enterprise Features:** Fully implemented and production-ready
 - **Architecture:** Microservices with Kubernetes orchestration
