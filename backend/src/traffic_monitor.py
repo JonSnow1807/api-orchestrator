@@ -55,7 +55,7 @@ class TrafficStats:
     successful_requests: int = 0
     failed_requests: int = 0
     avg_response_time_ms: float = 0
-    min_response_time_ms: float = float("inf")
+    min_response_time_ms: float = 0.0
     max_response_time_ms: float = 0
     total_bandwidth_mb: float = 0
     requests_per_second: float = 0
