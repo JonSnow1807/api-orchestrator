@@ -52,7 +52,11 @@ class InlineAISuggestions:
     def __init__(self, model: str = "gpt-3.5-turbo"):
         self.model = model
         if AI_AVAILABLE:
-            self.llm = ChatOpenAI(model=model, temperature=0.3, max_tokens=500)
+            try:
+                self.llm = ChatOpenAI(model=model, temperature=0.3, max_tokens=500)
+            except Exception:
+                # No OPENAI_API_KEY configured — use the heuristic fallbacks below
+                self.llm = None
         else:
             self.llm = None
 

@@ -4,15 +4,16 @@ A self-hosted API development platform — collections, environments, mock serve
 generation, governance rules, and a visual workflow builder — built as a solo project with a
 FastAPI backend and a React frontend. Apache 2.0 licensed.
 
-This README describes what the code actually does. Every number in it names the command that
-produced it, so you can re-measure everything yourself.
+This README describes what the code actually does. The key numbers below name the command that
+produced them, so you can re-measure everything yourself.
 
 ## What's here
 
 - **FastAPI backend** (`backend/`) — 307 registered REST endpoints plus 3 WebSocket routes
   across 25 routers: auth (JWT with refresh tokens), collections, environments, workspaces,
   mock servers, governance, monitoring, and more. Boots against SQLite out of the box; Postgres
-  supported via `DATABASE_URL`.
+  is wired in via `DATABASE_URL` (psycopg2 ships in requirements), though verification here used
+  SQLite.
 - **React 18 + Vite frontend** (`frontend/`) — 78 components, including a drag-and-drop
   workflow builder (reactflow) with API-call / decision / transform / delay blocks.
 - **Service virtualization** (`backend/src/service_virtualization.py`) — mock servers with 8
@@ -32,8 +33,11 @@ produced it, so you can re-measure everything yourself.
 - **SDK generation** — working client generators for 10 languages (Python, JavaScript,
   TypeScript, Java, C#, Go, Ruby, PHP, Rust, Kotlin). Other language names fall back to a
   generic stub.
-- **CLI** (`cli/`) — Newman-style collection runner with governance validation. Installable
-  from source (`pip install ./cli`); not published to PyPI or npm.
+- **CLI** (`cli/`) — Newman-style collection runner with governance validation. Runs from the
+  repo checkout (`python cli/api_orchestrator_cli_enhanced.py --help`) with the backend
+  requirements installed; the governance command needs the backend running and an authenticated
+  account. A `pip` package definition exists but its installed entry point currently can't
+  resolve the backend imports, and nothing is published to PyPI or npm.
 - **VS Code extension** (`vscode-extension/`) — published on the marketplace as
   [`ChinmayShrivastava.api-orchestrator`](https://marketplace.visualstudio.com/items?itemName=ChinmayShrivastava.api-orchestrator) (v1.0.0).
 
